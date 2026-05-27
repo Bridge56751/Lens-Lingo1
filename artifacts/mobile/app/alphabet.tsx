@@ -235,12 +235,13 @@ export default function AlphabetScreen() {
             </TouchableOpacity>
           </View>
         ) : (
-          <Animated.View style={{ opacity: fade, transform: [{ scale }] }}>
-            <TouchableOpacity
-              activeOpacity={0.85}
-              onPress={() => current && speak((current.name ?? current.char).replace(/\s*\(.*\)\s*/g, "").trim())}
-              style={[styles.letterCard, { backgroundColor: colors.card, borderColor: colors.primarySoft }]}
-            >
+          <Animated.View style={{ opacity: fade }}>
+            <Animated.View style={{ transform: [{ scale }] }}>
+              <TouchableOpacity
+                activeOpacity={0.85}
+                onPress={() => current && speak((current.name ?? current.char).replace(/\s*\(.*\)\s*/g, "").trim())}
+                style={[styles.letterCard, { backgroundColor: colors.card, borderColor: colors.primarySoft }]}
+              >
               <View style={[styles.speakerPill, { backgroundColor: colors.primarySoft }]}>
                 <Ionicons name="volume-medium" size={14} color={colors.primary} />
                 <Text style={[styles.speakerText, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
@@ -262,7 +263,8 @@ export default function AlphabetScreen() {
               <Text style={[styles.letterName, { color: colors.mutedForeground, fontFamily: "Inter_500Medium" }]}>
                 {current?.name}
               </Text>
-            </TouchableOpacity>
+              </TouchableOpacity>
+            </Animated.View>
 
             {/* Example */}
             <View style={[styles.exampleCard, { backgroundColor: colors.card }]}>
