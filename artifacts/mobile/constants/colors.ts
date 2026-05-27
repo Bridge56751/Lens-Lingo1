@@ -1,41 +1,42 @@
 const colors = {
   light: {
-    text: "#0D1B2A",
-    tint: "#1A9B8A",
+    text: "#1A1B2E",
+    tint: "#7C5CFF",
 
-    background: "#F4F7F9",
-    foreground: "#0D1B2A",
+    background: "#F5F4FB",
+    foreground: "#1A1B2E",
 
     card: "#FFFFFF",
-    cardForeground: "#0D1B2A",
+    cardForeground: "#1A1B2E",
 
-    primary: "#1A9B8A",
+    primary: "#7C5CFF",
     primaryForeground: "#FFFFFF",
+    primarySoft: "#EFE9FF",
 
-    secondary: "#E8EEF2",
-    secondaryForeground: "#0D1B2A",
+    secondary: "#F0F0F5",
+    secondaryForeground: "#1A1B2E",
 
-    muted: "#E8EEF2",
-    mutedForeground: "#6B7A8D",
+    muted: "#F0F0F5",
+    mutedForeground: "#7A7B8E",
 
-    accent: "#FF6B35",
+    accent: "#7C5CFF",
     accentForeground: "#FFFFFF",
 
     destructive: "#EF4444",
     destructiveForeground: "#FFFFFF",
 
-    border: "#D8E2EC",
-    input: "#D8E2EC",
+    border: "#E6E5EE",
+    input: "#E6E5EE",
 
-    scanOverlay: "rgba(26, 155, 138, 0.12)",
-    scanBorder: "#1A9B8A",
-    userBubble: "#1A9B8A",
-    userBubbleText: "#FFFFFF",
-    aiBubble: "#FFFFFF",
-    aiBubbleText: "#0D1B2A",
+    scanOverlay: "rgba(124, 92, 255, 0.10)",
+    scanBorder: "#7C5CFF",
+    userBubble: "#F0F0F5",
+    userBubbleText: "#1A1B2E",
+    aiBubble: "#EFE9FF",
+    aiBubbleText: "#1A1B2E",
   },
 
-  radius: 14,
+  radius: 18,
 };
 
 export default colors;

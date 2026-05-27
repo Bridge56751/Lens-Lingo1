@@ -26,35 +26,59 @@ type Message = {
   content: string;
 };
 
+function SparkleIcon({ color }: { color: string }) {
+  return (
+    <View style={styles.sparkleWrap}>
+      <Ionicons name="sparkles" size={14} color={color} />
+    </View>
+  );
+}
+
 function MessageBubble({ message, colors }: { message: Message; colors: ReturnType<typeof useColors> }) {
   const isUser = message.role === "user";
-  return (
-    <View style={[styles.bubbleRow, isUser ? styles.userRow : styles.aiRow]}>
-      {!isUser && (
-        <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
-          <Ionicons name="language-outline" size={14} color="#FFFFFF" />
+
+  if (isUser) {
+    return (
+      <View style={[styles.bubbleRow, styles.userRow]}>
+        <View
+          style={[
+            styles.bubble,
+            styles.userBubble,
+            { backgroundColor: colors.userBubble },
+          ]}
+        >
+          <Text
+            style={[
+              styles.bubbleText,
+              { color: colors.userBubbleText, fontFamily: "Inter_400Regular" },
+            ]}
+          >
+            {message.content}
+          </Text>
         </View>
-      )}
+      </View>
+    );
+  }
+
+  return (
+    <View style={[styles.bubbleRow, styles.aiRow]}>
       <View
         style={[
           styles.bubble,
-          isUser
-            ? [styles.userBubble, { backgroundColor: colors.userBubble }]
-            : [styles.aiBubble, { backgroundColor: colors.aiBubble, borderColor: colors.border }],
+          styles.aiBubble,
+          { backgroundColor: colors.aiBubble },
         ]}
       >
         <Text
           style={[
             styles.bubbleText,
-            {
-              color: isUser ? colors.userBubbleText : colors.aiBubbleText,
-              fontFamily: "Inter_400Regular",
-            },
+            { color: colors.aiBubbleText, fontFamily: "Inter_400Regular" },
           ]}
         >
           {message.content}
         </Text>
       </View>
+      <SparkleIcon color={colors.primary} />
     </View>
   );
 }
@@ -62,12 +86,10 @@ function MessageBubble({ message, colors }: { message: Message; colors: ReturnTy
 function TypingIndicator({ colors }: { colors: ReturnType<typeof useColors> }) {
   return (
     <View style={[styles.bubbleRow, styles.aiRow]}>
-      <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
-        <Ionicons name="language-outline" size={14} color="#FFFFFF" />
-      </View>
-      <View style={[styles.bubble, styles.aiBubble, { backgroundColor: colors.aiBubble, borderColor: colors.border }]}>
+      <View style={[styles.bubble, styles.aiBubble, { backgroundColor: colors.aiBubble }]}>
         <ActivityIndicator size="small" color={colors.primary} />
       </View>
+      <SparkleIcon color={colors.primary} />
     </View>
   );
 }
@@ -93,7 +115,6 @@ export default function ConversationScreen() {
     },
   });
 
-  // Load messages from server into local state
   useEffect(() => {
     if (conversation?.messages) {
       const serverMessages = conversation.messages.map((m) => ({
@@ -105,7 +126,6 @@ export default function ConversationScreen() {
     }
   }, [conversation?.messages?.length]);
 
-  // Parse title for display
   const parts = (conversation?.title ?? "").split(" • ");
   const itemName = parts[0] ?? "Conversation";
   const language = parts[1] ?? "";
@@ -127,10 +147,9 @@ export default function ConversationScreen() {
     setStreamingContent("");
 
     try {
-      const baseUrl =
-        process.env.EXPO_PUBLIC_DOMAIN
-          ? `https://${process.env.EXPO_PUBLIC_DOMAIN}`
-          : "";
+      const baseUrl = process.env.EXPO_PUBLIC_DOMAIN
+        ? `https://${process.env.EXPO_PUBLIC_DOMAIN}`
+        : "";
 
       const response = await expoFetch(
         `${baseUrl}/api/openai/conversations/${conversationId}/messages`,
@@ -141,9 +160,7 @@ export default function ConversationScreen() {
         },
       );
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
       const reader = response.body?.getReader();
       if (!reader) throw new Error("No reader");
@@ -206,7 +223,7 @@ export default function ConversationScreen() {
     }
   }, [inputText, isStreaming, conversationId, queryClient]);
 
-  const topPadding = Platform.OS === "web" ? 67 : insets.top;
+  const topPadding = Platform.OS === "web" ? 16 : insets.top;
   const bottomPadding = insets.bottom;
 
   const displayMessages = [...messages];
@@ -220,14 +237,12 @@ export default function ConversationScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header */}
       <View
         style={[
           styles.header,
           {
-            paddingTop: topPadding + 12,
-            backgroundColor: colors.card,
-            borderBottomColor: colors.border,
+            paddingTop: topPadding + 8,
+            backgroundColor: colors.background,
           },
         ]}
       >
@@ -236,21 +251,20 @@ export default function ConversationScreen() {
           onPress={() => router.back()}
           activeOpacity={0.7}
         >
-          <Ionicons name="chevron-back" size={26} color={colors.primary} />
+          <Ionicons name="chevron-back" size={26} color={colors.foreground} />
         </TouchableOpacity>
         <View style={styles.headerCenter}>
           <Text style={[styles.headerTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-            {itemName}
+            Conversation
           </Text>
-          {language ? (
-            <View style={[styles.langChip, { backgroundColor: colors.primary }]}>
-              <Text style={[styles.langChipText, { fontFamily: "Inter_500Medium" }]}>
-                {language}
-              </Text>
-            </View>
-          ) : null}
+          <Text style={[styles.headerSubtitle, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+            About: {itemName}
+            {language ? ` • ${language}` : ""}
+          </Text>
         </View>
-        <View style={{ width: 40 }} />
+        <TouchableOpacity style={styles.backButton} activeOpacity={0.7}>
+          <Ionicons name="ellipsis-horizontal" size={22} color={colors.foreground} />
+        </TouchableOpacity>
       </View>
 
       <KeyboardAvoidingView
@@ -258,7 +272,6 @@ export default function ConversationScreen() {
         behavior="padding"
         keyboardVerticalOffset={0}
       >
-        {/* Messages */}
         {isLoading ? (
           <View style={styles.centered}>
             <ActivityIndicator size="large" color={colors.primary} />
@@ -284,54 +297,48 @@ export default function ConversationScreen() {
           />
         )}
 
-        {/* Input Bar */}
         <View
           style={[
             styles.inputBar,
             {
-              backgroundColor: colors.card,
-              borderTopColor: colors.border,
-              paddingBottom: bottomPadding + 8,
+              paddingBottom: bottomPadding + 12,
             },
           ]}
         >
-          <TextInput
-            ref={inputRef}
-            style={[
-              styles.input,
-              {
-                backgroundColor: colors.secondary,
-                color: colors.foreground,
-                fontFamily: "Inter_400Regular",
-                borderColor: colors.border,
-              },
-            ]}
-            placeholder="Type your message..."
-            placeholderTextColor={colors.mutedForeground}
-            value={inputText}
-            onChangeText={setInputText}
-            multiline
-            maxLength={500}
-            returnKeyType="send"
-            onSubmitEditing={sendMessage}
-            blurOnSubmit={false}
-          />
+          <View style={[styles.inputWrap, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <TextInput
+              ref={inputRef}
+              style={[
+                styles.input,
+                { color: colors.foreground, fontFamily: "Inter_400Regular" },
+              ]}
+              placeholder="Tap to speak or type..."
+              placeholderTextColor={colors.mutedForeground}
+              value={inputText}
+              onChangeText={setInputText}
+              multiline
+              maxLength={500}
+              returnKeyType="send"
+              onSubmitEditing={sendMessage}
+              blurOnSubmit={false}
+            />
+          </View>
           <TouchableOpacity
             style={[
               styles.sendButton,
-              { backgroundColor: isStreaming || !inputText.trim() ? colors.secondary : colors.primary },
+              { backgroundColor: isStreaming || !inputText.trim() ? colors.primarySoft : colors.primary },
             ]}
             onPress={sendMessage}
             disabled={isStreaming || !inputText.trim()}
-            activeOpacity={0.8}
+            activeOpacity={0.85}
           >
             {isStreaming ? (
-              <ActivityIndicator size="small" color={colors.mutedForeground} />
+              <ActivityIndicator size="small" color={colors.primary} />
             ) : (
               <Ionicons
-                name="send"
-                size={18}
-                color={!inputText.trim() ? colors.mutedForeground : "#FFFFFF"}
+                name={inputText.trim() ? "send" : "mic"}
+                size={20}
+                color={!inputText.trim() ? colors.primary : "#FFFFFF"}
               />
             )}
           </TouchableOpacity>
@@ -342,15 +349,12 @@ export default function ConversationScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
   header: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 12,
-    paddingBottom: 14,
-    borderBottomWidth: 1,
+    paddingBottom: 12,
   },
   backButton: {
     width: 40,
@@ -358,95 +362,65 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  headerCenter: {
-    flex: 1,
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 8,
-  },
-  headerTitle: {
-    fontSize: 17,
-  },
-  langChip: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
-  },
-  langChipText: {
-    color: "#FFFFFF",
-    fontSize: 12,
-  },
-  centered: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
+  headerCenter: { flex: 1, alignItems: "center" },
+  headerTitle: { fontSize: 17 },
+  headerSubtitle: { fontSize: 12, marginTop: 2 },
+  centered: { flex: 1, alignItems: "center", justifyContent: "center" },
   messageList: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    gap: 12,
+    paddingHorizontal: 18,
+    paddingTop: 8,
+    gap: 14,
   },
   bubbleRow: {
     flexDirection: "row",
     alignItems: "flex-end",
-    gap: 8,
-    marginBottom: 4,
+    gap: 6,
+    marginBottom: 2,
   },
-  userRow: {
-    justifyContent: "flex-end",
-  },
-  aiRow: {
-    justifyContent: "flex-start",
-  },
-  avatar: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+  userRow: { justifyContent: "flex-end" },
+  aiRow: { justifyContent: "flex-start" },
+  sparkleWrap: {
+    width: 22,
+    height: 22,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 2,
+    marginBottom: 4,
   },
   bubble: {
     maxWidth: "78%",
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 18,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 22,
   },
-  userBubble: {
-    borderBottomRightRadius: 4,
-  },
-  aiBubble: {
-    borderWidth: 1,
-    borderBottomLeftRadius: 4,
-  },
-  bubbleText: {
-    fontSize: 15,
-    lineHeight: 22,
-  },
+  userBubble: { borderBottomRightRadius: 6 },
+  aiBubble: { borderBottomLeftRadius: 6 },
+  bubbleText: { fontSize: 15, lineHeight: 22 },
+
   inputBar: {
     flexDirection: "row",
     alignItems: "flex-end",
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
     paddingTop: 10,
-    borderTopWidth: 1,
     gap: 10,
   },
-  input: {
+  inputWrap: {
     flex: 1,
-    minHeight: 42,
-    maxHeight: 120,
-    borderRadius: 21,
-    paddingHorizontal: 16,
-    paddingTop: 10,
-    paddingBottom: 10,
-    fontSize: 15,
+    borderRadius: 26,
     borderWidth: 1,
+    minHeight: 48,
+    justifyContent: "center",
+    paddingHorizontal: 18,
+    paddingVertical: 4,
+  },
+  input: {
+    fontSize: 15,
+    maxHeight: 120,
+    paddingVertical: 8,
   },
   sendButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: "center",
     justifyContent: "center",
   },

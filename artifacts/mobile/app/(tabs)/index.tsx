@@ -9,11 +9,14 @@ import {
   ScrollView,
   Platform,
   Alert,
+  Modal,
+  Pressable,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import * as Haptics from "expo-haptics";
+import { CameraView, useCameraPermissions } from "expo-camera";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -40,9 +43,22 @@ const LANGUAGES = [
   "Dutch",
 ];
 
+function CornerBrackets({ color }: { color: string }) {
+  return (
+    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+      <View style={[styles.corner, styles.cornerTL, { borderColor: color }]} />
+      <View style={[styles.corner, styles.cornerTR, { borderColor: color }]} />
+      <View style={[styles.corner, styles.cornerBL, { borderColor: color }]} />
+      <View style={[styles.corner, styles.cornerBR, { borderColor: color }]} />
+    </View>
+  );
+}
+
 export default function ScanScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const cameraRef = useRef<CameraView>(null);
+  const [permission, requestPermission] = useCameraPermissions();
   const [selectedLanguage, setSelectedLanguage] = useState("Spanish");
   const [showLanguagePicker, setShowLanguagePicker] = useState(false);
   const [scannedImage, setScannedImage] = useState<string | null>(null);
@@ -55,19 +71,13 @@ export default function ScanScreen() {
   } | null>(null);
 
   const pulseAnim = useSharedValue(1);
-  const rotateAnim = useSharedValue(0);
 
   const startScanAnimation = () => {
     pulseAnim.value = withRepeat(
       withSequence(
-        withTiming(1.05, { duration: 600, easing: Easing.inOut(Easing.ease) }),
+        withTiming(1.04, { duration: 600, easing: Easing.inOut(Easing.ease) }),
         withTiming(1, { duration: 600, easing: Easing.inOut(Easing.ease) }),
       ),
-      -1,
-      false,
-    );
-    rotateAnim.value = withRepeat(
-      withTiming(1, { duration: 2000, easing: Easing.linear }),
       -1,
       false,
     );
@@ -75,64 +85,53 @@ export default function ScanScreen() {
 
   const stopScanAnimation = () => {
     pulseAnim.value = withTiming(1, { duration: 300 });
-    rotateAnim.value = withTiming(0, { duration: 300 });
   };
 
   const pulseStyle = useAnimatedStyle(() => ({
     transform: [{ scale: pulseAnim.value }],
   }));
 
-  const rotateStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${rotateAnim.value * 360}deg` }],
-  }));
-
-  const pickImage = async (fromCamera: boolean) => {
-    let result;
-
-    if (fromCamera) {
-      const { status } = await ImagePicker.requestCameraPermissionsAsync();
-      if (status !== "granted") {
-        Alert.alert("Permission required", "Camera access is needed to scan items.");
-        return;
-      }
-      result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ["images"],
+  const handleCapture = async () => {
+    if (!cameraRef.current || isScanning) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    try {
+      const photo = await cameraRef.current.takePictureAsync({
         quality: 0.7,
         base64: true,
-        allowsEditing: true,
-        aspect: [4, 3],
+        skipProcessing: true,
       });
-    } else {
-      result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ["images"],
-        quality: 0.7,
-        base64: true,
-        allowsEditing: true,
-        aspect: [4, 3],
-      });
-    }
-
-    if (!result.canceled && result.assets[0]) {
-      const asset = result.assets[0];
-      const base64 = asset.base64;
-      if (!base64) return;
-
-      setScannedImage(asset.uri);
+      if (!photo?.base64) return;
+      setScannedImage(photo.uri);
       setScanResult(null);
-      await scanItem(base64);
+      await scanItem(photo.base64);
+    } catch (err) {
+      Alert.alert("Capture failed", "Could not take photo. Try again.");
+    }
+  };
+
+  const handleGallery = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      quality: 0.7,
+      base64: true,
+      allowsEditing: true,
+      aspect: [4, 3],
+    });
+    if (!result.canceled && result.assets[0]?.base64) {
+      setScannedImage(result.assets[0].uri);
+      setScanResult(null);
+      await scanItem(result.assets[0].base64);
     }
   };
 
   const scanItem = async (imageBase64: string) => {
     setIsScanning(true);
     startScanAnimation();
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     try {
-      const baseUrl =
-        process.env.EXPO_PUBLIC_DOMAIN
-          ? `https://${process.env.EXPO_PUBLIC_DOMAIN}`
-          : "";
+      const baseUrl = process.env.EXPO_PUBLIC_DOMAIN
+        ? `https://${process.env.EXPO_PUBLIC_DOMAIN}`
+        : "";
 
       const response = await fetch(`${baseUrl}/api/scan`, {
         method: "POST",
@@ -144,9 +143,7 @@ export default function ScanScreen() {
         }),
       });
 
-      if (!response.ok) {
-        throw new Error(`Scan failed: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`Scan failed: ${response.status}`);
 
       const data = (await response.json()) as {
         conversationId: number;
@@ -177,55 +174,232 @@ export default function ScanScreen() {
     setScanResult(null);
   };
 
-  const topPadding = Platform.OS === "web" ? 67 : insets.top;
-  const bottomPadding = Platform.OS === "web" ? 34 + 84 : insets.bottom + 80;
+  const topPadding = Platform.OS === "web" ? 16 : insets.top;
+  const bottomPadding = Platform.OS === "web" ? 34 + 84 : insets.bottom + 90;
 
-  return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header */}
-      <View style={[styles.header, { paddingTop: topPadding + 12 }]}>
-        <Text style={[styles.appTitle, { color: colors.primary, fontFamily: "Inter_700Bold" }]}>
-          LinguaScan
-        </Text>
-        <Text style={[styles.subtitle, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-          Scan anything. Learn any language.
-        </Text>
-      </View>
-
-      <ScrollView
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomPadding }]}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
-        {/* Language Selector */}
-        <View style={styles.languageSection}>
-          <Text style={[styles.label, { color: colors.mutedForeground, fontFamily: "Inter_500Medium" }]}>
-            Learning
+  // RESULT SCREEN
+  if (scannedImage && scanResult && !isScanning) {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <View style={[styles.resultHeader, { paddingTop: topPadding + 8 }]}>
+          <TouchableOpacity onPress={reset} style={styles.iconButton} activeOpacity={0.7}>
+            <Ionicons name="chevron-back" size={26} color={colors.foreground} />
+          </TouchableOpacity>
+          <Text style={[styles.resultHeaderTitle, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
+            Identified
           </Text>
+          <View style={{ width: 40 }} />
+        </View>
+
+        <ScrollView
+          contentContainerStyle={[styles.resultScroll, { paddingBottom: bottomPadding + 24 }]}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={[styles.resultCardNew, { backgroundColor: colors.card }]}>
+            <Image source={{ uri: scannedImage }} style={styles.resultImage} />
+            <View style={styles.resultBody}>
+              <View style={styles.resultTitleRow}>
+                <Text style={[styles.resultEnglish, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
+                  {scanResult.itemName}
+                </Text>
+                <View style={[styles.speakerDot, { backgroundColor: colors.primarySoft }]}>
+                  <Ionicons name="volume-medium" size={16} color={colors.primary} />
+                </View>
+              </View>
+              <Text style={[styles.resultTranslation, { color: colors.primary, fontFamily: "Inter_700Bold" }]}>
+                {scanResult.itemNameTranslated}
+              </Text>
+              <Text style={[styles.resultLanguage, { color: colors.mutedForeground, fontFamily: "Inter_500Medium" }]}>
+                {selectedLanguage}
+              </Text>
+
+              <View style={[styles.exampleBox, { backgroundColor: colors.primarySoft }]}>
+                <Text style={[styles.exampleLabel, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
+                  Tutor says
+                </Text>
+                <Text style={[styles.exampleText, { color: colors.foreground, fontFamily: "Inter_400Regular" }]}>
+                  {scanResult.initialMessage}
+                </Text>
+              </View>
+            </View>
+          </View>
+
           <TouchableOpacity
-            style={[styles.languageButton, { backgroundColor: colors.card, borderColor: colors.primary }]}
-            onPress={() => setShowLanguagePicker(!showLanguagePicker)}
-            activeOpacity={0.7}
+            style={[styles.primaryButton, { backgroundColor: colors.primary }]}
+            onPress={openConversation}
+            activeOpacity={0.85}
           >
-            <Text style={[styles.languageText, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
-              {selectedLanguage}
+            <Ionicons name="chatbubbles" size={20} color="#FFFFFF" />
+            <Text style={[styles.primaryButtonText, { fontFamily: "Inter_600SemiBold" }]}>
+              Start Conversation
             </Text>
-            <Ionicons
-              name={showLanguagePicker ? "chevron-up" : "chevron-down"}
-              size={18}
-              color={colors.primary}
-            />
           </TouchableOpacity>
 
-          {showLanguagePicker && (
-            <View style={[styles.languagePicker, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              <ScrollView style={{ maxHeight: 200 }} nestedScrollEnabled>
-                {LANGUAGES.map((lang) => (
+          <TouchableOpacity onPress={reset} activeOpacity={0.7} style={styles.linkButton}>
+            <Text style={[styles.linkButtonText, { color: colors.mutedForeground, fontFamily: "Inter_500Medium" }]}>
+              Scan something else
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </View>
+    );
+  }
+
+  // CAMERA / SCAN SCREEN
+  const hasCameraPermission = permission?.granted;
+  const canUseCamera = Platform.OS !== "web" && hasCameraPermission;
+
+  return (
+    <View style={[styles.container, { backgroundColor: "#0A0A12" }]}>
+      {/* Viewfinder */}
+      <View style={styles.viewfinder}>
+        {canUseCamera && !scannedImage ? (
+          <CameraView ref={cameraRef} style={StyleSheet.absoluteFill} facing="back" />
+        ) : scannedImage ? (
+          <Image source={{ uri: scannedImage }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+        ) : (
+          <View style={[StyleSheet.absoluteFill, styles.cameraPlaceholder]}>
+            <Ionicons name="camera-outline" size={64} color="rgba(255,255,255,0.4)" />
+            <Text style={[styles.placeholderText, { fontFamily: "Inter_500Medium" }]}>
+              {Platform.OS === "web" ? "Camera preview unavailable on web" : "Camera access needed"}
+            </Text>
+            {Platform.OS !== "web" && !hasCameraPermission && (
+              <TouchableOpacity
+                style={[styles.permissionButton, { backgroundColor: colors.primary }]}
+                onPress={requestPermission}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.permissionButtonText, { fontFamily: "Inter_600SemiBold" }]}>
+                  Enable Camera
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
+
+        {/* Dim overlay around frame */}
+        <View pointerEvents="none" style={styles.dimOverlay}>
+          <View style={styles.dimSide} />
+          <View style={styles.dimMiddle}>
+            <View style={styles.dimSide} />
+            <Animated.View style={[styles.scanFrame, pulseStyle]}>
+              <CornerBrackets color="#FFFFFF" />
+              {isScanning && (
+                <View style={styles.scanningBadge}>
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                  <Text style={[styles.scanningBadgeText, { fontFamily: "Inter_600SemiBold" }]}>
+                    Identifying...
+                  </Text>
+                </View>
+              )}
+            </Animated.View>
+            <View style={styles.dimSide} />
+          </View>
+          <View style={styles.dimSide} />
+        </View>
+      </View>
+
+      {/* Top bar */}
+      <View style={[styles.topBar, { paddingTop: topPadding + 8 }]} pointerEvents="box-none">
+        <TouchableOpacity
+          style={styles.topIconButton}
+          onPress={() => setShowLanguagePicker(true)}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="globe-outline" size={18} color="#FFFFFF" />
+          <Text style={[styles.topIconText, { fontFamily: "Inter_600SemiBold" }]}>
+            {selectedLanguage}
+          </Text>
+          <Ionicons name="chevron-down" size={16} color="#FFFFFF" />
+        </TouchableOpacity>
+
+        <View style={{ flex: 1 }} />
+
+        <View style={styles.brandPill}>
+          <Text style={[styles.brandText, { fontFamily: "Inter_700Bold" }]}>LinguaScan</Text>
+        </View>
+      </View>
+
+      {/* Hint text */}
+      <View pointerEvents="none" style={[styles.hintWrap, { top: "38%" }]}>
+        <View style={styles.hintPill}>
+          <Text style={[styles.hintText, { fontFamily: "Inter_500Medium" }]}>
+            Point your camera at any item to scan
+          </Text>
+        </View>
+      </View>
+
+      {/* Bottom controls */}
+      <View
+        style={[
+          styles.bottomBar,
+          { paddingBottom: bottomPadding },
+        ]}
+      >
+        <TouchableOpacity
+          style={styles.sideButton}
+          onPress={() => router.push("/history")}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="time-outline" size={22} color="#FFFFFF" />
+          <Text style={[styles.sideButtonText, { fontFamily: "Inter_500Medium" }]}>
+            History
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={handleCapture}
+          activeOpacity={0.85}
+          disabled={isScanning || !canUseCamera}
+          style={styles.captureWrap}
+        >
+          <View style={[styles.captureOuter, { opacity: !canUseCamera ? 0.4 : 1 }]}>
+            <View style={[styles.captureInner, { backgroundColor: isScanning ? colors.primary : "#FFFFFF" }]}>
+              {isScanning ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <Ionicons name="scan" size={26} color={colors.primary} />
+              )}
+            </View>
+          </View>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.sideButton}
+          onPress={handleGallery}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="images-outline" size={22} color="#FFFFFF" />
+          <Text style={[styles.sideButtonText, { fontFamily: "Inter_500Medium" }]}>
+            Gallery
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Language picker modal */}
+      <Modal
+        visible={showLanguagePicker}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowLanguagePicker(false)}
+      >
+        <Pressable style={styles.modalBackdrop} onPress={() => setShowLanguagePicker(false)}>
+          <Pressable
+            style={[styles.modalCard, { backgroundColor: colors.card }]}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <Text style={[styles.modalTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
+              Choose language
+            </Text>
+            <ScrollView style={{ maxHeight: 380 }}>
+              {LANGUAGES.map((lang) => {
+                const active = lang === selectedLanguage;
+                return (
                   <TouchableOpacity
                     key={lang}
                     style={[
-                      styles.languageOption,
-                      selectedLanguage === lang && { backgroundColor: colors.scanOverlay },
+                      styles.langOption,
+                      active && { backgroundColor: colors.primarySoft },
                     ]}
                     onPress={() => {
                       setSelectedLanguage(lang);
@@ -236,316 +410,227 @@ export default function ScanScreen() {
                   >
                     <Text
                       style={[
-                        styles.languageOptionText,
-                        { color: selectedLanguage === lang ? colors.primary : colors.foreground },
-                        { fontFamily: selectedLanguage === lang ? "Inter_600SemiBold" : "Inter_400Regular" },
+                        styles.langOptionText,
+                        {
+                          color: active ? colors.primary : colors.foreground,
+                          fontFamily: active ? "Inter_600SemiBold" : "Inter_400Regular",
+                        },
                       ]}
                     >
                       {lang}
                     </Text>
-                    {selectedLanguage === lang && (
-                      <Ionicons name="checkmark" size={18} color={colors.primary} />
-                    )}
+                    {active && <Ionicons name="checkmark" size={20} color={colors.primary} />}
                   </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </View>
-          )}
-        </View>
-
-        {/* Image Preview Area */}
-        <Animated.View style={[styles.imageContainer, pulseStyle]}>
-          {scannedImage ? (
-            <View style={styles.imageWrapper}>
-              <Image source={{ uri: scannedImage }} style={styles.previewImage} />
-              {isScanning && (
-                <View style={styles.scanningOverlay}>
-                  <Animated.View style={rotateStyle}>
-                    <Ionicons name="scan-outline" size={60} color={colors.primary} />
-                  </Animated.View>
-                  <Text style={[styles.scanningText, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
-                    Identifying...
-                  </Text>
-                </View>
-              )}
-              {!isScanning && (
-                <TouchableOpacity style={styles.resetButton} onPress={reset}>
-                  <Ionicons name="close-circle" size={28} color="#FFFFFF" />
-                </TouchableOpacity>
-              )}
-            </View>
-          ) : (
-            <View
-              style={[
-                styles.placeholder,
-                { backgroundColor: colors.card, borderColor: colors.scanBorder },
-              ]}
-            >
-              <View style={styles.scanIcon}>
-                <Ionicons name="camera-outline" size={56} color={colors.primary} />
-              </View>
-              <Text style={[styles.placeholderText, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-                Point your camera at any object
-              </Text>
-            </View>
-          )}
-        </Animated.View>
-
-        {/* Scan Result */}
-        {scanResult && !isScanning && (
-          <View style={[styles.resultCard, { backgroundColor: colors.card, borderColor: colors.primary }]}>
-            <View style={styles.resultHeader}>
-              <View>
-                <Text style={[styles.resultItem, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-                  {scanResult.itemName}
-                </Text>
-                <View style={styles.translationRow}>
-                  <Text style={[styles.translationArrow, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-                    in {selectedLanguage}:
-                  </Text>
-                  <Text style={[styles.translatedWord, { color: colors.primary, fontFamily: "Inter_700Bold" }]}>
-                    {scanResult.itemNameTranslated}
-                  </Text>
-                </View>
-              </View>
-              <View style={[styles.successBadge, { backgroundColor: colors.primary }]}>
-                <Ionicons name="checkmark" size={20} color="#FFFFFF" />
-              </View>
-            </View>
-            <TouchableOpacity
-              style={[styles.startButton, { backgroundColor: colors.accent }]}
-              onPress={openConversation}
-              activeOpacity={0.8}
-            >
-              <Text style={[styles.startButtonText, { fontFamily: "Inter_600SemiBold" }]}>
-                Start Conversation
-              </Text>
-              <Ionicons name="chatbubbles-outline" size={20} color="#FFFFFF" />
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {/* Action Buttons */}
-        {!scanResult && !isScanning && (
-          <View style={styles.actionButtons}>
-            <TouchableOpacity
-              style={[styles.actionBtn, { backgroundColor: colors.primary }]}
-              onPress={() => pickImage(true)}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="camera" size={24} color="#FFFFFF" />
-              <Text style={[styles.actionBtnText, { fontFamily: "Inter_600SemiBold" }]}>
-                Take Photo
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.actionBtn, styles.secondaryBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
-              onPress={() => pickImage(false)}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="images-outline" size={24} color={colors.foreground} />
-              <Text style={[styles.actionBtnText, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
-                Gallery
-              </Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {isScanning && (
-          <View style={styles.loadingRow}>
-            <ActivityIndicator size="small" color={colors.primary} />
-            <Text style={[styles.loadingText, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-              Analyzing image...
-            </Text>
-          </View>
-        )}
-      </ScrollView>
+                );
+              })}
+            </ScrollView>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
 
+const FRAME_SIZE = 280;
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  container: { flex: 1 },
+
+  viewfinder: { ...StyleSheet.absoluteFillObject },
+  cameraPlaceholder: {
+    backgroundColor: "#1A1B2E",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 14,
   },
-  header: {
-    paddingHorizontal: 24,
+  placeholderText: { color: "rgba(255,255,255,0.6)", fontSize: 14 },
+  permissionButton: {
+    marginTop: 8,
+    paddingHorizontal: 22,
+    paddingVertical: 12,
+    borderRadius: 22,
+  },
+  permissionButtonText: { color: "#FFFFFF", fontSize: 14 },
+
+  dimOverlay: { ...StyleSheet.absoluteFillObject },
+  dimSide: { flex: 1, backgroundColor: "rgba(10,10,18,0.55)" },
+  dimMiddle: { flexDirection: "row", height: FRAME_SIZE },
+  scanFrame: {
+    width: FRAME_SIZE,
+    height: FRAME_SIZE,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  corner: {
+    position: "absolute",
+    width: 36,
+    height: 36,
+    borderColor: "#FFFFFF",
+  },
+  cornerTL: { top: 0, left: 0, borderTopWidth: 3, borderLeftWidth: 3, borderTopLeftRadius: 12 },
+  cornerTR: { top: 0, right: 0, borderTopWidth: 3, borderRightWidth: 3, borderTopRightRadius: 12 },
+  cornerBL: { bottom: 0, left: 0, borderBottomWidth: 3, borderLeftWidth: 3, borderBottomLeftRadius: 12 },
+  cornerBR: { bottom: 0, right: 0, borderBottomWidth: 3, borderRightWidth: 3, borderBottomRightRadius: 12 },
+
+  scanningBadge: {
+    position: "absolute",
+    bottom: -44,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "rgba(124,92,255,0.95)",
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  scanningBadgeText: { color: "#FFFFFF", fontSize: 13 },
+
+  topBar: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
     paddingBottom: 8,
-  },
-  appTitle: {
-    fontSize: 28,
-    letterSpacing: -0.5,
-  },
-  subtitle: {
-    fontSize: 14,
-    marginTop: 2,
-  },
-  scrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    gap: 20,
-  },
-  languageSection: {
     gap: 8,
   },
-  label: {
-    fontSize: 12,
-    textTransform: "uppercase",
-    letterSpacing: 1,
-  },
-  languageButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 12,
-    borderWidth: 1.5,
-  },
-  languageText: {
-    fontSize: 16,
-  },
-  languagePicker: {
-    borderRadius: 12,
-    borderWidth: 1,
-    overflow: "hidden",
-  },
-  languageOption: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  languageOptionText: {
-    fontSize: 15,
-  },
-  imageContainer: {
-    borderRadius: 20,
-    overflow: "hidden",
-  },
-  imageWrapper: {
-    position: "relative",
-    borderRadius: 20,
-    overflow: "hidden",
-  },
-  previewImage: {
-    width: "100%",
-    height: 260,
-    borderRadius: 20,
-  },
-  scanningOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(244, 247, 249, 0.85)",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 12,
-    borderRadius: 20,
-  },
-  scanningText: {
-    fontSize: 16,
-  },
-  resetButton: {
-    position: "absolute",
-    top: 12,
-    right: 12,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    borderRadius: 20,
-  },
-  placeholder: {
-    height: 220,
-    borderRadius: 20,
-    borderWidth: 2,
-    borderStyle: "dashed",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 12,
-  },
-  scanIcon: {
-    opacity: 0.7,
-  },
-  placeholderText: {
-    fontSize: 14,
-  },
-  resultCard: {
-    borderRadius: 16,
-    borderWidth: 1.5,
-    padding: 20,
-    gap: 16,
-  },
-  resultHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  resultItem: {
-    fontSize: 22,
-  },
-  translationRow: {
+  topIconButton: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    marginTop: 4,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 22,
   },
-  translationArrow: {
-    fontSize: 14,
+  topIconText: { color: "#FFFFFF", fontSize: 13 },
+  brandPill: {
+    backgroundColor: "rgba(0,0,0,0.45)",
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 22,
   },
-  translatedWord: {
-    fontSize: 20,
-  },
-  successBadge: {
-    width: 36,
-    height: 36,
+  brandText: { color: "#FFFFFF", fontSize: 13, letterSpacing: 0.3 },
+
+  hintWrap: { position: "absolute", left: 0, right: 0, alignItems: "center" },
+  hintPill: {
+    backgroundColor: "rgba(0,0,0,0.55)",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     borderRadius: 18,
+  },
+  hintText: { color: "#FFFFFF", fontSize: 13 },
+
+  bottomBar: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 32,
+    paddingTop: 20,
+  },
+  sideButton: { alignItems: "center", gap: 4, width: 64 },
+  sideButtonText: { color: "#FFFFFF", fontSize: 11 },
+  captureWrap: { alignItems: "center", justifyContent: "center" },
+  captureOuter: {
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+    borderWidth: 4,
+    borderColor: "rgba(255,255,255,0.85)",
+    padding: 4,
     alignItems: "center",
     justifyContent: "center",
   },
-  startButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    paddingVertical: 14,
-    borderRadius: 12,
-  },
-  startButtonText: {
-    fontSize: 16,
-    color: "#FFFFFF",
-  },
-  actionButtons: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  actionBtn: {
+  captureInner: {
     flex: 1,
-    flexDirection: "row",
+    width: "100%",
+    borderRadius: 36,
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
-    paddingVertical: 16,
-    borderRadius: 16,
   },
-  secondaryBtn: {
-    borderWidth: 1,
+
+  // Result screen
+  resultHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingBottom: 8,
   },
-  actionBtnText: {
-    fontSize: 15,
-    color: "#FFFFFF",
+  iconButton: { width: 40, height: 40, alignItems: "center", justifyContent: "center" },
+  resultHeaderTitle: { flex: 1, textAlign: "center", fontSize: 16 },
+  resultScroll: { paddingHorizontal: 20, paddingTop: 8, gap: 16 },
+  resultCardNew: {
+    borderRadius: 22,
+    overflow: "hidden",
+    shadowColor: "#1A1B2E",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.06,
+    shadowRadius: 18,
+    elevation: 3,
   },
-  loadingRow: {
+  resultImage: { width: "100%", height: 240, backgroundColor: "#F0F0F5" },
+  resultBody: { padding: 20, gap: 4 },
+  resultTitleRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  resultEnglish: { fontSize: 24 },
+  speakerDot: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  resultTranslation: { fontSize: 22, marginTop: 6 },
+  resultLanguage: { fontSize: 13, marginTop: 2 },
+  exampleBox: {
+    marginTop: 16,
+    borderRadius: 14,
+    padding: 14,
+    gap: 6,
+  },
+  exampleLabel: { fontSize: 11, textTransform: "uppercase", letterSpacing: 1 },
+  exampleText: { fontSize: 14, lineHeight: 20 },
+
+  primaryButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 10,
+    paddingVertical: 16,
+    borderRadius: 16,
   },
-  loadingText: {
-    fontSize: 14,
+  primaryButtonText: { color: "#FFFFFF", fontSize: 16 },
+  linkButton: { alignItems: "center", paddingVertical: 8 },
+  linkButtonText: { fontSize: 14 },
+
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 24,
   },
-  scanOverlay: {
-    backgroundColor: "rgba(26, 155, 138, 0.12)",
+  modalCard: {
+    width: "100%",
+    maxWidth: 360,
+    borderRadius: 20,
+    padding: 16,
+    gap: 8,
   },
-  scanBorder: {
-    borderColor: "#1A9B8A",
+  modalTitle: { fontSize: 18, paddingHorizontal: 8, paddingTop: 4, paddingBottom: 8 },
+  langOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 14,
+    paddingVertical: 13,
+    borderRadius: 12,
   },
+  langOptionText: { fontSize: 15 },
 });
