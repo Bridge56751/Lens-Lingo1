@@ -14,6 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useListOpenaiConversations } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
+import { usePreferences } from "@/hooks/usePreferences";
 
 type Conversation = {
   id: number;
@@ -113,6 +114,7 @@ function ConversationRow({ item }: { item: Conversation }) {
 export default function HomeScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const { prefs } = usePreferences();
   const { data: conversations } = useListOpenaiConversations();
 
   const list = (conversations ?? []) as Conversation[];
@@ -157,7 +159,7 @@ export default function HomeScreen() {
           <View style={{ flex: 1 }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
               <Text style={[styles.greeting, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-                Hello!
+                Hello, {prefs.displayName}!
               </Text>
               <Text style={styles.wave}>👋</Text>
             </View>
@@ -177,9 +179,16 @@ export default function HomeScreen() {
                 </Text>
               </View>
             </View>
-            <View style={[styles.avatar, { borderColor: colors.primary }]}>
+            <TouchableOpacity
+              style={[styles.avatar, { borderColor: colors.primary }]}
+              onPress={() => {
+                Haptics.selectionAsync();
+                router.push("/settings");
+              }}
+              activeOpacity={0.7}
+            >
               <Ionicons name="person" size={20} color={colors.primary} />
-            </View>
+            </TouchableOpacity>
           </View>
         </View>
 

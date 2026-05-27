@@ -27,21 +27,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColors";
-
-const LANGUAGES = [
-  "Spanish",
-  "French",
-  "German",
-  "Italian",
-  "Portuguese",
-  "Japanese",
-  "Chinese",
-  "Korean",
-  "Arabic",
-  "Russian",
-  "Hindi",
-  "Dutch",
-];
+import { usePreferences, LANGUAGES, type Language } from "@/hooks/usePreferences";
 
 function CornerBrackets({ color }: { color: string }) {
   return (
@@ -59,7 +45,8 @@ export default function ScanScreen() {
   const insets = useSafeAreaInsets();
   const cameraRef = useRef<CameraView>(null);
   const [permission, requestPermission] = useCameraPermissions();
-  const [selectedLanguage, setSelectedLanguage] = useState("Spanish");
+  const { prefs, update } = usePreferences();
+  const selectedLanguage = prefs.targetLanguage;
   const [showLanguagePicker, setShowLanguagePicker] = useState(false);
   const [scannedImage, setScannedImage] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
@@ -406,7 +393,7 @@ export default function ScanScreen() {
                       active && { backgroundColor: colors.primarySoft },
                     ]}
                     onPress={() => {
-                      setSelectedLanguage(lang);
+                      update("targetLanguage", lang as Language);
                       setShowLanguagePicker(false);
                       Haptics.selectionAsync();
                     }}
