@@ -57,6 +57,6 @@
   },
   "dependencies": {
     "expo-camera": "^17.0.10",
-    "expo-speech": "^56.0.3"
+    "expo-speech": "~14.0.8"
   }
 }
