@@ -49,6 +49,7 @@ export default function AlphabetScreen() {
   const [completed, setCompleted] = useState<Record<string, Set<number>>>({});
   const fade = useRef(new Animated.Value(1)).current;
   const scale = useRef(new Animated.Value(1)).current;
+  const exampleScale = useRef(new Animated.Value(1)).current;
 
   const script = scripts[scriptIndex];
   const letters = script?.letters ?? [];
@@ -71,11 +72,12 @@ export default function AlphabetScreen() {
     });
   };
 
-  const speak = (text: string) => {
+  const speak = (text: string, which: "letter" | "example" = "letter") => {
     Haptics.selectionAsync();
+    const target = which === "example" ? exampleScale : scale;
     Animated.sequence([
-      Animated.timing(scale, { toValue: 1.08, duration: 120, useNativeDriver: true }),
-      Animated.timing(scale, { toValue: 1, duration: 180, useNativeDriver: true }),
+      Animated.timing(target, { toValue: 1.08, duration: 120, useNativeDriver: true }),
+      Animated.timing(target, { toValue: 1, duration: 180, useNativeDriver: true }),
     ]).start();
     const locale = SPEECH_LOCALES[prefs.targetLanguage] ?? "en-US";
     if (Platform.OS === "web") {
@@ -301,14 +303,16 @@ export default function AlphabetScreen() {
             </Animated.View>
 
             {/* Example */}
-            <View style={[styles.exampleCard, { backgroundColor: colors.card }]}>
+            <Animated.View
+              style={[styles.exampleCard, { backgroundColor: colors.card, transform: [{ scale: exampleScale }] }]}
+            >
               <Text style={[styles.exampleLabel, { color: colors.mutedForeground, fontFamily: "Inter_600SemiBold" }]}>
                 {t("alphabet.example")}
               </Text>
               <TouchableOpacity
                 style={styles.exampleRow}
                 activeOpacity={0.7}
-                onPress={() => current && speak(current.example.replace(/\s*\(.*\)/, ""))}
+                onPress={() => current && speak(current.example.replace(/\s*\(.*\)/, ""), "example")}
               >
                 <View style={{ flex: 1 }}>
                   <Text
@@ -333,7 +337,7 @@ export default function AlphabetScreen() {
                   <Ionicons name="volume-medium" size={18} color={colors.primary} />
                 </View>
               </TouchableOpacity>
-            </View>
+            </Animated.View>
           </Animated.View>
         )}
       </ScrollView>
