@@ -14,7 +14,22 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useListOpenaiConversations } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
-import { usePreferences } from "@/hooks/usePreferences";
+import { usePreferences, type Language } from "@/hooks/usePreferences";
+
+const HELLOS: Record<Language, string> = {
+  Spanish: "hola",
+  French: "bonjour",
+  German: "hallo",
+  Italian: "ciao",
+  Portuguese: "olá",
+  Japanese: "こんにちは",
+  Chinese: "你好",
+  Korean: "안녕",
+  Arabic: "مرحبا",
+  Russian: "привет",
+  Hindi: "नमस्ते",
+  Dutch: "hallo",
+};
 
 type Conversation = {
   id: number;
@@ -232,7 +247,7 @@ export default function HomeScreen() {
             </View>
             <View style={[styles.heroChip, { backgroundColor: "#FFFFFF" }]}>
               <Text style={[styles.heroChipText, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-                hola
+                {HELLOS[prefs.targetLanguage] ?? "hello"}
               </Text>
               <Ionicons name="volume-medium" size={14} color={colors.primary} />
             </View>
