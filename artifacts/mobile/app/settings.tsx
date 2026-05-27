@@ -266,13 +266,33 @@ export default function SettingsScreen() {
                     key={lang}
                     style={[styles.langOption, active && { backgroundColor: colors.primarySoft }]}
                     onPress={() => {
-                      if (picker === "native") {
-                        update("nativeLanguage", lang);
-                      } else {
-                        update("targetLanguage", lang as Language);
+                      const isNative = picker === "native";
+                      const other = isNative ? prefs.targetLanguage : prefs.nativeLanguage;
+                      const apply = () => {
+                        if (isNative) {
+                          update("nativeLanguage", lang);
+                        } else {
+                          update("targetLanguage", lang as Language);
+                        }
+                        setPicker(null);
+                        Haptics.selectionAsync();
+                      };
+                      if (lang === other) {
+                        Alert.alert(
+                          t("settings.sameLangTitle"),
+                          t("settings.sameLangBody", { lang }),
+                          [
+                            { text: t("history.cancel"), style: "cancel" },
+                            {
+                              text: t("settings.continueAnyway"),
+                              style: "destructive",
+                              onPress: apply,
+                            },
+                          ],
+                        );
+                        return;
                       }
-                      setPicker(null);
-                      Haptics.selectionAsync();
+                      apply();
                     }}
                     activeOpacity={0.7}
                   >

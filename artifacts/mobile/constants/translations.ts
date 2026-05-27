@@ -60,6 +60,9 @@ export type TKey =
   | "settings.chooseNative"
   | "settings.helpAlertTitle"
   | "settings.helpAlertBody"
+  | "settings.sameLangTitle"
+  | "settings.sameLangBody"
+  | "settings.continueAnyway"
   | "vocab.title"
   | "vocab.all"
   | "vocab.empty"
@@ -162,6 +165,9 @@ const en: Record<TKey, string> = {
   "settings.chooseNative": "Choose your language",
   "settings.helpAlertTitle": "Help",
   "settings.helpAlertBody": "Send us a note at hello@linguascan.app",
+  "settings.sameLangTitle": "Same language?",
+  "settings.sameLangBody": "You picked {lang} as both the language you speak and the one you\u2019re learning. You probably won\u2019t learn much that way.",
+  "settings.continueAnyway": "Use it anyway",
   "vocab.title": "Vocabulary",
   "vocab.all": "All",
   "vocab.empty": "No words yet",
