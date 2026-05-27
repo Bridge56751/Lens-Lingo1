@@ -77,12 +77,37 @@ export default function AlphabetScreen() {
       Animated.timing(scale, { toValue: 1.08, duration: 120, useNativeDriver: true }),
       Animated.timing(scale, { toValue: 1, duration: 180, useNativeDriver: true }),
     ]).start();
+    const locale = SPEECH_LOCALES[prefs.targetLanguage] ?? "en-US";
+    if (Platform.OS === "web") {
+      try {
+        const synth = (globalThis as { speechSynthesis?: SpeechSynthesis }).speechSynthesis;
+        const SU = (globalThis as { SpeechSynthesisUtterance?: typeof SpeechSynthesisUtterance })
+          .SpeechSynthesisUtterance;
+        if (!synth || !SU) {
+          console.warn("[speak] SpeechSynthesis not available in this browser");
+          return;
+        }
+        synth.cancel();
+        const utter = new SU(text);
+        utter.lang = locale;
+        utter.rate = 0.85;
+        const voices = synth.getVoices();
+        const langPrefix = locale.split("-")[0];
+        const match =
+          voices.find((v) => v.lang === locale) ||
+          voices.find((v) => v.lang.toLowerCase().startsWith(langPrefix)) ||
+          voices[0];
+        if (match) utter.voice = match;
+        utter.onerror = (e) => console.warn("[speak] error", e);
+        synth.speak(utter);
+      } catch (err) {
+        console.warn("[speak] failed", err);
+      }
+      return;
+    }
     try {
       Speech.stop();
-      Speech.speak(text, {
-        language: SPEECH_LOCALES[prefs.targetLanguage] ?? "en-US",
-        rate: 0.85,
-      });
+      Speech.speak(text, { language: locale, rate: 0.85 });
     } catch {
       // ignore — Speech is unavailable on some web browsers
     }
