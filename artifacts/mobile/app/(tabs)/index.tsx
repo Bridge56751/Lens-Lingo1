@@ -18,6 +18,7 @@ import { usePreferences, type Language } from "@/hooks/usePreferences";
 import { useT } from "@/hooks/useT";
 
 const HELLOS: Record<Language, string> = {
+  English: "hello",
   Spanish: "hola",
   French: "bonjour",
   German: "hallo",

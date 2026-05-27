@@ -283,6 +283,8 @@ export default function SettingsScreen() {
                           {
                             color: active ? colors.primary : colors.foreground,
                             fontFamily: active ? "Inter_600SemiBold" : "Inter_500Medium",
+                            textAlign: "left",
+                            writingDirection: "ltr",
                           },
                         ]}
                       >
@@ -292,7 +294,12 @@ export default function SettingsScreen() {
                         <Text
                           style={[
                             styles.langOptionSub,
-                            { color: colors.mutedForeground, fontFamily: "Inter_400Regular" },
+                            {
+                              color: colors.mutedForeground,
+                              fontFamily: "Inter_400Regular",
+                              textAlign: "left",
+                              writingDirection: "ltr",
+                            },
                           ]}
                         >
                           {lang}
