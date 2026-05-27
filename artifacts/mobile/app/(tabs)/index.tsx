@@ -1,636 +1,509 @@
-import React, { useState, useRef } from "react";
+import React, { useMemo } from "react";
 import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
-  ActivityIndicator,
-  Image,
   ScrollView,
+  TouchableOpacity,
   Platform,
-  Alert,
-  Modal,
-  Pressable,
+  Image,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import * as ImagePicker from "expo-image-picker";
-import * as Haptics from "expo-haptics";
-import { CameraView, useCameraPermissions } from "expo-camera";
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withRepeat,
-  withTiming,
-  withSequence,
-  Easing,
-} from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
+import { useListOpenaiConversations } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 
-const LANGUAGES = [
-  "Spanish",
-  "French",
-  "German",
-  "Italian",
-  "Portuguese",
-  "Japanese",
-  "Chinese",
-  "Korean",
-  "Arabic",
-  "Russian",
-  "Hindi",
-  "Dutch",
-];
+type Conversation = {
+  id: number;
+  title: string;
+  createdAt: string;
+};
 
-function CornerBrackets({ color }: { color: string }) {
+function CornerBrackets({ color, size = 22 }: { color: string; size?: number }) {
+  const b = { borderColor: color, width: size, height: size, position: "absolute" as const };
   return (
-    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-      <View style={[styles.corner, styles.cornerTL, { borderColor: color }]} />
-      <View style={[styles.corner, styles.cornerTR, { borderColor: color }]} />
-      <View style={[styles.corner, styles.cornerBL, { borderColor: color }]} />
-      <View style={[styles.corner, styles.cornerBR, { borderColor: color }]} />
+    <>
+      <View style={[b, { top: 0, left: 0, borderTopWidth: 2.5, borderLeftWidth: 2.5, borderTopLeftRadius: 6 }]} />
+      <View style={[b, { top: 0, right: 0, borderTopWidth: 2.5, borderRightWidth: 2.5, borderTopRightRadius: 6 }]} />
+      <View style={[b, { bottom: 0, left: 0, borderBottomWidth: 2.5, borderLeftWidth: 2.5, borderBottomLeftRadius: 6 }]} />
+      <View style={[b, { bottom: 0, right: 0, borderBottomWidth: 2.5, borderRightWidth: 2.5, borderBottomRightRadius: 6 }]} />
+    </>
+  );
+}
+
+function StatTile({
+  icon,
+  iconColor,
+  iconBg,
+  title,
+  subtitle,
+  progress,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  iconColor: string;
+  iconBg: string;
+  title: string;
+  subtitle: string;
+  progress?: number;
+}) {
+  const colors = useColors();
+  return (
+    <View style={[styles.tile, { backgroundColor: colors.card }]}>
+      <View style={[styles.tileIcon, { backgroundColor: iconBg }]}>
+        <Ionicons name={icon} size={20} color={iconColor} />
+      </View>
+      <Text style={[styles.tileTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
+        {title}
+      </Text>
+      <Text style={[styles.tileSubtitle, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+        {subtitle}
+      </Text>
+      {progress !== undefined && (
+        <View style={[styles.progressTrack, { backgroundColor: colors.muted }]}>
+          <View
+            style={[
+              styles.progressFill,
+              { width: `${Math.min(100, progress * 100)}%`, backgroundColor: "#22C55E" },
+            ]}
+          />
+        </View>
+      )}
     </View>
   );
 }
 
-export default function ScanScreen() {
+function ConversationRow({ item }: { item: Conversation }) {
+  const colors = useColors();
+  const parts = item.title.split(" • ");
+  const itemName = parts[0] ?? item.title;
+  const language = parts[1] ?? "";
+
+  return (
+    <TouchableOpacity
+      style={[styles.convoRow, { backgroundColor: colors.card }]}
+      onPress={() => router.push(`/conversation/${item.id}`)}
+      activeOpacity={0.7}
+    >
+      <View style={[styles.convoThumb, { backgroundColor: colors.primarySoft }]}>
+        <Ionicons name="cube" size={22} color={colors.primary} />
+      </View>
+      <View style={styles.convoBody}>
+        <Text style={[styles.convoName, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
+          {itemName}
+        </Text>
+        <Text
+          style={[styles.convoSub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}
+          numberOfLines={1}
+        >
+          {language ? `Practicing ${language}` : "Tap to continue"}
+        </Text>
+      </View>
+      <View style={[styles.continueBtn, { backgroundColor: colors.primarySoft }]}>
+        <Ionicons name="chatbubble" size={12} color={colors.primary} />
+        <Text style={[styles.continueText, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
+          Continue
+        </Text>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+export default function HomeScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const cameraRef = useRef<CameraView>(null);
-  const [permission, requestPermission] = useCameraPermissions();
-  const [selectedLanguage, setSelectedLanguage] = useState("Spanish");
-  const [showLanguagePicker, setShowLanguagePicker] = useState(false);
-  const [scannedImage, setScannedImage] = useState<string | null>(null);
-  const [isScanning, setIsScanning] = useState(false);
-  const [scanResult, setScanResult] = useState<{
-    itemName: string;
-    itemNameTranslated: string;
-    conversationId: number;
-    initialMessage: string;
-  } | null>(null);
+  const { data: conversations } = useListOpenaiConversations();
 
-  const pulseAnim = useSharedValue(1);
+  const list = (conversations ?? []) as Conversation[];
 
-  const startScanAnimation = () => {
-    pulseAnim.value = withRepeat(
-      withSequence(
-        withTiming(1.04, { duration: 600, easing: Easing.inOut(Easing.ease) }),
-        withTiming(1, { duration: 600, easing: Easing.inOut(Easing.ease) }),
-      ),
-      -1,
-      false,
+  const stats = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayCount = list.filter((c) => new Date(c.createdAt) >= today).length;
+
+    const days = new Set(
+      list.map((c) => {
+        const d = new Date(c.createdAt);
+        return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+      }),
     );
-  };
 
-  const stopScanAnimation = () => {
-    pulseAnim.value = withTiming(1, { duration: 300 });
-  };
-
-  const pulseStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: pulseAnim.value }],
-  }));
-
-  const handleCapture = async () => {
-    if (!cameraRef.current || isScanning) return;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    try {
-      const photo = await cameraRef.current.takePictureAsync({
-        quality: 0.7,
-        base64: true,
-        skipProcessing: true,
-      });
-      if (!photo?.base64) return;
-      setScannedImage(photo.uri);
-      setScanResult(null);
-      await scanItem(photo.base64);
-    } catch (err) {
-      Alert.alert("Capture failed", "Could not take photo. Try again.");
-    }
-  };
-
-  const handleGallery = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images"],
-      quality: 0.7,
-      base64: true,
-      allowsEditing: true,
-      aspect: [4, 3],
-    });
-    if (!result.canceled && result.assets[0]?.base64) {
-      setScannedImage(result.assets[0].uri);
-      setScanResult(null);
-      await scanItem(result.assets[0].base64);
-    }
-  };
-
-  const scanItem = async (imageBase64: string) => {
-    setIsScanning(true);
-    startScanAnimation();
-
-    try {
-      const baseUrl = process.env.EXPO_PUBLIC_DOMAIN
-        ? `https://${process.env.EXPO_PUBLIC_DOMAIN}`
-        : "";
-
-      const response = await fetch(`${baseUrl}/api/scan`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          imageBase64,
-          targetLanguage: selectedLanguage,
-          nativeLanguage: "English",
-        }),
-      });
-
-      if (!response.ok) throw new Error(`Scan failed: ${response.status}`);
-
-      const data = (await response.json()) as {
-        conversationId: number;
-        itemName: string;
-        itemNameTranslated: string;
-        initialMessage: string;
-      };
-
-      setScanResult(data);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    } catch (err) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Alert.alert("Scan failed", "Could not identify the item. Please try again.");
-      setScannedImage(null);
-    } finally {
-      setIsScanning(false);
-      stopScanAnimation();
-    }
-  };
-
-  const openConversation = () => {
-    if (!scanResult) return;
-    router.push(`/conversation/${scanResult.conversationId}`);
-  };
-
-  const reset = () => {
-    setScannedImage(null);
-    setScanResult(null);
-  };
+    return {
+      streak: Math.max(1, days.size),
+      totalConvos: list.length,
+      vocab: list.length * 5,
+      dailyDone: todayCount,
+      dailyGoal: 10,
+    };
+  }, [list]);
 
   const topPadding = Platform.OS === "web" ? 16 : insets.top;
   const bottomPadding = Platform.OS === "web" ? 34 + 84 : insets.bottom + 90;
 
-  // RESULT SCREEN
-  if (scannedImage && scanResult && !isScanning) {
-    return (
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <View style={[styles.resultHeader, { paddingTop: topPadding + 8 }]}>
-          <TouchableOpacity onPress={reset} style={styles.iconButton} activeOpacity={0.7}>
-            <Ionicons name="chevron-back" size={26} color={colors.foreground} />
-          </TouchableOpacity>
-          <Text style={[styles.resultHeaderTitle, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
-            Identified
-          </Text>
-          <View style={{ width: 40 }} />
-        </View>
+  const goScan = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.push("/scan");
+  };
 
-        <ScrollView
-          contentContainerStyle={[styles.resultScroll, { paddingBottom: bottomPadding + 24 }]}
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={[styles.resultCardNew, { backgroundColor: colors.card }]}>
-            <Image source={{ uri: scannedImage }} style={styles.resultImage} />
-            <View style={styles.resultBody}>
-              <View style={styles.resultTitleRow}>
-                <Text style={[styles.resultEnglish, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-                  {scanResult.itemName}
-                </Text>
-                <View style={[styles.speakerDot, { backgroundColor: colors.primarySoft }]}>
-                  <Ionicons name="volume-medium" size={16} color={colors.primary} />
-                </View>
-              </View>
-              <Text style={[styles.resultTranslation, { color: colors.primary, fontFamily: "Inter_700Bold" }]}>
-                {scanResult.itemNameTranslated}
+  return (
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <ScrollView
+        contentContainerStyle={[styles.scroll, { paddingTop: topPadding + 12, paddingBottom: bottomPadding }]}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Greeting row */}
+        <View style={styles.greetingRow}>
+          <View style={{ flex: 1 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <Text style={[styles.greeting, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
+                Hello!
               </Text>
-              <Text style={[styles.resultLanguage, { color: colors.mutedForeground, fontFamily: "Inter_500Medium" }]}>
-                {selectedLanguage}
-              </Text>
-
-              <View style={[styles.exampleBox, { backgroundColor: colors.primarySoft }]}>
-                <Text style={[styles.exampleLabel, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
-                  Tutor says
+              <Text style={styles.wave}>👋</Text>
+            </View>
+            <Text style={[styles.greetingSub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+              Scan something around you{"\n"}and start a real conversation.
+            </Text>
+          </View>
+          <View style={styles.greetingRight}>
+            <View style={[styles.streakPill, { backgroundColor: "#FFF1E6" }]}>
+              <Text style={{ fontSize: 14 }}>🔥</Text>
+              <View>
+                <Text style={[styles.streakNum, { color: "#1A1B2E", fontFamily: "Inter_700Bold" }]}>
+                  {stats.streak}
                 </Text>
-                <Text style={[styles.exampleText, { color: colors.foreground, fontFamily: "Inter_400Regular" }]}>
-                  {scanResult.initialMessage}
+                <Text style={[styles.streakLabel, { color: "#7A7B8E", fontFamily: "Inter_500Medium" }]}>
+                  Day streak
                 </Text>
               </View>
             </View>
+            <View style={[styles.avatar, { borderColor: colors.primary }]}>
+              <Ionicons name="person" size={20} color={colors.primary} />
+            </View>
+          </View>
+        </View>
+
+        {/* Hero card */}
+        <View style={[styles.hero, { backgroundColor: colors.primarySoft }]}>
+          <View style={styles.heroLeft}>
+            <Text style={[styles.heroTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
+              Scan. Learn.{"\n"}Speak.
+            </Text>
+            <Text style={[styles.heroBody, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+              Scan any object to learn the words and start a conversation about it.
+            </Text>
+            <TouchableOpacity
+              style={[styles.heroButton, { backgroundColor: colors.primary }]}
+              onPress={goScan}
+              activeOpacity={0.85}
+            >
+              <Ionicons name="scan" size={16} color="#FFFFFF" />
+              <Text style={[styles.heroButtonText, { fontFamily: "Inter_600SemiBold" }]}>
+                Scan an Item
+              </Text>
+            </TouchableOpacity>
           </View>
 
-          <TouchableOpacity
-            style={[styles.primaryButton, { backgroundColor: colors.primary }]}
-            onPress={openConversation}
-            activeOpacity={0.85}
-          >
-            <Ionicons name="chatbubbles" size={20} color="#FFFFFF" />
-            <Text style={[styles.primaryButtonText, { fontFamily: "Inter_600SemiBold" }]}>
-              Start Conversation
-            </Text>
-          </TouchableOpacity>
+          <View style={styles.heroRight}>
+            <View style={styles.heroBracket}>
+              <CornerBrackets color="#FFFFFF" size={20} />
+              <View style={[styles.heroIconCircle, { backgroundColor: "#FFFFFF" }]}>
+                <Ionicons name="cube" size={48} color={colors.primary} />
+              </View>
+            </View>
+            <View style={[styles.heroChip, { backgroundColor: "#FFFFFF" }]}>
+              <Text style={[styles.heroChipText, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
+                hola
+              </Text>
+              <Ionicons name="volume-medium" size={14} color={colors.primary} />
+            </View>
+          </View>
+        </View>
 
-          <TouchableOpacity onPress={reset} activeOpacity={0.7} style={styles.linkButton}>
-            <Text style={[styles.linkButtonText, { color: colors.mutedForeground, fontFamily: "Inter_500Medium" }]}>
-              Scan something else
-            </Text>
-          </TouchableOpacity>
-        </ScrollView>
-      </View>
-    );
-  }
+        {/* Stats grid */}
+        <View style={styles.statsRow}>
+          <StatTile
+            icon="chatbubbles"
+            iconColor={colors.primary}
+            iconBg={colors.primarySoft}
+            title="AI Chats"
+            subtitle={`${stats.totalConvos} sessions`}
+          />
+          <StatTile
+            icon="book"
+            iconColor="#F59E0B"
+            iconBg="#FEF3C7"
+            title="Vocabulary"
+            subtitle={`${stats.vocab} words`}
+          />
+        </View>
+        <View style={styles.statsRow}>
+          <StatTile
+            icon="checkmark-circle"
+            iconColor="#22C55E"
+            iconBg="#DCFCE7"
+            title="Daily Goal"
+            subtitle={`${stats.dailyDone} / ${stats.dailyGoal} today`}
+            progress={stats.dailyDone / stats.dailyGoal}
+          />
+          <StatTile
+            icon="trophy"
+            iconColor="#3B82F6"
+            iconBg="#DBEAFE"
+            title="Challenges"
+            subtitle="Earn badges"
+          />
+        </View>
 
-  // CAMERA / SCAN SCREEN
-  const hasCameraPermission = permission?.granted;
-  const canUseCamera = Platform.OS !== "web" && hasCameraPermission;
+        {/* Continue your conversations */}
+        <View style={styles.sectionHeader}>
+          <Text style={[styles.sectionTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
+            Continue your conversations
+          </Text>
+          {list.length > 0 && (
+            <TouchableOpacity onPress={() => router.push("/history")} activeOpacity={0.7}>
+              <Text style={[styles.seeAll, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
+                See all
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
 
-  return (
-    <View style={[styles.container, { backgroundColor: "#0A0A12" }]}>
-      {/* Viewfinder */}
-      <View style={styles.viewfinder}>
-        {canUseCamera && !scannedImage ? (
-          <CameraView ref={cameraRef} style={StyleSheet.absoluteFill} facing="back" />
-        ) : scannedImage ? (
-          <Image source={{ uri: scannedImage }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+        {list.length === 0 ? (
+          <View style={[styles.emptyCard, { backgroundColor: colors.card }]}>
+            <View style={[styles.emptyIcon, { backgroundColor: colors.primarySoft }]}>
+              <Ionicons name="scan" size={26} color={colors.primary} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.emptyTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
+                No scans yet
+              </Text>
+              <Text style={[styles.emptyBody, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                Tap Scan an Item to get started.
+              </Text>
+            </View>
+          </View>
         ) : (
-          <View style={[StyleSheet.absoluteFill, styles.cameraPlaceholder]}>
-            <Ionicons name="camera-outline" size={64} color="rgba(255,255,255,0.4)" />
-            <Text style={[styles.placeholderText, { fontFamily: "Inter_500Medium" }]}>
-              {Platform.OS === "web" ? "Camera preview unavailable on web" : "Camera access needed"}
-            </Text>
-            {Platform.OS !== "web" && !hasCameraPermission && (
-              <TouchableOpacity
-                style={[styles.permissionButton, { backgroundColor: colors.primary }]}
-                onPress={requestPermission}
-                activeOpacity={0.8}
-              >
-                <Text style={[styles.permissionButtonText, { fontFamily: "Inter_600SemiBold" }]}>
-                  Enable Camera
-                </Text>
-              </TouchableOpacity>
-            )}
+          <View style={{ gap: 10 }}>
+            {list.slice(0, 3).map((item) => (
+              <ConversationRow key={item.id} item={item} />
+            ))}
           </View>
         )}
 
-        {/* Dim overlay around frame */}
-        <View pointerEvents="none" style={styles.dimOverlay}>
-          <View style={styles.dimSide} />
-          <View style={styles.dimMiddle}>
-            <View style={styles.dimSide} />
-            <Animated.View style={[styles.scanFrame, pulseStyle]}>
-              <CornerBrackets color="#FFFFFF" />
-              {isScanning && (
-                <View style={styles.scanningBadge}>
-                  <ActivityIndicator size="small" color="#FFFFFF" />
-                  <Text style={[styles.scanningBadgeText, { fontFamily: "Inter_600SemiBold" }]}>
-                    Identifying...
-                  </Text>
-                </View>
-              )}
-            </Animated.View>
-            <View style={styles.dimSide} />
+        {/* New here CTA */}
+        <View style={[styles.tourCard, { backgroundColor: colors.primarySoft }]}>
+          <View style={[styles.tourBot, { backgroundColor: colors.primary }]}>
+            <Ionicons name="sparkles" size={26} color="#FFFFFF" />
           </View>
-          <View style={styles.dimSide} />
-        </View>
-      </View>
-
-      {/* Top bar */}
-      <View style={[styles.topBar, { paddingTop: topPadding + 8 }]} pointerEvents="box-none">
-        <TouchableOpacity
-          style={styles.topIconButton}
-          onPress={() => setShowLanguagePicker(true)}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="globe-outline" size={18} color="#FFFFFF" />
-          <Text style={[styles.topIconText, { fontFamily: "Inter_600SemiBold" }]}>
-            {selectedLanguage}
-          </Text>
-          <Ionicons name="chevron-down" size={16} color="#FFFFFF" />
-        </TouchableOpacity>
-
-        <View style={{ flex: 1 }} />
-
-        <View style={styles.brandPill}>
-          <Text style={[styles.brandText, { fontFamily: "Inter_700Bold" }]}>LinguaScan</Text>
-        </View>
-      </View>
-
-      {/* Hint text */}
-      <View pointerEvents="none" style={[styles.hintWrap, { top: "38%" }]}>
-        <View style={styles.hintPill}>
-          <Text style={[styles.hintText, { fontFamily: "Inter_500Medium" }]}>
-            Point your camera at any item to scan
-          </Text>
-        </View>
-      </View>
-
-      {/* Bottom controls */}
-      <View
-        style={[
-          styles.bottomBar,
-          { paddingBottom: bottomPadding },
-        ]}
-      >
-        <TouchableOpacity
-          style={styles.sideButton}
-          onPress={() => router.push("/history")}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="time-outline" size={22} color="#FFFFFF" />
-          <Text style={[styles.sideButtonText, { fontFamily: "Inter_500Medium" }]}>
-            History
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={handleCapture}
-          activeOpacity={0.85}
-          disabled={isScanning || !canUseCamera}
-          style={styles.captureWrap}
-        >
-          <View style={[styles.captureOuter, { opacity: !canUseCamera ? 0.4 : 1 }]}>
-            <View style={[styles.captureInner, { backgroundColor: isScanning ? colors.primary : "#FFFFFF" }]}>
-              {isScanning ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
-              ) : (
-                <Ionicons name="scan" size={26} color={colors.primary} />
-              )}
-            </View>
-          </View>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.sideButton}
-          onPress={handleGallery}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="images-outline" size={22} color="#FFFFFF" />
-          <Text style={[styles.sideButtonText, { fontFamily: "Inter_500Medium" }]}>
-            Gallery
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Language picker modal */}
-      <Modal
-        visible={showLanguagePicker}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowLanguagePicker(false)}
-      >
-        <Pressable style={styles.modalBackdrop} onPress={() => setShowLanguagePicker(false)}>
-          <Pressable
-            style={[styles.modalCard, { backgroundColor: colors.card }]}
-            onPress={(e) => e.stopPropagation()}
-          >
-            <Text style={[styles.modalTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-              Choose language
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.tourTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
+              New here?
             </Text>
-            <ScrollView style={{ maxHeight: 380 }}>
-              {LANGUAGES.map((lang) => {
-                const active = lang === selectedLanguage;
-                return (
-                  <TouchableOpacity
-                    key={lang}
-                    style={[
-                      styles.langOption,
-                      active && { backgroundColor: colors.primarySoft },
-                    ]}
-                    onPress={() => {
-                      setSelectedLanguage(lang);
-                      setShowLanguagePicker(false);
-                      Haptics.selectionAsync();
-                    }}
-                    activeOpacity={0.7}
-                  >
-                    <Text
-                      style={[
-                        styles.langOptionText,
-                        {
-                          color: active ? colors.primary : colors.foreground,
-                          fontFamily: active ? "Inter_600SemiBold" : "Inter_400Regular",
-                        },
-                      ]}
-                    >
-                      {lang}
-                    </Text>
-                    {active && <Ionicons name="checkmark" size={20} color={colors.primary} />}
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-          </Pressable>
-        </Pressable>
-      </Modal>
+            <Text style={[styles.tourBody, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+              Start your first scan and let AI help you speak from day one.
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={[styles.tourBtn, { backgroundColor: "#FFFFFF" }]}
+            onPress={goScan}
+            activeOpacity={0.85}
+          >
+            <Ionicons name="play" size={12} color={colors.primary} />
+            <Text style={[styles.tourBtnText, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
+              Start
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </View>
   );
 }
 
-const FRAME_SIZE = 280;
-
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  scroll: { paddingHorizontal: 18, gap: 16 },
 
-  viewfinder: { ...StyleSheet.absoluteFillObject },
-  cameraPlaceholder: {
-    backgroundColor: "#1A1B2E",
+  greetingRow: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
+  greeting: { fontSize: 24, letterSpacing: -0.4 },
+  wave: { fontSize: 22 },
+  greetingSub: { fontSize: 13, marginTop: 4, lineHeight: 18 },
+  greetingRight: { flexDirection: "row", alignItems: "center", gap: 8 },
+  streakPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 14,
+  },
+  streakNum: { fontSize: 14, lineHeight: 16 },
+  streakLabel: { fontSize: 9, lineHeight: 11 },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 2,
     alignItems: "center",
     justifyContent: "center",
-    gap: 14,
-  },
-  placeholderText: { color: "rgba(255,255,255,0.6)", fontSize: 14 },
-  permissionButton: {
-    marginTop: 8,
-    paddingHorizontal: 22,
-    paddingVertical: 12,
-    borderRadius: 22,
-  },
-  permissionButtonText: { color: "#FFFFFF", fontSize: 14 },
-
-  dimOverlay: { ...StyleSheet.absoluteFillObject },
-  dimSide: { flex: 1, backgroundColor: "rgba(10,10,18,0.55)" },
-  dimMiddle: { flexDirection: "row", height: FRAME_SIZE },
-  scanFrame: {
-    width: FRAME_SIZE,
-    height: FRAME_SIZE,
-    alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: "#FFFFFF",
   },
 
-  corner: {
-    position: "absolute",
-    width: 36,
-    height: 36,
-    borderColor: "#FFFFFF",
+  hero: {
+    flexDirection: "row",
+    borderRadius: 24,
+    padding: 20,
+    gap: 12,
+    overflow: "hidden",
   },
-  cornerTL: { top: 0, left: 0, borderTopWidth: 3, borderLeftWidth: 3, borderTopLeftRadius: 12 },
-  cornerTR: { top: 0, right: 0, borderTopWidth: 3, borderRightWidth: 3, borderTopRightRadius: 12 },
-  cornerBL: { bottom: 0, left: 0, borderBottomWidth: 3, borderLeftWidth: 3, borderBottomLeftRadius: 12 },
-  cornerBR: { bottom: 0, right: 0, borderBottomWidth: 3, borderRightWidth: 3, borderBottomRightRadius: 12 },
-
-  scanningBadge: {
-    position: "absolute",
-    bottom: -44,
+  heroLeft: { flex: 1, gap: 10 },
+  heroTitle: { fontSize: 24, letterSpacing: -0.5, lineHeight: 28 },
+  heroBody: { fontSize: 12, lineHeight: 17 },
+  heroButton: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    backgroundColor: "rgba(124,92,255,0.95)",
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 11,
+    borderRadius: 14,
+    alignSelf: "flex-start",
+    marginTop: 4,
   },
-  scanningBadgeText: { color: "#FFFFFF", fontSize: 13 },
+  heroButtonText: { color: "#FFFFFF", fontSize: 14 },
 
-  topBar: {
+  heroRight: {
+    width: 120,
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+  },
+  heroBracket: {
+    width: 100,
+    height: 100,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  heroIconCircle: {
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  heroChip: {
     position: "absolute",
     top: 0,
-    left: 0,
-    right: 0,
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-    gap: 8,
-  },
-  topIconButton: {
+    right: -4,
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    backgroundColor: "rgba(0,0,0,0.45)",
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-    borderRadius: 22,
-  },
-  topIconText: { color: "#FFFFFF", fontSize: 13 },
-  brandPill: {
-    backgroundColor: "rgba(0,0,0,0.45)",
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-    borderRadius: 22,
-  },
-  brandText: { color: "#FFFFFF", fontSize: 13, letterSpacing: 0.3 },
-
-  hintWrap: { position: "absolute", left: 0, right: 0, alignItems: "center" },
-  hintPill: {
-    backgroundColor: "rgba(0,0,0,0.55)",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 18,
-  },
-  hintText: { color: "#FFFFFF", fontSize: 13 },
-
-  bottomBar: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 32,
-    paddingTop: 20,
-  },
-  sideButton: { alignItems: "center", gap: 4, width: 64 },
-  sideButtonText: { color: "#FFFFFF", fontSize: 11 },
-  captureWrap: { alignItems: "center", justifyContent: "center" },
-  captureOuter: {
-    width: 84,
-    height: 84,
-    borderRadius: 42,
-    borderWidth: 4,
-    borderColor: "rgba(255,255,255,0.85)",
-    padding: 4,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  captureInner: {
-    flex: 1,
-    width: "100%",
-    borderRadius: 36,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  // Result screen
-  resultHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 12,
-    paddingBottom: 8,
-  },
-  iconButton: { width: 40, height: 40, alignItems: "center", justifyContent: "center" },
-  resultHeaderTitle: { flex: 1, textAlign: "center", fontSize: 16 },
-  resultScroll: { paddingHorizontal: 20, paddingTop: 8, gap: 16 },
-  resultCardNew: {
-    borderRadius: 22,
-    overflow: "hidden",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 14,
     shadowColor: "#1A1B2E",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.06,
-    shadowRadius: 18,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 2,
   },
-  resultImage: { width: "100%", height: 240, backgroundColor: "#F0F0F5" },
-  resultBody: { padding: 20, gap: 4 },
-  resultTitleRow: { flexDirection: "row", alignItems: "center", gap: 10 },
-  resultEnglish: { fontSize: 24 },
-  speakerDot: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  resultTranslation: { fontSize: 22, marginTop: 6 },
-  resultLanguage: { fontSize: 13, marginTop: 2 },
-  exampleBox: {
-    marginTop: 16,
-    borderRadius: 14,
-    padding: 14,
-    gap: 6,
-  },
-  exampleLabel: { fontSize: 11, textTransform: "uppercase", letterSpacing: 1 },
-  exampleText: { fontSize: 14, lineHeight: 20 },
+  heroChipText: { fontSize: 13 },
 
-  primaryButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 10,
-    paddingVertical: 16,
-    borderRadius: 16,
-  },
-  primaryButtonText: { color: "#FFFFFF", fontSize: 16 },
-  linkButton: { alignItems: "center", paddingVertical: 8 },
-  linkButtonText: { fontSize: 14 },
-
-  modalBackdrop: {
+  statsRow: { flexDirection: "row", gap: 10 },
+  tile: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 24,
-  },
-  modalCard: {
-    width: "100%",
-    maxWidth: 360,
-    borderRadius: 20,
-    padding: 16,
+    borderRadius: 18,
+    padding: 14,
     gap: 8,
   },
-  modalTitle: { fontSize: 18, paddingHorizontal: 8, paddingTop: 4, paddingBottom: 8 },
-  langOption: {
+  tileIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 11,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  tileTitle: { fontSize: 14 },
+  tileSubtitle: { fontSize: 11, lineHeight: 14 },
+  progressTrack: { height: 5, borderRadius: 3, overflow: "hidden", marginTop: 2 },
+  progressFill: { height: "100%", borderRadius: 3 },
+
+  sectionHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 14,
-    paddingVertical: 13,
+    marginTop: 4,
+  },
+  sectionTitle: { fontSize: 16 },
+  seeAll: { fontSize: 13 },
+
+  convoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 12,
+    borderRadius: 16,
+    gap: 12,
+  },
+  convoThumb: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  convoBody: { flex: 1, gap: 3 },
+  convoName: { fontSize: 14 },
+  convoSub: { fontSize: 12 },
+  continueBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
     borderRadius: 12,
   },
-  langOptionText: { fontSize: 15 },
+  continueText: { fontSize: 11 },
+
+  emptyCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    borderRadius: 16,
+    gap: 12,
+  },
+  emptyIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emptyTitle: { fontSize: 15 },
+  emptyBody: { fontSize: 12, marginTop: 2 },
+
+  tourCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 14,
+    borderRadius: 18,
+    gap: 12,
+    marginTop: 4,
+  },
+  tourBot: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  tourTitle: { fontSize: 14 },
+  tourBody: { fontSize: 11, lineHeight: 15, marginTop: 2 },
+  tourBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+  },
+  tourBtnText: { fontSize: 12 },
 });
