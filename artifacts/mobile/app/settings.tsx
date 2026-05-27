@@ -278,18 +278,24 @@ export default function SettingsScreen() {
                         Haptics.selectionAsync();
                       };
                       if (lang === other) {
-                        Alert.alert(
-                          t("settings.sameLangTitle"),
-                          t("settings.sameLangBody", { lang }),
-                          [
+                        const title = t("settings.sameLangTitle");
+                        const body = t("settings.sameLangBody", { lang });
+                        if (Platform.OS === "web") {
+                          if (typeof window !== "undefined" && window.confirm(`${title}\n\n${body}`)) {
+                            apply();
+                          } else {
+                            setPicker(null);
+                          }
+                        } else {
+                          Alert.alert(title, body, [
                             { text: t("history.cancel"), style: "cancel" },
                             {
                               text: t("settings.continueAnyway"),
                               style: "destructive",
                               onPress: apply,
                             },
-                          ],
-                        );
+                          ]);
+                        }
                         return;
                       }
                       apply();
