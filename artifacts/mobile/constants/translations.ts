@@ -23,6 +23,18 @@ export type TKey =
   | "home.subtitleLine1"
   | "home.subtitleLine2"
   | "home.dayStreak"
+  | "home.alphabet"
+  | "home.alphabetDesc"
+  | "home.letters"
+  | "alphabet.title"
+  | "alphabet.tapToHear"
+  | "alphabet.example"
+  | "alphabet.progress"
+  | "alphabet.previous"
+  | "alphabet.next"
+  | "alphabet.complete"
+  | "alphabet.completeBody"
+  | "alphabet.startOver"
   | "home.aiChats"
   | "home.sessions"
   | "home.vocabulary"
@@ -128,6 +140,18 @@ const en: Record<TKey, string> = {
   "home.subtitleLine1": "Scan something around you",
   "home.subtitleLine2": "and start a real conversation.",
   "home.dayStreak": "Day streak",
+  "home.alphabet": "Alphabet",
+  "home.alphabetDesc": "Learn the {lang} letters",
+  "home.letters": "{n} letters",
+  "alphabet.title": "{lang} Alphabet",
+  "alphabet.tapToHear": "Tap to hear",
+  "alphabet.example": "Example",
+  "alphabet.progress": "{current} of {total}",
+  "alphabet.previous": "Previous",
+  "alphabet.next": "Next",
+  "alphabet.complete": "Great job!",
+  "alphabet.completeBody": "You\u2019ve gone through the whole {lang} alphabet.",
+  "alphabet.startOver": "Start over",
   "home.aiChats": "AI Chats",
   "home.sessions": "{n} sessions",
   "home.vocabulary": "Vocabulary",

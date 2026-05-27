@@ -258,6 +258,29 @@ export default function HomeScreen() {
           </View>
         </View>
 
+        {/* Alphabet big button */}
+        <TouchableOpacity
+          style={[styles.alphabetCard, { backgroundColor: "#FEF3C7" }]}
+          onPress={() => {
+            Haptics.selectionAsync();
+            router.push("/alphabet");
+          }}
+          activeOpacity={0.85}
+        >
+          <View style={[styles.alphabetIcon, { backgroundColor: "#F59E0B" }]}>
+            <Text style={[styles.alphabetIconText, { fontFamily: "Inter_700Bold" }]}>Aa</Text>
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.alphabetTitle, { color: "#7C2D12", fontFamily: "Inter_700Bold" }]}>
+              {t("home.alphabet")}
+            </Text>
+            <Text style={[styles.alphabetSub, { color: "#92400E", fontFamily: "Inter_500Medium" }]}>
+              {t("home.alphabetDesc", { lang: prefs.targetLanguage })}
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={22} color="#92400E" />
+        </TouchableOpacity>
+
         {/* Stats grid */}
         <View style={styles.statsRow}>
           <StatTile
@@ -450,6 +473,23 @@ const styles = StyleSheet.create({
   },
   heroChipText: { fontSize: 13 },
 
+  alphabetCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    padding: 16,
+    borderRadius: 20,
+  },
+  alphabetIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  alphabetIconText: { color: "#FFFFFF", fontSize: 24, letterSpacing: -0.5 },
+  alphabetTitle: { fontSize: 18, letterSpacing: -0.2 },
+  alphabetSub: { fontSize: 12, marginTop: 2 },
   statsRow: { flexDirection: "row", gap: 10 },
   tile: {
     flex: 1,
