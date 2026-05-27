@@ -29,7 +29,8 @@ import type {
   OpenaiMessage,
   OpenaiMessageInput,
   ScanRequest,
-  ScanResult
+  ScanResult,
+  VocabularyEntry
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -487,6 +488,83 @@ export const useDeleteOpenaiConversation = <TError = ErrorType<OpenaiError>,
       > => {
       return useMutation(getDeleteOpenaiConversationMutationOptions(options));
     }
+
+export const getListVocabularyUrl = () => {
+
+
+
+
+  return `/api/vocabulary`
+}
+
+/**
+ * @summary Aggregate unique words from all conversation messages
+ */
+export const listVocabulary = async ( options?: RequestInit): Promise<VocabularyEntry[]> => {
+
+  return customFetch<VocabularyEntry[]>(getListVocabularyUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListVocabularyQueryKey = () => {
+    return [
+    `/api/vocabulary`
+    ] as const;
+    }
+
+
+export const getListVocabularyQueryOptions = <TData = Awaited<ReturnType<typeof listVocabulary>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listVocabulary>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListVocabularyQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listVocabulary>>> = ({ signal }) => listVocabulary({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listVocabulary>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListVocabularyQueryResult = NonNullable<Awaited<ReturnType<typeof listVocabulary>>>
+export type ListVocabularyQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Aggregate unique words from all conversation messages
+ */
+
+export function useListVocabulary<TData = Awaited<ReturnType<typeof listVocabulary>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listVocabulary>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListVocabularyQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 
 export const getListOpenaiMessagesUrl = (id: number,) => {
 

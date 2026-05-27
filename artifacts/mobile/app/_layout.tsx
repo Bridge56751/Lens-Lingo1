@@ -44,6 +44,9 @@ function RootLayoutNav() {
           presentation: "card",
         }}
       />
+      <Stack.Screen name="vocabulary" options={{ headerShown: false, presentation: "card" }} />
+      <Stack.Screen name="progress" options={{ headerShown: false, presentation: "card" }} />
+      <Stack.Screen name="challenges" options={{ headerShown: false, presentation: "card" }} />
       <Stack.Screen
         name="conversation/[id]"
         options={{

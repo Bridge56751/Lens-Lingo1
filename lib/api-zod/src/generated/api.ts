@@ -76,6 +76,20 @@ export const DeleteOpenaiConversationParams = zod.object({
 
 
 /**
+ * @summary Aggregate unique words from all conversation messages
+ */
+export const ListVocabularyResponseItem = zod.object({
+  "word": zod.string(),
+  "language": zod.string(),
+  "count": zod.number(),
+  "firstSeenAt": zod.coerce.date(),
+  "conversationId": zod.number(),
+  "conversationTitle": zod.string()
+})
+export const ListVocabularyResponse = zod.array(ListVocabularyResponseItem)
+
+
+/**
  * @summary List messages in a conversation
  */
 export const ListOpenaiMessagesParams = zod.object({

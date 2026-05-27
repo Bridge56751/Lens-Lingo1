@@ -16,3 +16,4 @@ export * from './openaiMessage';
 export * from './openaiMessageInput';
 export * from './scanRequest';
 export * from './scanResult';
+export * from './vocabularyEntry';

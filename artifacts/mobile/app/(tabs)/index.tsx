@@ -41,6 +41,7 @@ function StatTile({
   title,
   subtitle,
   progress,
+  onPress,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
   iconColor: string;
@@ -48,10 +49,19 @@ function StatTile({
   title: string;
   subtitle: string;
   progress?: number;
+  onPress?: () => void;
 }) {
   const colors = useColors();
   return (
-    <View style={[styles.tile, { backgroundColor: colors.card }]}>
+    <TouchableOpacity
+      style={[styles.tile, { backgroundColor: colors.card }]}
+      onPress={() => {
+        if (!onPress) return;
+        Haptics.selectionAsync();
+        onPress();
+      }}
+      activeOpacity={onPress ? 0.7 : 1}
+    >
       <View style={[styles.tileIcon, { backgroundColor: iconBg }]}>
         <Ionicons name={icon} size={20} color={iconColor} />
       </View>
@@ -71,7 +81,7 @@ function StatTile({
           />
         </View>
       )}
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -237,6 +247,7 @@ export default function HomeScreen() {
             iconBg={colors.primarySoft}
             title="AI Chats"
             subtitle={`${stats.totalConvos} sessions`}
+            onPress={() => router.push("/(tabs)/history")}
           />
           <StatTile
             icon="book"
@@ -244,6 +255,7 @@ export default function HomeScreen() {
             iconBg="#FEF3C7"
             title="Vocabulary"
             subtitle={`${stats.vocab} words`}
+            onPress={() => router.push("/vocabulary")}
           />
         </View>
         <View style={styles.statsRow}>
@@ -254,6 +266,7 @@ export default function HomeScreen() {
             title="Daily Goal"
             subtitle={`${stats.dailyDone} / ${stats.dailyGoal} today`}
             progress={stats.dailyDone / stats.dailyGoal}
+            onPress={() => router.push("/progress")}
           />
           <StatTile
             icon="trophy"
@@ -261,6 +274,7 @@ export default function HomeScreen() {
             iconBg="#DBEAFE"
             title="Challenges"
             subtitle="Earn badges"
+            onPress={() => router.push("/challenges")}
           />
         </View>
 

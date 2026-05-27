@@ -61,6 +61,15 @@ export interface OpenaiConversationWithMessages {
   messages: OpenaiMessage[];
 }
 
+export interface VocabularyEntry {
+  word: string;
+  language: string;
+  count: number;
+  firstSeenAt: string;
+  conversationId: number;
+  conversationTitle: string;
+}
+
 export interface OpenaiError {
   error: string;
 }

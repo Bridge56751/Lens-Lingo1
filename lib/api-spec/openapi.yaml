@@ -126,6 +126,20 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/OpenaiError"
+  /vocabulary:
+    get:
+      operationId: listVocabulary
+      tags: [scan]
+      summary: Aggregate unique words from all conversation messages
+      responses:
+        "200":
+          description: List of unique words across all conversations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/VocabularyEntry"
   /openai/conversations/{id}/messages:
     get:
       operationId: listOpenaiMessages
@@ -285,6 +299,29 @@ components:
         - title
         - createdAt
         - messages
+    VocabularyEntry:
+      type: object
+      properties:
+        word:
+          type: string
+        language:
+          type: string
+        count:
+          type: integer
+        firstSeenAt:
+          type: string
+          format: date-time
+        conversationId:
+          type: integer
+        conversationTitle:
+          type: string
+      required:
+        - word
+        - language
+        - count
+        - firstSeenAt
+        - conversationId
+        - conversationTitle
     OpenaiError:
       type: object
       properties:
