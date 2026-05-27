@@ -19,6 +19,8 @@ import { usePreferences } from "@/hooks/usePreferences";
 import { useT } from "@/hooks/useT";
 import { ALPHABETS, RTL_LANGUAGES } from "@/constants/alphabets";
 
+const NON_LATIN_LANGS = new Set(["Japanese", "Chinese", "Korean", "Arabic", "Russian", "Hindi"]);
+
 const SPEECH_LOCALES: Record<string, string> = {
   English: "en-US",
   Spanish: "es-ES",
@@ -239,7 +241,14 @@ export default function AlphabetScreen() {
             <Animated.View style={{ transform: [{ scale }] }}>
               <TouchableOpacity
                 activeOpacity={0.85}
-                onPress={() => current && speak((current.name ?? current.char).replace(/\s*\(.*\)\s*/g, "").trim())}
+                onPress={() => {
+                  if (!current) return;
+                  const useChar = NON_LATIN_LANGS.has(prefs.targetLanguage);
+                  const text = useChar
+                    ? current.char.split(/\s+/)[0]
+                    : (current.name ?? current.char).replace(/\s*\(.*\)\s*/g, "").trim();
+                  speak(text);
+                }}
                 style={[styles.letterCard, { backgroundColor: colors.card, borderColor: colors.primarySoft }]}
               >
               <View style={[styles.speakerPill, { backgroundColor: colors.primarySoft }]}>
