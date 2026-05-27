@@ -12,6 +12,7 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useListOpenaiConversations } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
+import { useT } from "@/hooks/useT";
 
 type Conversation = { id: number; title: string; createdAt: string };
 
@@ -24,6 +25,7 @@ function startOfDay(d: Date) {
 }
 
 export default function ProgressScreen() {
+  const t = useT();
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { data } = useListOpenaiConversations();
@@ -81,7 +83,7 @@ export default function ProgressScreen() {
           <Ionicons name="chevron-back" size={26} color={colors.foreground} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-          Daily Progress
+          {t("progress.title")}
         </Text>
         <View style={{ width: 40 }} />
       </View>
@@ -92,14 +94,14 @@ export default function ProgressScreen() {
       >
         {/* Today ring */}
         <View style={[styles.heroCard, { backgroundColor: colors.primary }]}>
-          <Text style={[styles.heroLabel, { fontFamily: "Inter_500Medium" }]}>TODAY</Text>
+          <Text style={[styles.heroLabel, { fontFamily: "Inter_500Medium" }]}>{t("progress.today")}</Text>
           <Text style={[styles.heroNumber, { fontFamily: "Inter_700Bold" }]}>
             {todayCount} <Text style={styles.heroNumberSmall}>/ {DAILY_GOAL}</Text>
           </Text>
           <Text style={[styles.heroSub, { fontFamily: "Inter_400Regular" }]}>
             {todayCount >= DAILY_GOAL
-              ? "Goal complete. Nice work!"
-              : `${DAILY_GOAL - todayCount} more to hit your goal`}
+              ? t("progress.complete")
+              : t("progress.more", { n: DAILY_GOAL - todayCount })}
           </Text>
           <View style={styles.heroBarTrack}>
             <View style={[styles.heroBarFill, { width: `${progress * 100}%` }]} />
@@ -116,7 +118,7 @@ export default function ProgressScreen() {
               {streak}
             </Text>
             <Text style={[styles.statLabel, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-              Day streak
+              {t("home.dayStreak")}
             </Text>
           </View>
           <View style={[styles.statCard, { backgroundColor: colors.card }]}>
@@ -127,7 +129,7 @@ export default function ProgressScreen() {
               {totalDays}
             </Text>
             <Text style={[styles.statLabel, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-              Active days
+              {t("progress.activeDays")}
             </Text>
           </View>
         </View>
@@ -135,7 +137,7 @@ export default function ProgressScreen() {
         {/* Week chart */}
         <View style={[styles.chartCard, { backgroundColor: colors.card }]}>
           <Text style={[styles.chartTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-            Last 7 days
+            {t("progress.last7")}
           </Text>
           <View style={styles.chart}>
             {weekData.map((d, idx) => {

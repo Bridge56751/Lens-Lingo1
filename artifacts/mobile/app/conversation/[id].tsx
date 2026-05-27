@@ -18,6 +18,7 @@ import { useGetOpenaiConversation } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { getGetOpenaiConversationQueryKey } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
+import { useT } from "@/hooks/useT";
 import { fetch as expoFetch } from "expo/fetch";
 
 type Message = {
@@ -95,6 +96,7 @@ function TypingIndicator({ colors }: { colors: ReturnType<typeof useColors> }) {
 }
 
 export default function ConversationScreen() {
+  const t = useT();
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -127,7 +129,7 @@ export default function ConversationScreen() {
   }, [conversation?.messages?.length]);
 
   const parts = (conversation?.title ?? "").split(" • ");
-  const itemName = parts[0] ?? "Conversation";
+  const itemName = parts[0] ?? t("conv.fallbackName");
   const language = parts[1] ?? "";
 
   const sendMessage = useCallback(async () => {
@@ -210,7 +212,7 @@ export default function ConversationScreen() {
       const errorMessage: Message = {
         id: `error-${Date.now()}`,
         role: "assistant",
-        content: "Sorry, something went wrong. Please try again.",
+        content: t("conv.errorReply"),
       };
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
@@ -255,10 +257,10 @@ export default function ConversationScreen() {
         </TouchableOpacity>
         <View style={styles.headerCenter}>
           <Text style={[styles.headerTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-            Conversation
+            {t("conv.title")}
           </Text>
           <Text style={[styles.headerSubtitle, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-            About: {itemName}
+            {t("conv.about", { name: itemName })}
             {language ? ` • ${language}` : ""}
           </Text>
         </View>
@@ -312,7 +314,7 @@ export default function ConversationScreen() {
                 styles.input,
                 { color: colors.foreground, fontFamily: "Inter_400Regular" },
               ]}
-              placeholder="Tap to speak or type..."
+              placeholder={t("conv.placeholder")}
               placeholderTextColor={colors.mutedForeground}
               value={inputText}
               onChangeText={setInputText}

@@ -28,6 +28,7 @@ import Animated, {
 import { Ionicons } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColors";
 import { usePreferences, LANGUAGES, type Language } from "@/hooks/usePreferences";
+import { useT } from "@/hooks/useT";
 
 function CornerBrackets({ color }: { color: string }) {
   return (
@@ -41,6 +42,7 @@ function CornerBrackets({ color }: { color: string }) {
 }
 
 export default function ScanScreen() {
+  const t = useT();
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const cameraRef = useRef<CameraView>(null);
@@ -92,7 +94,7 @@ export default function ScanScreen() {
       setScanResult(null);
       await scanItem(photo.base64);
     } catch (err) {
-      Alert.alert("Capture failed", "Could not take photo. Try again.");
+      Alert.alert(t("scan.captureFailedTitle"), t("scan.captureFailedBody"));
     }
   };
 
@@ -126,7 +128,7 @@ export default function ScanScreen() {
         body: JSON.stringify({
           imageBase64,
           targetLanguage: selectedLanguage,
-          nativeLanguage: "English",
+          nativeLanguage: prefs.nativeLanguage,
         }),
       });
 
@@ -143,7 +145,7 @@ export default function ScanScreen() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (err) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Alert.alert("Scan failed", "Could not identify the item. Please try again.");
+      Alert.alert(t("scan.scanFailedTitle"), t("scan.scanFailedBody"));
       setScannedImage(null);
     } finally {
       setIsScanning(false);
@@ -173,7 +175,7 @@ export default function ScanScreen() {
             <Ionicons name="chevron-back" size={26} color={colors.foreground} />
           </TouchableOpacity>
           <Text style={[styles.resultHeaderTitle, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
-            Identified
+            {t("scan.identified")}
           </Text>
           <View style={{ width: 40 }} />
         </View>
@@ -202,7 +204,7 @@ export default function ScanScreen() {
 
               <View style={[styles.exampleBox, { backgroundColor: colors.primarySoft }]}>
                 <Text style={[styles.exampleLabel, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
-                  Tutor says
+                  {t("scan.tutorSays")}
                 </Text>
                 <Text style={[styles.exampleText, { color: colors.foreground, fontFamily: "Inter_400Regular" }]}>
                   {scanResult.initialMessage}
@@ -218,13 +220,13 @@ export default function ScanScreen() {
           >
             <Ionicons name="chatbubbles" size={20} color="#FFFFFF" />
             <Text style={[styles.primaryButtonText, { fontFamily: "Inter_600SemiBold" }]}>
-              Start Conversation
+              {t("scan.startConversation")}
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity onPress={reset} activeOpacity={0.7} style={styles.linkButton}>
             <Text style={[styles.linkButtonText, { color: colors.mutedForeground, fontFamily: "Inter_500Medium" }]}>
-              Scan something else
+              {t("scan.scanAnother")}
             </Text>
           </TouchableOpacity>
         </ScrollView>
@@ -248,7 +250,7 @@ export default function ScanScreen() {
           <View style={[StyleSheet.absoluteFill, styles.cameraPlaceholder]}>
             <Ionicons name="camera-outline" size={64} color="rgba(255,255,255,0.4)" />
             <Text style={[styles.placeholderText, { fontFamily: "Inter_500Medium" }]}>
-              {Platform.OS === "web" ? "Camera preview unavailable on web" : "Camera access needed"}
+              {Platform.OS === "web" ? t("scan.cameraUnavailableWeb") : t("scan.cameraNeeded")}
             </Text>
             {Platform.OS !== "web" && !hasCameraPermission && (
               <TouchableOpacity
@@ -257,7 +259,7 @@ export default function ScanScreen() {
                 activeOpacity={0.8}
               >
                 <Text style={[styles.permissionButtonText, { fontFamily: "Inter_600SemiBold" }]}>
-                  Enable Camera
+                  {t("scan.enableCamera")}
                 </Text>
               </TouchableOpacity>
             )}
@@ -275,7 +277,7 @@ export default function ScanScreen() {
                 <View style={styles.scanningBadge}>
                   <ActivityIndicator size="small" color="#FFFFFF" />
                   <Text style={[styles.scanningBadgeText, { fontFamily: "Inter_600SemiBold" }]}>
-                    Identifying...
+                    {t("scan.identifying")}
                   </Text>
                 </View>
               )}
@@ -315,7 +317,7 @@ export default function ScanScreen() {
       <View pointerEvents="none" style={[styles.hintWrap, { top: "38%" }]}>
         <View style={styles.hintPill}>
           <Text style={[styles.hintText, { fontFamily: "Inter_500Medium" }]}>
-            Point your camera at any item to scan
+            {t("scan.hint")}
           </Text>
         </View>
       </View>
@@ -334,7 +336,7 @@ export default function ScanScreen() {
         >
           <Ionicons name="time-outline" size={22} color="#FFFFFF" />
           <Text style={[styles.sideButtonText, { fontFamily: "Inter_500Medium" }]}>
-            History
+            {t("scan.history")}
           </Text>
         </TouchableOpacity>
 
@@ -362,7 +364,7 @@ export default function ScanScreen() {
         >
           <Ionicons name="images-outline" size={22} color="#FFFFFF" />
           <Text style={[styles.sideButtonText, { fontFamily: "Inter_500Medium" }]}>
-            Gallery
+            {t("scan.gallery")}
           </Text>
         </TouchableOpacity>
       </View>
@@ -380,7 +382,7 @@ export default function ScanScreen() {
             onPress={(e) => e.stopPropagation()}
           >
             <Text style={[styles.modalTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-              Choose language
+              {t("scan.chooseLanguage")}
             </Text>
             <ScrollView style={{ maxHeight: 380 }}>
               {LANGUAGES.map((lang) => {

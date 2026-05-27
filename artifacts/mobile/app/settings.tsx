@@ -18,6 +18,8 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useColors } from "@/hooks/useColors";
 import { usePreferences, LANGUAGES, type Language } from "@/hooks/usePreferences";
+import { useT } from "@/hooks/useT";
+import { LOCALE_NATIVE_NAMES, LOCALES, type Locale } from "@/constants/translations";
 
 function Row({
   icon,
@@ -62,11 +64,14 @@ function Row({
   );
 }
 
+type PickerKind = "learning" | "native" | null;
+
 export default function SettingsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const t = useT();
   const { prefs, update } = usePreferences();
-  const [showLangPicker, setShowLangPicker] = useState(false);
+  const [picker, setPicker] = useState<PickerKind>(null);
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState(prefs.displayName);
 
@@ -80,6 +85,9 @@ export default function SettingsScreen() {
     Haptics.selectionAsync();
   };
 
+  const nativeLabel =
+    LOCALE_NATIVE_NAMES[(prefs.nativeLanguage as Locale) ?? "English"] ?? prefs.nativeLanguage;
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { paddingTop: topPadding + 8 }]}>
@@ -87,7 +95,7 @@ export default function SettingsScreen() {
           <Ionicons name="chevron-back" size={26} color={colors.foreground} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-          Settings
+          {t("settings.title")}
         </Text>
         <View style={{ width: 40 }} />
       </View>
@@ -139,51 +147,46 @@ export default function SettingsScreen() {
             </TouchableOpacity>
           )}
           <Text style={[styles.profileSub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-            Learning {prefs.targetLanguage}
+            {t("settings.learningSub", { lang: prefs.targetLanguage })}
           </Text>
         </View>
 
         {/* Languages */}
         <View style={{ gap: 8 }}>
           <Text style={[styles.sectionLabel, { color: colors.mutedForeground, fontFamily: "Inter_600SemiBold" }]}>
-            LANGUAGES
+            {t("settings.languages")}
           </Text>
           <Row
             icon="globe"
             iconBg={colors.primarySoft}
             iconColor={colors.primary}
-            title="Learning"
+            title={t("settings.learning")}
             subtitle={prefs.targetLanguage}
             right={<Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />}
-            onPress={() => setShowLangPicker(true)}
+            onPress={() => setPicker("learning")}
           />
           <Row
             icon="language"
             iconBg="#DBEAFE"
             iconColor="#3B82F6"
-            title="I speak"
-            subtitle={prefs.nativeLanguage}
+            title={t("settings.iSpeak")}
+            subtitle={nativeLabel}
             right={<Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />}
-            onPress={() =>
-              Alert.alert(
-                "Native language",
-                "English is currently the only supported native language. More coming soon!",
-              )
-            }
+            onPress={() => setPicker("native")}
           />
         </View>
 
         {/* Preferences */}
         <View style={{ gap: 8 }}>
           <Text style={[styles.sectionLabel, { color: colors.mutedForeground, fontFamily: "Inter_600SemiBold" }]}>
-            PREFERENCES
+            {t("settings.preferences")}
           </Text>
           <Row
             icon="phone-portrait"
             iconBg="#FEF3C7"
             iconColor="#F59E0B"
-            title="Haptic feedback"
-            subtitle="Vibrate on actions"
+            title={t("settings.haptics")}
+            subtitle={t("settings.hapticsSub")}
             right={
               <Switch
                 value={prefs.hapticsEnabled}
@@ -200,8 +203,8 @@ export default function SettingsScreen() {
             icon="notifications"
             iconBg="#FCE7F3"
             iconColor="#EC4899"
-            title="Daily reminder"
-            subtitle="Practice every day"
+            title={t("settings.daily")}
+            subtitle={t("settings.dailySub")}
             right={
               <Switch
                 value={prefs.notificationsEnabled}
@@ -216,63 +219,86 @@ export default function SettingsScreen() {
         {/* About */}
         <View style={{ gap: 8 }}>
           <Text style={[styles.sectionLabel, { color: colors.mutedForeground, fontFamily: "Inter_600SemiBold" }]}>
-            ABOUT
+            {t("settings.about")}
           </Text>
           <Row
             icon="help-circle"
             iconBg="#DCFCE7"
             iconColor="#22C55E"
-            title="Help & support"
+            title={t("settings.help")}
             right={<Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />}
-            onPress={() => Alert.alert("Help", "Send us a note at hello@linguascan.app")}
+            onPress={() =>
+              Alert.alert(t("settings.helpAlertTitle"), t("settings.helpAlertBody"))
+            }
           />
           <Row
             icon="information-circle"
             iconBg={colors.muted}
             iconColor={colors.mutedForeground}
-            title="Version"
+            title={t("settings.version")}
             subtitle="1.0.0"
           />
         </View>
       </ScrollView>
 
-      {/* Language picker modal */}
+      {/* Language picker modal (used for both learning & native) */}
       <Modal
-        visible={showLangPicker}
+        visible={picker !== null}
         transparent
         animationType="fade"
-        onRequestClose={() => setShowLangPicker(false)}
+        onRequestClose={() => setPicker(null)}
       >
-        <Pressable style={styles.modalBackdrop} onPress={() => setShowLangPicker(false)}>
+        <Pressable style={styles.modalBackdrop} onPress={() => setPicker(null)}>
           <Pressable style={[styles.modalCard, { backgroundColor: colors.card }]} onPress={(e) => e.stopPropagation()}>
             <Text style={[styles.modalTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-              Choose language
+              {picker === "native" ? t("settings.chooseNative") : t("settings.chooseLearning")}
             </Text>
-            <ScrollView style={{ maxHeight: 400 }}>
-              {LANGUAGES.map((lang) => {
-                const active = lang === prefs.targetLanguage;
+            <ScrollView style={{ maxHeight: 420 }}>
+              {(picker === "native" ? LOCALES : LANGUAGES).map((lang) => {
+                const active =
+                  picker === "native"
+                    ? lang === prefs.nativeLanguage
+                    : lang === prefs.targetLanguage;
+                const nativeName =
+                  LOCALE_NATIVE_NAMES[lang as Locale] ?? lang;
                 return (
                   <TouchableOpacity
                     key={lang}
                     style={[styles.langOption, active && { backgroundColor: colors.primarySoft }]}
                     onPress={() => {
-                      update("targetLanguage", lang as Language);
-                      setShowLangPicker(false);
+                      if (picker === "native") {
+                        update("nativeLanguage", lang);
+                      } else {
+                        update("targetLanguage", lang as Language);
+                      }
+                      setPicker(null);
                       Haptics.selectionAsync();
                     }}
                     activeOpacity={0.7}
                   >
-                    <Text
-                      style={[
-                        styles.langOptionText,
-                        {
-                          color: active ? colors.primary : colors.foreground,
-                          fontFamily: active ? "Inter_600SemiBold" : "Inter_400Regular",
-                        },
-                      ]}
-                    >
-                      {lang}
-                    </Text>
+                    <View style={{ flex: 1 }}>
+                      <Text
+                        style={[
+                          styles.langOptionText,
+                          {
+                            color: active ? colors.primary : colors.foreground,
+                            fontFamily: active ? "Inter_600SemiBold" : "Inter_500Medium",
+                          },
+                        ]}
+                      >
+                        {nativeName}
+                      </Text>
+                      {nativeName !== lang && (
+                        <Text
+                          style={[
+                            styles.langOptionSub,
+                            { color: colors.mutedForeground, fontFamily: "Inter_400Regular" },
+                          ]}
+                        >
+                          {lang}
+                        </Text>
+                      )}
+                    </View>
                     {active && <Ionicons name="checkmark" size={20} color={colors.primary} />}
                   </TouchableOpacity>
                 );
@@ -360,8 +386,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 14,
-    paddingVertical: 13,
+    paddingVertical: 12,
     borderRadius: 12,
   },
   langOptionText: { fontSize: 15 },
+  langOptionSub: { fontSize: 11, marginTop: 2 },
 });

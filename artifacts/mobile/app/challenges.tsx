@@ -12,6 +12,8 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useListOpenaiConversations, useListVocabulary } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
+import { useT } from "@/hooks/useT";
+import type { TKey } from "@/constants/translations";
 
 type Conversation = { id: number; title: string; createdAt: string };
 type VocabEntry = { word: string; language: string; count: number };
@@ -21,13 +23,14 @@ type Badge = {
   icon: keyof typeof Ionicons.glyphMap;
   color: string;
   bg: string;
-  title: string;
-  description: string;
+  titleKey: TKey;
+  descKey: TKey;
   goal: number;
   value: number;
 };
 
 export default function ChallengesScreen() {
+  const t = useT();
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { data: convos } = useListOpenaiConversations();
@@ -52,8 +55,8 @@ export default function ChallengesScreen() {
         icon: "scan",
         color: "#7C5CFF",
         bg: "#EFE9FF",
-        title: "First Scan",
-        description: "Complete your first scan",
+        titleKey: "badge.firstScan.title",
+        descKey: "badge.firstScan.desc",
         goal: 1,
         value: list.length,
       },
@@ -62,8 +65,8 @@ export default function ChallengesScreen() {
         icon: "chatbubbles",
         color: "#3B82F6",
         bg: "#DBEAFE",
-        title: "Chatty",
-        description: "Have 5 conversations",
+        titleKey: "badge.chatty.title",
+        descKey: "badge.chatty.desc",
         goal: 5,
         value: list.length,
       },
@@ -72,8 +75,8 @@ export default function ChallengesScreen() {
         icon: "book",
         color: "#F59E0B",
         bg: "#FEF3C7",
-        title: "Word Hoarder",
-        description: "Collect 50 unique words",
+        titleKey: "badge.wordHoarder.title",
+        descKey: "badge.wordHoarder.desc",
         goal: 50,
         value: vocabList.length,
       },
@@ -82,8 +85,8 @@ export default function ChallengesScreen() {
         icon: "globe",
         color: "#22C55E",
         bg: "#DCFCE7",
-        title: "Polyglot",
-        description: "Practice 3 different languages",
+        titleKey: "badge.polyglot.title",
+        descKey: "badge.polyglot.desc",
         goal: 3,
         value: languages.size,
       },
@@ -92,8 +95,8 @@ export default function ChallengesScreen() {
         icon: "calendar",
         color: "#EC4899",
         bg: "#FCE7F3",
-        title: "Consistent",
-        description: "Practice on 7 different days",
+        titleKey: "badge.consistent.title",
+        descKey: "badge.consistent.desc",
         goal: 7,
         value: days.size,
       },
@@ -102,8 +105,8 @@ export default function ChallengesScreen() {
         icon: "trophy",
         color: "#F59E0B",
         bg: "#FEF3C7",
-        title: "Century",
-        description: "Collect 100 unique words",
+        titleKey: "badge.century.title",
+        descKey: "badge.century.desc",
         goal: 100,
         value: vocabList.length,
       },
@@ -122,7 +125,7 @@ export default function ChallengesScreen() {
           <Ionicons name="chevron-back" size={26} color={colors.foreground} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-          Challenges
+          {t("challenges.title")}
         </Text>
         <View style={{ width: 40 }} />
       </View>
@@ -132,12 +135,12 @@ export default function ChallengesScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={[styles.summary, { backgroundColor: colors.primary }]}>
-          <Text style={[styles.summaryLabel, { fontFamily: "Inter_500Medium" }]}>BADGES EARNED</Text>
+          <Text style={[styles.summaryLabel, { fontFamily: "Inter_500Medium" }]}>{t("challenges.earned")}</Text>
           <Text style={[styles.summaryNumber, { fontFamily: "Inter_700Bold" }]}>
             {earned} <Text style={styles.summaryNumberSmall}>/ {badges.length}</Text>
           </Text>
           <Text style={[styles.summarySub, { fontFamily: "Inter_400Regular" }]}>
-            Keep scanning and chatting to unlock more.
+            {t("challenges.keepGoing")}
           </Text>
         </View>
 
@@ -166,13 +169,13 @@ export default function ChallengesScreen() {
                       { color: colors.foreground, fontFamily: "Inter_700Bold" },
                     ]}
                   >
-                    {b.title}
+                    {t(b.titleKey)}
                   </Text>
                   {done && (
                     <View style={[styles.earnedPill, { backgroundColor: b.bg }]}>
                       <Ionicons name="checkmark" size={11} color={b.color} />
                       <Text style={[styles.earnedText, { color: b.color, fontFamily: "Inter_600SemiBold" }]}>
-                        Earned
+                        {t("challenges.earnedTag")}
                       </Text>
                     </View>
                   )}
@@ -183,7 +186,7 @@ export default function ChallengesScreen() {
                     { color: colors.mutedForeground, fontFamily: "Inter_400Regular" },
                   ]}
                 >
-                  {b.description}
+                  {t(b.descKey)}
                 </Text>
                 <View style={[styles.progressTrack, { backgroundColor: colors.muted }]}>
                   <View

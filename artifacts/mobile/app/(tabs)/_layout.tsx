@@ -8,6 +8,7 @@ import React from "react";
 import { Platform, Pressable, StyleSheet, View, useColorScheme } from "react-native";
 import * as Haptics from "expo-haptics";
 import { useColors } from "@/hooks/useColors";
+import { useT } from "@/hooks/useT";
 
 function ScanTabButton() {
   const colors = useColors();
@@ -33,21 +34,23 @@ function ScanTabButton() {
 }
 
 function NativeTabLayout() {
+  const t = useT();
   return (
     <NativeTabs>
       <NativeTabs.Trigger name="index">
         <Icon sf={{ default: "house", selected: "house.fill" }} />
-        <Label>Home</Label>
+        <Label>{t("tabs.home")}</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="history">
         <Icon sf={{ default: "clock", selected: "clock.fill" }} />
-        <Label>History</Label>
+        <Label>{t("tabs.history")}</Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );
 }
 
 function ClassicTabLayout() {
+  const t = useT();
   const colors = useColors();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -90,7 +93,7 @@ function ClassicTabLayout() {
         <Tabs.Screen
           name="index"
           options={{
-            title: "Home",
+            title: t("tabs.home"),
             tabBarIcon: ({ color }) =>
               isIOS ? (
                 <SymbolView name="house" tintColor={color} size={24} />
@@ -102,7 +105,7 @@ function ClassicTabLayout() {
         <Tabs.Screen
           name="history"
           options={{
-            title: "History",
+            title: t("tabs.history"),
             tabBarIcon: ({ color }) =>
               isIOS ? (
                 <SymbolView name="clock" tintColor={color} size={24} />

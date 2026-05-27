@@ -13,6 +13,7 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useListVocabulary } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
+import { useT } from "@/hooks/useT";
 
 type Entry = {
   word: string;
@@ -24,6 +25,7 @@ type Entry = {
 };
 
 export default function VocabularyScreen() {
+  const t = useT();
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { data, isLoading } = useListVocabulary();
@@ -54,7 +56,7 @@ export default function VocabularyScreen() {
           <Ionicons name="chevron-back" size={26} color={colors.foreground} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-          Vocabulary
+          {t("vocab.title")}
         </Text>
         <View style={{ width: 40 }} />
       </View>
@@ -66,7 +68,7 @@ export default function VocabularyScreen() {
           contentContainerStyle={styles.chipsRow}
         >
           <Chip
-            label="All"
+            label={t("vocab.all")}
             count={entries.length}
             active={activeLang === null}
             onPress={() => setActiveLang(null)}
@@ -93,10 +95,10 @@ export default function VocabularyScreen() {
             <Ionicons name="book" size={32} color={colors.primary} />
           </View>
           <Text style={[styles.emptyTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-            No words yet
+            {t("vocab.empty")}
           </Text>
           <Text style={[styles.emptySub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-            Scan an object and start a conversation to build your vocabulary.
+            {t("vocab.emptySub")}
           </Text>
         </View>
       ) : (
@@ -105,7 +107,7 @@ export default function VocabularyScreen() {
           showsVerticalScrollIndicator={false}
         >
           <Text style={[styles.summary, { color: colors.mutedForeground, fontFamily: "Inter_500Medium" }]}>
-            {filtered.length} unique word{filtered.length === 1 ? "" : "s"}
+            {t("vocab.unique", { n: filtered.length })}
           </Text>
           {filtered.map((e) => (
             <TouchableOpacity
@@ -122,7 +124,7 @@ export default function VocabularyScreen() {
                   style={[styles.wordSub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}
                   numberOfLines={1}
                 >
-                  {e.language} · from “{e.conversationTitle.split(" • ")[0]}”
+                  {e.language} · {t("vocab.from", { title: e.conversationTitle.split(" • ")[0] ?? "" })}
                 </Text>
               </View>
               <View style={[styles.countPill, { backgroundColor: colors.primarySoft }]}>

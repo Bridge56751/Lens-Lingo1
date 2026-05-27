@@ -19,6 +19,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { getListOpenaiConversationsQueryKey } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
+import { useT } from "@/hooks/useT";
 
 type Conversation = {
   id: number;
@@ -35,6 +36,7 @@ function ConversationItem({
   onPress: () => void;
   onDelete: () => void;
 }) {
+  const t = useT();
   const colors = useColors();
 
   const parts = item.title.split(" • ");
@@ -46,10 +48,10 @@ function ConversationItem({
   const diffMs = now.getTime() - date.getTime();
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
   let dateStr: string;
-  if (diffDays === 0) dateStr = "Today";
-  else if (diffDays === 1) dateStr = "Yesterday";
-  else if (diffDays < 7) dateStr = `${diffDays} days ago`;
-  else dateStr = date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  if (diffDays === 0) dateStr = t("history.today");
+  else if (diffDays === 1) dateStr = t("history.yesterday");
+  else if (diffDays < 7) dateStr = t("history.daysAgo", { n: diffDays });
+  else dateStr = date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 
   return (
     <TouchableOpacity
@@ -58,10 +60,14 @@ function ConversationItem({
       activeOpacity={0.7}
       onLongPress={() => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        Alert.alert("Delete conversation?", `Remove "${itemName}" from history?`, [
-          { text: "Cancel", style: "cancel" },
-          { text: "Delete", style: "destructive", onPress: onDelete },
-        ]);
+        Alert.alert(
+          t("history.deleteTitle"),
+          t("history.deleteBody", { name: itemName }),
+          [
+            { text: t("history.cancel"), style: "cancel" },
+            { text: t("history.delete"), style: "destructive", onPress: onDelete },
+          ],
+        );
       }}
     >
       <View style={[styles.iconBox, { backgroundColor: colors.primarySoft }]}>
@@ -90,6 +96,7 @@ function ConversationItem({
 }
 
 export default function HistoryScreen() {
+  const t = useT();
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
@@ -120,10 +127,10 @@ export default function HistoryScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { paddingTop: topPadding + 8 }]}>
         <Text style={[styles.title, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-          History
+          {t("history.title")}
         </Text>
         <Text style={[styles.subtitle, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-          Your past scans
+          {t("home.subtitleLine1")}
         </Text>
       </View>
 
@@ -137,10 +144,10 @@ export default function HistoryScreen() {
             <Ionicons name="scan" size={36} color={colors.primary} />
           </View>
           <Text style={[styles.emptyTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-            No scans yet
+            {t("history.empty")}
           </Text>
           <Text style={[styles.emptyText, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-            Scan an object to start learning
+            {t("history.emptySub")}
           </Text>
         </View>
       ) : (

@@ -15,6 +15,7 @@ import * as Haptics from "expo-haptics";
 import { useListOpenaiConversations } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { usePreferences, type Language } from "@/hooks/usePreferences";
+import { useT } from "@/hooks/useT";
 
 const HELLOS: Record<Language, string> = {
   Spanish: "hola",
@@ -101,6 +102,7 @@ function StatTile({
 }
 
 function ConversationRow({ item }: { item: Conversation }) {
+  const t = useT();
   const colors = useColors();
   const parts = item.title.split(" • ");
   const itemName = parts[0] ?? item.title;
@@ -123,7 +125,7 @@ function ConversationRow({ item }: { item: Conversation }) {
           style={[styles.convoSub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}
           numberOfLines={1}
         >
-          {language ? `Practicing ${language}` : "Tap to continue"}
+          {language ? t("home.practicing", { lang: language }) : t("home.tapToContinue")}
         </Text>
       </View>
       <View style={[styles.continueBtn, { backgroundColor: colors.primarySoft }]}>
@@ -137,6 +139,7 @@ function ConversationRow({ item }: { item: Conversation }) {
 }
 
 export default function HomeScreen() {
+  const t = useT();
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { prefs } = usePreferences();
@@ -184,12 +187,12 @@ export default function HomeScreen() {
           <View style={{ flex: 1 }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
               <Text style={[styles.greeting, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-                Hello, {prefs.displayName}!
+                {t("home.greeting", { name: prefs.displayName })}
               </Text>
               <Text style={styles.wave}>👋</Text>
             </View>
             <Text style={[styles.greetingSub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-              Scan something around you{"\n"}and start a real conversation.
+              {t("home.subtitleLine1")}{"\n"}{t("home.subtitleLine2")}
             </Text>
           </View>
           <View style={styles.greetingRight}>
@@ -200,7 +203,7 @@ export default function HomeScreen() {
                   {stats.streak}
                 </Text>
                 <Text style={[styles.streakLabel, { color: "#7A7B8E", fontFamily: "Inter_500Medium" }]}>
-                  Day streak
+                  {t("home.dayStreak")}
                 </Text>
               </View>
             </View>
@@ -221,10 +224,10 @@ export default function HomeScreen() {
         <View style={[styles.hero, { backgroundColor: colors.primarySoft }]}>
           <View style={styles.heroLeft}>
             <Text style={[styles.heroTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-              Scan. Learn.{"\n"}Speak.
+              {t("home.scanLearnSpeak")}
             </Text>
             <Text style={[styles.heroBody, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-              Scan any object to learn the words and start a conversation about it.
+              {t("home.heroDesc")}
             </Text>
             <TouchableOpacity
               style={[styles.heroButton, { backgroundColor: colors.primary }]}
@@ -233,7 +236,7 @@ export default function HomeScreen() {
             >
               <Ionicons name="scan" size={16} color="#FFFFFF" />
               <Text style={[styles.heroButtonText, { fontFamily: "Inter_600SemiBold" }]}>
-                Scan an Item
+                {t("home.scanCta")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -247,7 +250,7 @@ export default function HomeScreen() {
             </View>
             <View style={[styles.heroChip, { backgroundColor: "#FFFFFF" }]}>
               <Text style={[styles.heroChipText, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-                {HELLOS[prefs.targetLanguage] ?? "hello"}
+                {HELLOS[prefs.targetLanguage] ?? "Hello"}
               </Text>
               <Ionicons name="volume-medium" size={14} color={colors.primary} />
             </View>
@@ -260,16 +263,16 @@ export default function HomeScreen() {
             icon="chatbubbles"
             iconColor={colors.primary}
             iconBg={colors.primarySoft}
-            title="AI Chats"
-            subtitle={`${stats.totalConvos} sessions`}
+            title={t("home.aiChats")}
+            subtitle={t("home.sessions", { n: stats.totalConvos })}
             onPress={() => router.push("/(tabs)/history")}
           />
           <StatTile
             icon="book"
             iconColor="#F59E0B"
             iconBg="#FEF3C7"
-            title="Vocabulary"
-            subtitle={`${stats.vocab} words`}
+            title={t("home.vocabulary")}
+            subtitle={t("home.words", { n: stats.vocab })}
             onPress={() => router.push("/vocabulary")}
           />
         </View>
@@ -278,8 +281,8 @@ export default function HomeScreen() {
             icon="checkmark-circle"
             iconColor="#22C55E"
             iconBg="#DCFCE7"
-            title="Daily Goal"
-            subtitle={`${stats.dailyDone} / ${stats.dailyGoal} today`}
+            title={t("home.dailyGoal")}
+            subtitle={t("home.dailyProgress", { done: stats.dailyDone, goal: stats.dailyGoal })}
             progress={stats.dailyDone / stats.dailyGoal}
             onPress={() => router.push("/progress")}
           />
@@ -287,8 +290,8 @@ export default function HomeScreen() {
             icon="trophy"
             iconColor="#3B82F6"
             iconBg="#DBEAFE"
-            title="Challenges"
-            subtitle="Earn badges"
+            title={t("home.challenges")}
+            subtitle={t("home.earnBadges")}
             onPress={() => router.push("/challenges")}
           />
         </View>
@@ -296,7 +299,7 @@ export default function HomeScreen() {
         {/* Continue your conversations */}
         <View style={styles.sectionHeader}>
           <Text style={[styles.sectionTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-            Continue your conversations
+            {t("home.continueConvos")}
           </Text>
           {list.length > 0 && (
             <TouchableOpacity onPress={() => router.push("/history")} activeOpacity={0.7}>
@@ -336,10 +339,10 @@ export default function HomeScreen() {
           </View>
           <View style={{ flex: 1 }}>
             <Text style={[styles.tourTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-              New here?
+              {t("home.newHere")}
             </Text>
             <Text style={[styles.tourBody, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-              Start your first scan and let AI help you speak from day one.
+              {t("home.newHereDesc")}
             </Text>
           </View>
           <TouchableOpacity
