@@ -40,18 +40,34 @@ export default function AlphabetScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { prefs } = usePreferences();
-  const letters = useMemo(() => ALPHABETS[prefs.targetLanguage] ?? [], [prefs.targetLanguage]);
+  const scripts = useMemo(() => ALPHABETS[prefs.targetLanguage] ?? [], [prefs.targetLanguage]);
   const isRTL = RTL_LANGUAGES.includes(prefs.targetLanguage);
+  const [scriptIndex, setScriptIndex] = useState(0);
   const [index, setIndex] = useState(0);
-  const [completed, setCompleted] = useState<Set<number>>(new Set());
+  const [completed, setCompleted] = useState<Record<string, Set<number>>>({});
   const fade = useRef(new Animated.Value(1)).current;
   const scale = useRef(new Animated.Value(1)).current;
+
+  const script = scripts[scriptIndex];
+  const letters = script?.letters ?? [];
+  const scriptKey = script?.id ?? "";
+  const scriptCompleted = completed[scriptKey] ?? new Set<number>();
 
   const topPadding = Platform.OS === "web" ? 16 : insets.top;
   const bottomPadding = Platform.OS === "web" ? 34 : insets.bottom + 16;
   const current = letters[index];
   const isLast = index === letters.length - 1;
-  const isDone = completed.size === letters.length && letters.length > 0;
+  const isDone = scriptCompleted.size === letters.length && letters.length > 0;
+
+  const markCompleted = (idx: number) => {
+    setCompleted((prev) => {
+      const next = { ...prev };
+      const set = new Set(next[scriptKey] ?? []);
+      set.add(idx);
+      next[scriptKey] = set;
+      return next;
+    });
+  };
 
   const speak = (text: string) => {
     Haptics.selectionAsync();
@@ -89,9 +105,7 @@ export default function AlphabetScreen() {
 
   const goNext = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    const newCompleted = new Set(completed);
-    newCompleted.add(index);
-    setCompleted(newCompleted);
+    markCompleted(index);
     if (!isLast) animateTo(index + 1);
   };
 
@@ -102,14 +116,25 @@ export default function AlphabetScreen() {
   };
 
   const restart = () => {
-    setCompleted(new Set());
+    setCompleted((prev) => {
+      const next = { ...prev };
+      delete next[scriptKey];
+      return next;
+    });
     setIndex(0);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   };
 
-  const progress = letters.length > 0 ? (completed.size / letters.length) : 0;
+  const switchScript = (idx: number) => {
+    if (idx === scriptIndex) return;
+    Haptics.selectionAsync();
+    setScriptIndex(idx);
+    setIndex(0);
+  };
 
-  if (letters.length === 0) {
+  const progress = letters.length > 0 ? (scriptCompleted.size / letters.length) : 0;
+
+  if (scripts.length === 0) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background, paddingTop: topPadding + 8 }]}>
         <Header colors={colors} title={t("alphabet.title", { lang: prefs.targetLanguage })} />
@@ -121,6 +146,52 @@ export default function AlphabetScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={{ paddingTop: topPadding + 8 }}>
         <Header colors={colors} title={t("alphabet.title", { lang: prefs.targetLanguage })} />
+
+        {/* Script selector */}
+        {scripts.length > 1 && (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.scriptTabsContent}
+            style={styles.scriptTabs}
+          >
+            {scripts.map((s, i) => {
+              const active = i === scriptIndex;
+              return (
+                <TouchableOpacity
+                  key={s.id}
+                  onPress={() => switchScript(i)}
+                  style={[
+                    styles.scriptTab,
+                    {
+                      backgroundColor: active ? colors.primary : colors.muted,
+                    },
+                  ]}
+                  activeOpacity={0.85}
+                >
+                  <Text
+                    style={[
+                      styles.scriptTabText,
+                      {
+                        color: active ? "#FFFFFF" : colors.foreground,
+                        fontFamily: "Inter_600SemiBold",
+                      },
+                    ]}
+                  >
+                    {s.name}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        )}
+
+        {script?.description && (
+          <Text style={[styles.scriptDesc, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+            {script.description}
+          </Text>
+        )}
+
         {/* Progress bar */}
         <View style={styles.progressWrap}>
           <View style={[styles.progressTrack, { backgroundColor: colors.muted }]}>
@@ -150,7 +221,7 @@ export default function AlphabetScreen() {
               {t("alphabet.complete")}
             </Text>
             <Text style={[styles.doneBody, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-              {t("alphabet.completeBody", { lang: prefs.targetLanguage })}
+              {t("alphabet.completeBody", { lang: script?.name ?? prefs.targetLanguage })}
             </Text>
             <TouchableOpacity
               style={[styles.primaryBtn, { backgroundColor: colors.primary }]}
@@ -292,7 +363,16 @@ const styles = StyleSheet.create({
   },
   iconBtn: { width: 40, height: 40, alignItems: "center", justifyContent: "center" },
   headerTitle: { flex: 1, fontSize: 18, textAlign: "center" },
-  progressWrap: { paddingHorizontal: 18, paddingTop: 4, paddingBottom: 12, gap: 6 },
+  scriptTabs: { maxHeight: 44 },
+  scriptTabsContent: { paddingHorizontal: 18, gap: 8, paddingVertical: 4 },
+  scriptTab: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 999,
+  },
+  scriptTabText: { fontSize: 13 },
+  scriptDesc: { fontSize: 12, paddingHorizontal: 18, paddingTop: 6, textAlign: "center" },
+  progressWrap: { paddingHorizontal: 18, paddingTop: 8, paddingBottom: 12, gap: 6 },
   progressTrack: { height: 8, borderRadius: 4, overflow: "hidden" },
   progressFill: { height: "100%", borderRadius: 4 },
   progressText: { fontSize: 11, textAlign: "right" },
