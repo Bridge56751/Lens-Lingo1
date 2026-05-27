@@ -238,7 +238,7 @@ export default function AlphabetScreen() {
           <Animated.View style={{ opacity: fade, transform: [{ scale }] }}>
             <TouchableOpacity
               activeOpacity={0.85}
-              onPress={() => current && speak(current.char.replace(/\s.*$/, ""))}
+              onPress={() => current && speak((current.name ?? current.char).replace(/\s*\(.*\)\s*/g, "").trim())}
               style={[styles.letterCard, { backgroundColor: colors.card, borderColor: colors.primarySoft }]}
             >
               <View style={[styles.speakerPill, { backgroundColor: colors.primarySoft }]}>
