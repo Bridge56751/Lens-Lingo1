@@ -30,6 +30,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColors";
 import { usePreferences, LANGUAGES, type Language } from "@/hooks/usePreferences";
 import { useT } from "@/hooks/useT";
+import { getDeviceIdSync } from "@/lib/device";
 
 const SPEECH_LOCALES: Record<Language, string> = {
   English: "en-US",
@@ -141,7 +142,10 @@ export default function ScanScreen() {
 
       const response = await fetch(`${baseUrl}/api/scan`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(getDeviceIdSync() ? { "x-device-id": getDeviceIdSync()! } : {}),
+        },
         body: JSON.stringify({
           imageBase64,
           targetLanguage: selectedLanguage,

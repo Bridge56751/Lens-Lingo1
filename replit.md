@@ -10,7 +10,9 @@ A language learning mobile app that lets users scan real-world objects with thei
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- DB connection: `SUPABASE_DATABASE_URL` (preferred) falls back to `DATABASE_URL`
+  - Must be the Supabase **Session pooler** URI (`...pooler.supabase.com:5432`, user `postgres.<ref>`). The Direct connection (`db.<ref>.supabase.co`) is IPv6-only and unreachable here.
+  - Paste the pooler URI with the literal `[YOUR-PASSWORD]` placeholder left in place; provide the password separately as `SUPABASE_DB_PASSWORD`. `lib/db/src/connection.ts` URL-encodes and substitutes it for both the runtime pool and drizzle migrations.
 - Required env: `AI_INTEGRATIONS_OPENAI_BASE_URL`, `AI_INTEGRATIONS_OPENAI_API_KEY` — auto-provisioned by Replit AI Integrations
 
 ## Stack
@@ -26,7 +28,9 @@ A language learning mobile app that lets users scan real-world objects with thei
 
 ## Where things live
 
-- DB schema: `lib/db/src/schema/` (conversations.ts, messages.ts)
+- DB schema: `lib/db/src/schema/` (customers.ts, conversations.ts, messages.ts)
+- DB connection resolver: `lib/db/src/connection.ts` (Session-pooler + split-password substitution)
+- Customer middleware: `artifacts/api-server/src/middleware/customer.ts`
 - OpenAPI spec: `lib/api-spec/openapi.yaml`
 - Generated React Query hooks: `lib/api-client-react/src/generated/`
 - Generated Zod schemas: `lib/api-zod/src/generated/`
@@ -41,6 +45,7 @@ A language learning mobile app that lets users scan real-world objects with thei
 - Streaming SSE for chat responses using `expo/fetch` (supports streaming on all Expo platforms)
 - Express JSON body limit raised to 10mb to handle base64 image payloads
 - `setBaseUrl` is called at app root in `_layout.tsx` so all generated hooks work from Expo Go
+- Per-customer data is scoped by a stable device id (no auth yet). The mobile app generates/persists a UUID in AsyncStorage (`lib/device.ts`), sets it via `setDeviceId` at app root, and sends it as an `x-device-id` header on every request (generated hooks auto-inject it; direct `expoFetch` calls add it manually). Server middleware upserts a `customers` row from the header and sets `req.customerId`; conversations and vocabulary are filtered/ownership-checked by that id. Requests with no device id see an empty list.
 
 ## Product
 

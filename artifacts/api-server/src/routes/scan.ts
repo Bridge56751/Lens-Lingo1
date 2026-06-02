@@ -17,6 +17,11 @@ router.post("/scan", async (req, res) => {
     return;
   }
 
+  if (req.customerId == null) {
+    res.status(400).json({ error: "Missing or unresolved x-device-id" });
+    return;
+  }
+
   // Use GPT vision to identify the item
   let itemName = "Unknown Item";
   let itemNameTranslated = "Unknown";
@@ -64,7 +69,7 @@ router.post("/scan", async (req, res) => {
     .insert(conversations)
     .values({
       title: `${itemName} • ${targetLanguage}`,
-      customerId: req.customerId ?? null,
+      customerId: req.customerId,
     })
     .returning();
 

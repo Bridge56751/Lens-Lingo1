@@ -1,1 +1,1 @@
-- [expo-audio recording lifecycle](expo-audio-recording.md) — reset audio mode after stop + on unmount, or capture stays engaged; cap transcribe base64 at ~7M chars (client+server).
+- [Supabase from Replit](supabase-connection.md) — direct DB host is IPv6-only/unreachable; must use Session pooler + split-password env pattern.

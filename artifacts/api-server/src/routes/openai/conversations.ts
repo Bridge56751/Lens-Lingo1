@@ -74,9 +74,13 @@ router.post("/openai/conversations", async (req, res) => {
     res.status(400).json({ error: "title is required" });
     return;
   }
+  if (req.customerId == null) {
+    res.status(400).json({ error: "Missing or unresolved x-device-id" });
+    return;
+  }
   const [conv] = await db
     .insert(conversations)
-    .values({ title, customerId: req.customerId ?? null })
+    .values({ title, customerId: req.customerId })
     .returning();
   res.status(201).json(conv);
 });
