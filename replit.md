@@ -46,6 +46,7 @@ A language learning mobile app that lets users scan real-world objects with thei
 - Express JSON body limit raised to 10mb to handle base64 image payloads
 - `setBaseUrl` is called at app root in `_layout.tsx` so all generated hooks work from Expo Go
 - Per-customer data is scoped by a stable device id (no auth yet). The mobile app generates/persists a UUID in AsyncStorage (`lib/device.ts`), sets it via `setDeviceId` at app root, and sends it as an `x-device-id` header on every request (generated hooks auto-inject it; direct `expoFetch` calls add it manually). Server middleware upserts a `customers` row from the header and sets `req.customerId`; conversations and vocabulary are filtered/ownership-checked by that id. Requests with no device id see an empty list.
+- Per-customer tracking lives on the `customers` table: `plan` ('free'/'pro') + `pro_since` for tiering, and `scan_count` (pictures taken), `chat_count` (chats started), `message_count` (messages sent) usage counters incremented in the scan, create-conversation, and message-send routes. View these directly in the Supabase Table Editor.
 
 ## Product
 

@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { and, eq, desc } from "drizzle-orm";
+import { and, eq, desc, sql } from "drizzle-orm";
 import { db } from "@workspace/db";
-import { conversations, messages } from "@workspace/db";
+import { conversations, customers, messages } from "@workspace/db";
 import { openai, toFile } from "@workspace/integrations-openai-ai-server";
 
 const router = Router();
@@ -78,10 +78,22 @@ router.post("/openai/conversations", async (req, res) => {
     res.status(400).json({ error: "Missing or unresolved x-device-id" });
     return;
   }
-  const [conv] = await db
-    .insert(conversations)
-    .values({ title, customerId: req.customerId })
-    .returning();
+  const customerId = req.customerId;
+  const conv = await db.transaction(async (tx) => {
+    const [created] = await tx
+      .insert(conversations)
+      .values({ title, customerId })
+      .returning();
+
+    // Track usage: one chat started.
+    await tx
+      .update(customers)
+      .set({ chatCount: sql`${customers.chatCount} + 1` })
+      .where(eq(customers.id, customerId));
+
+    return created;
+  });
+
   res.status(201).json(conv);
 });
 
@@ -240,11 +252,21 @@ router.post("/openai/conversations/:id/messages", async (req, res) => {
     return;
   }
 
-  // Save user message first
-  await db.insert(messages).values({
-    conversationId: id,
-    role: "user",
-    content,
+  // Save the user message and bump the usage counter together so the persisted
+  // message and the count stay consistent on partial failure.
+  const customerId = req.customerId;
+  await db.transaction(async (tx) => {
+    await tx.insert(messages).values({
+      conversationId: id,
+      role: "user",
+      content,
+    });
+
+    // Track usage: one message sent by the customer.
+    await tx
+      .update(customers)
+      .set({ messageCount: sql`${customers.messageCount} + 1` })
+      .where(eq(customers.id, customerId));
   });
 
   // Build chat messages for OpenAI (include system + history + new user message)

@@ -1,6 +1,7 @@
 import { Router } from "express";
+import { eq, sql } from "drizzle-orm";
 import { db } from "@workspace/db";
-import { conversations, messages } from "@workspace/db";
+import { conversations, customers, messages } from "@workspace/db";
 import { openai } from "@workspace/integrations-openai-ai-server";
 
 const router = Router();
@@ -21,6 +22,7 @@ router.post("/scan", async (req, res) => {
     res.status(400).json({ error: "Missing or unresolved x-device-id" });
     return;
   }
+  const customerId = req.customerId;
 
   // Use GPT vision to identify the item
   let itemName = "Unknown Item";
@@ -64,15 +66,6 @@ router.post("/scan", async (req, res) => {
     req.log.error({ err }, "Vision identification failed, using defaults");
   }
 
-  // Create conversation with a descriptive title, scoped to the customer
-  const [conversation] = await db
-    .insert(conversations)
-    .values({
-      title: `${itemName} • ${targetLanguage}`,
-      customerId: req.customerId,
-    })
-    .returning();
-
   // Build system prompt for language learning
   const pronounceNote = pronunciation ? `, pronounced "${pronunciation}"` : "";
   const systemPrompt = `You are an enthusiastic and encouraging language tutor helping a ${nativeLanguage} speaker learn ${targetLanguage}. The user has scanned an item: "${itemName}" (${itemNameTranslated} in ${targetLanguage}${pronounceNote}).
@@ -84,7 +77,9 @@ Your teaching style:
 - Be warm and encouraging
 - Do not use emojis`;
 
-  // Generate initial AI greeting
+  const triggerMessage = `I just scanned a ${itemName}. Help me learn the word for it in ${targetLanguage}!`;
+
+  // Generate initial AI greeting (kept outside the DB transaction below)
   let initialContent = `Let's learn about "${itemName}" in ${targetLanguage}!`;
   try {
     const initialResponse = await openai.chat.completions.create({
@@ -92,10 +87,7 @@ Your teaching style:
       max_completion_tokens: 300,
       messages: [
         { role: "system", content: systemPrompt },
-        {
-          role: "user",
-          content: `I just scanned a ${itemName}. Help me learn the word for it in ${targetLanguage}!`,
-        },
+        { role: "user", content: triggerMessage },
       ],
     });
     initialContent =
@@ -104,16 +96,34 @@ Your teaching style:
     req.log.error({ err }, "Initial message generation failed");
   }
 
-  // Save system message, user trigger, and AI initial message to DB
-  await db.insert(messages).values([
-    { conversationId: conversation.id, role: "system", content: systemPrompt },
-    {
-      conversationId: conversation.id,
-      role: "user",
-      content: `I just scanned a ${itemName}. Help me learn the word for it in ${targetLanguage}!`,
-    },
-    { conversationId: conversation.id, role: "assistant", content: initialContent },
-  ]);
+  // Persist conversation, its seed messages, and the usage counters together so
+  // the chat artifacts and the counts can never drift apart on partial failure.
+  const conversation = await db.transaction(async (tx) => {
+    const [conv] = await tx
+      .insert(conversations)
+      .values({
+        title: `${itemName} • ${targetLanguage}`,
+        customerId,
+      })
+      .returning();
+
+    await tx.insert(messages).values([
+      { conversationId: conv.id, role: "system", content: systemPrompt },
+      { conversationId: conv.id, role: "user", content: triggerMessage },
+      { conversationId: conv.id, role: "assistant", content: initialContent },
+    ]);
+
+    // Track usage: one picture taken and one chat started.
+    await tx
+      .update(customers)
+      .set({
+        scanCount: sql`${customers.scanCount} + 1`,
+        chatCount: sql`${customers.chatCount} + 1`,
+      })
+      .where(eq(customers.id, customerId));
+
+    return conv;
+  });
 
   res.status(201).json({
     conversationId: conversation.id,
