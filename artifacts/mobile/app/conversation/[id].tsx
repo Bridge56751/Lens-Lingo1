@@ -27,6 +27,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { getGetOpenaiConversationQueryKey } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { useT } from "@/hooks/useT";
+import { getDeviceIdSync } from "@/lib/device";
 import { fetch as expoFetch } from "expo/fetch";
 
 type Message = {
@@ -214,7 +215,10 @@ export default function ConversationScreen() {
 
       const response = await expoFetch(`${baseUrl}/api/openai/transcribe`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(getDeviceIdSync() ? { "x-device-id": getDeviceIdSync()! } : {}),
+        },
         body: JSON.stringify({
           audioBase64,
           mimeType,
@@ -262,7 +266,10 @@ export default function ConversationScreen() {
         `${baseUrl}/api/openai/conversations/${conversationId}/messages`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...(getDeviceIdSync() ? { "x-device-id": getDeviceIdSync()! } : {}),
+          },
           body: JSON.stringify({ content: text }),
         },
       );

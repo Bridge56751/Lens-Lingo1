@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { eq, desc } from "drizzle-orm";
+import { and, eq, desc } from "drizzle-orm";
 import { db } from "@workspace/db";
 import { conversations, messages } from "@workspace/db";
 import { openai, toFile } from "@workspace/integrations-openai-ai-server";
@@ -53,11 +53,16 @@ router.post("/openai/transcribe", async (req, res) => {
   }
 });
 
-// GET /openai/conversations - list all conversations
+// GET /openai/conversations - list conversations for the current customer
 router.get("/openai/conversations", async (req, res) => {
+  if (req.customerId == null) {
+    res.json([]);
+    return;
+  }
   const all = await db
     .select()
     .from(conversations)
+    .where(eq(conversations.customerId, req.customerId))
     .orderBy(desc(conversations.createdAt));
   res.json(all);
 });
@@ -69,7 +74,10 @@ router.post("/openai/conversations", async (req, res) => {
     res.status(400).json({ error: "title is required" });
     return;
   }
-  const [conv] = await db.insert(conversations).values({ title }).returning();
+  const [conv] = await db
+    .insert(conversations)
+    .values({ title, customerId: req.customerId ?? null })
+    .returning();
   res.status(201).json(conv);
 });
 
@@ -81,10 +89,20 @@ router.get("/openai/conversations/:id", async (req, res) => {
     return;
   }
 
+  if (req.customerId == null) {
+    res.status(404).json({ error: "Conversation not found" });
+    return;
+  }
+
   const [conv] = await db
     .select()
     .from(conversations)
-    .where(eq(conversations.id, id));
+    .where(
+      and(
+        eq(conversations.id, id),
+        eq(conversations.customerId, req.customerId),
+      ),
+    );
 
   if (!conv) {
     res.status(404).json({ error: "Conversation not found" });
@@ -111,9 +129,19 @@ router.delete("/openai/conversations/:id", async (req, res) => {
     return;
   }
 
+  if (req.customerId == null) {
+    res.status(404).json({ error: "Conversation not found" });
+    return;
+  }
+
   const [deleted] = await db
     .delete(conversations)
-    .where(eq(conversations.id, id))
+    .where(
+      and(
+        eq(conversations.id, id),
+        eq(conversations.customerId, req.customerId),
+      ),
+    )
     .returning();
 
   if (!deleted) {
@@ -129,6 +157,26 @@ router.get("/openai/conversations/:id/messages", async (req, res) => {
   const id = parseInt(req.params.id ?? "", 10);
   if (isNaN(id)) {
     res.status(400).json({ error: "Invalid conversation id" });
+    return;
+  }
+
+  if (req.customerId == null) {
+    res.status(404).json({ error: "Conversation not found" });
+    return;
+  }
+
+  const [conv] = await db
+    .select()
+    .from(conversations)
+    .where(
+      and(
+        eq(conversations.id, id),
+        eq(conversations.customerId, req.customerId),
+      ),
+    );
+
+  if (!conv) {
+    res.status(404).json({ error: "Conversation not found" });
     return;
   }
 
@@ -153,6 +201,26 @@ router.post("/openai/conversations/:id/messages", async (req, res) => {
   const { content } = req.body as { content?: string };
   if (!content) {
     res.status(400).json({ error: "content is required" });
+    return;
+  }
+
+  if (req.customerId == null) {
+    res.status(404).json({ error: "Conversation not found" });
+    return;
+  }
+
+  const [owned] = await db
+    .select()
+    .from(conversations)
+    .where(
+      and(
+        eq(conversations.id, id),
+        eq(conversations.customerId, req.customerId),
+      ),
+    );
+
+  if (!owned) {
+    res.status(404).json({ error: "Conversation not found" });
     return;
   }
 

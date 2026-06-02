@@ -59,10 +59,13 @@ router.post("/scan", async (req, res) => {
     req.log.error({ err }, "Vision identification failed, using defaults");
   }
 
-  // Create conversation with a descriptive title
+  // Create conversation with a descriptive title, scoped to the customer
   const [conversation] = await db
     .insert(conversations)
-    .values({ title: `${itemName} • ${targetLanguage}` })
+    .values({
+      title: `${itemName} • ${targetLanguage}`,
+      customerId: req.customerId ?? null,
+    })
     .returning();
 
   // Build system prompt for language learning

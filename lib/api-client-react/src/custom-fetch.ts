@@ -17,6 +17,7 @@ const DEFAULT_JSON_ACCEPT = "application/json, application/problem+json";
 
 let _baseUrl: string | null = null;
 let _authTokenGetter: AuthTokenGetter | null = null;
+let _deviceId: string | null = null;
 
 /**
  * Set a base URL that is prepended to every relative request URL
@@ -42,6 +43,15 @@ export function setBaseUrl(url: string | null): void {
  */
 export function setAuthTokenGetter(getter: AuthTokenGetter | null): void {
   _authTokenGetter = getter;
+}
+
+/**
+ * Set a device identifier attached to every request as an `x-device-id`
+ * header. Used to scope data to a specific device/customer before a full
+ * authentication system exists. Pass `null` to clear it.
+ */
+export function setDeviceId(deviceId: string | null): void {
+  _deviceId = deviceId && deviceId.trim() !== "" ? deviceId : null;
 }
 
 function isRequest(input: RequestInfo | URL): input is Request {
@@ -347,6 +357,12 @@ export async function customFetch<T = unknown>(
 
   if (responseType === "json" && !headers.has("accept")) {
     headers.set("accept", DEFAULT_JSON_ACCEPT);
+  }
+
+  // Attach device id (used to scope data per device/customer) when configured
+  // and not already explicitly provided.
+  if (_deviceId && !headers.has("x-device-id")) {
+    headers.set("x-device-id", _deviceId);
   }
 
   // Attach bearer token when an auth getter is configured and no

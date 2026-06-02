@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { eq, asc } from "drizzle-orm";
+import { and, eq, asc } from "drizzle-orm";
 import { db } from "@workspace/db";
 import { conversations, messages } from "@workspace/db";
 
@@ -22,6 +22,11 @@ const STOPWORDS = new Set([
 
 // GET /vocabulary - aggregate unique words from assistant messages, oldest first
 router.get("/vocabulary", async (req, res) => {
+  if (req.customerId == null) {
+    res.json([]);
+    return;
+  }
+
   // Single SQL pass: join assistant messages to their conversations, sorted by message createdAt ascending
   const rows = await db
     .select({
@@ -32,7 +37,12 @@ router.get("/vocabulary", async (req, res) => {
     })
     .from(messages)
     .innerJoin(conversations, eq(messages.conversationId, conversations.id))
-    .where(eq(messages.role, "assistant"))
+    .where(
+      and(
+        eq(messages.role, "assistant"),
+        eq(conversations.customerId, req.customerId),
+      ),
+    )
     .orderBy(asc(messages.createdAt));
 
   type Acc = {
