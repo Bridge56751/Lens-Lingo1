@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import {
   View,
   Text,
@@ -13,7 +13,7 @@ import {
   Pressable,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import * as Haptics from "expo-haptics";
 import { CameraView, useCameraPermissions } from "expo-camera";
@@ -153,12 +153,26 @@ export default function ScanScreen() {
     }
   };
 
+  const isOpeningRef = useRef(false);
+  const [isOpening, setIsOpening] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      isOpeningRef.current = false;
+      setIsOpening(false);
+    }, []),
+  );
+
   const openConversation = () => {
-    if (!scanResult) return;
+    if (!scanResult || isOpeningRef.current) return;
+    isOpeningRef.current = true;
+    setIsOpening(true);
     router.push(`/conversation/${scanResult.conversationId}`);
   };
 
   const reset = () => {
+    isOpeningRef.current = false;
+    setIsOpening(false);
     setScannedImage(null);
     setScanResult(null);
   };
@@ -214,11 +228,16 @@ export default function ScanScreen() {
           </View>
 
           <TouchableOpacity
-            style={[styles.primaryButton, { backgroundColor: colors.primary }]}
+            style={[styles.primaryButton, { backgroundColor: colors.primary, opacity: isOpening ? 0.6 : 1 }]}
             onPress={openConversation}
+            disabled={isOpening}
             activeOpacity={0.85}
           >
-            <Ionicons name="chatbubbles" size={20} color="#FFFFFF" />
+            {isOpening ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <Ionicons name="chatbubbles" size={20} color="#FFFFFF" />
+            )}
             <Text style={[styles.primaryButtonText, { fontFamily: "Inter_600SemiBold" }]}>
               {t("scan.startConversation")}
             </Text>
