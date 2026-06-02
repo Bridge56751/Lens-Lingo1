@@ -16,6 +16,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import * as Haptics from "expo-haptics";
+import * as Speech from "expo-speech";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import Animated, {
   useSharedValue,
@@ -29,6 +30,22 @@ import { Ionicons } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColors";
 import { usePreferences, LANGUAGES, type Language } from "@/hooks/usePreferences";
 import { useT } from "@/hooks/useT";
+
+const SPEECH_LOCALES: Record<Language, string> = {
+  English: "en-US",
+  Spanish: "es-ES",
+  French: "fr-FR",
+  German: "de-DE",
+  Italian: "it-IT",
+  Portuguese: "pt-PT",
+  Japanese: "ja-JP",
+  Chinese: "zh-CN",
+  Korean: "ko-KR",
+  Arabic: "ar-SA",
+  Russian: "ru-RU",
+  Hindi: "hi-IN",
+  Dutch: "nl-NL",
+};
 
 function CornerBrackets({ color }: { color: string }) {
   return (
@@ -160,6 +177,9 @@ export default function ScanScreen() {
     useCallback(() => {
       isOpeningRef.current = false;
       setIsOpening(false);
+      return () => {
+        Speech.stop();
+      };
     }, []),
   );
 
@@ -171,10 +191,21 @@ export default function ScanScreen() {
   };
 
   const reset = () => {
+    Speech.stop();
     isOpeningRef.current = false;
     setIsOpening(false);
     setScannedImage(null);
     setScanResult(null);
+  };
+
+  const speakTranslation = () => {
+    if (!scanResult) return;
+    Speech.stop();
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    Speech.speak(scanResult.itemNameTranslated, {
+      language: SPEECH_LOCALES[selectedLanguage] ?? "en-US",
+      rate: 0.9,
+    });
   };
 
   const topPadding = Platform.OS === "web" ? 16 : insets.top;
@@ -205,9 +236,14 @@ export default function ScanScreen() {
                 <Text style={[styles.resultEnglish, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
                   {scanResult.itemName}
                 </Text>
-                <View style={[styles.speakerDot, { backgroundColor: colors.primarySoft }]}>
+                <TouchableOpacity
+                  style={[styles.speakerDot, { backgroundColor: colors.primarySoft }]}
+                  onPress={speakTranslation}
+                  activeOpacity={0.7}
+                  hitSlop={8}
+                >
                   <Ionicons name="volume-medium" size={16} color={colors.primary} />
-                </View>
+                </TouchableOpacity>
               </View>
               <Text style={[styles.resultTranslation, { color: colors.primary, fontFamily: "Inter_700Bold" }]}>
                 {scanResult.itemNameTranslated}
