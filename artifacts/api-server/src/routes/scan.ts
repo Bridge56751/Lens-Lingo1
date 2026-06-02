@@ -24,7 +24,7 @@ router.post("/scan", async (req, res) => {
 
   try {
     const visionResponse = await openai.chat.completions.create({
-      model: "gpt-5.4",
+      model: "gpt-4o",
       max_completion_tokens: 200,
       messages: [
         {
@@ -80,7 +80,7 @@ Your teaching style:
   let initialContent = `Let's learn about "${itemName}" in ${targetLanguage}!`;
   try {
     const initialResponse = await openai.chat.completions.create({
-      model: "gpt-5.4",
+      model: "gpt-4o",
       max_completion_tokens: 300,
       messages: [
         { role: "system", content: systemPrompt },
