@@ -35,6 +35,12 @@
         {
           "cameraPermission": "Allow LinguaScan to use your camera to scan items."
         }
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Allow LinguaScan to use your microphone to talk with your tutor."
+        }
       ]
     ],
     "experiments": {

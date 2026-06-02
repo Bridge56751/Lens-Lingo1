@@ -8,11 +8,19 @@ import {
   TouchableOpacity,
   Platform,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import {
+  useAudioRecorder,
+  RecordingPresets,
+  setAudioModeAsync,
+  requestRecordingPermissionsAsync,
+} from "expo-audio";
+import { File } from "expo-file-system";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useGetOpenaiConversation } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -26,6 +34,24 @@ type Message = {
   role: "user" | "assistant";
   content: string;
 };
+
+const WHISPER_LANG: Record<string, string> = {
+  English: "en",
+  Spanish: "es",
+  French: "fr",
+  German: "de",
+  Italian: "it",
+  Portuguese: "pt",
+  Japanese: "ja",
+  Chinese: "zh",
+  Korean: "ko",
+  Arabic: "ar",
+  Russian: "ru",
+  Hindi: "hi",
+  Dutch: "nl",
+};
+
+const MAX_AUDIO_BASE64_LEN = 7_000_000;
 
 function SparkleIcon({ color }: { color: string }) {
   return (
@@ -110,6 +136,19 @@ export default function ConversationScreen() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingContent, setStreamingContent] = useState("");
 
+  const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+
+  useEffect(() => {
+    return () => {
+      if (audioRecorder.isRecording) {
+        audioRecorder.stop().catch(() => {});
+      }
+      setAudioModeAsync({ allowsRecording: false }).catch(() => {});
+    };
+  }, [audioRecorder]);
+
   const { data: conversation, isLoading } = useGetOpenaiConversation(conversationId, {
     query: {
       queryKey: getGetOpenaiConversationQueryKey(conversationId),
@@ -131,6 +170,72 @@ export default function ConversationScreen() {
   const parts = (conversation?.title ?? "").split(" • ");
   const itemName = parts[0] ?? t("conv.fallbackName");
   const language = parts[1] ?? "";
+
+  const startRecording = async () => {
+    if (isRecording || isTranscribing || isStreaming) return;
+    try {
+      const perm = await requestRecordingPermissionsAsync();
+      if (!perm.granted) {
+        Alert.alert(t("conv.micDeniedTitle"), t("conv.micDeniedBody"));
+        return;
+      }
+      await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
+      await audioRecorder.prepareToRecordAsync();
+      audioRecorder.record();
+      setIsRecording(true);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    } catch {
+      setIsRecording(false);
+      Alert.alert(t("conv.micErrorTitle"), t("conv.micErrorBody"));
+    }
+  };
+
+  const stopAndTranscribe = async () => {
+    if (!isRecording) return;
+    setIsRecording(false);
+    setIsTranscribing(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    try {
+      await audioRecorder.stop();
+      await setAudioModeAsync({ allowsRecording: false });
+      const uri = audioRecorder.uri;
+      if (!uri) throw new Error("No recording uri");
+
+      const audioBase64 = await new File(uri).base64();
+      if (audioBase64.length > MAX_AUDIO_BASE64_LEN) {
+        Alert.alert(t("conv.micTooLongTitle"), t("conv.micTooLongBody"));
+        return;
+      }
+      const mimeType = Platform.OS === "web" ? "audio/webm" : "audio/m4a";
+
+      const baseUrl = process.env.EXPO_PUBLIC_DOMAIN
+        ? `https://${process.env.EXPO_PUBLIC_DOMAIN}`
+        : "";
+
+      const response = await expoFetch(`${baseUrl}/api/openai/transcribe`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          audioBase64,
+          mimeType,
+          language: WHISPER_LANG[language],
+        }),
+      });
+
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+      const data = (await response.json()) as { text?: string };
+      const transcript = data.text?.trim();
+      if (transcript) {
+        setInputText((prev) => (prev ? `${prev} ${transcript}` : transcript));
+        setTimeout(() => inputRef.current?.focus(), 100);
+      }
+    } catch {
+      Alert.alert(t("conv.transcribeErrorTitle"), t("conv.transcribeErrorBody"));
+    } finally {
+      setIsTranscribing(false);
+    }
+  };
 
   const sendMessage = useCallback(async () => {
     const text = inputText.trim();
@@ -299,6 +404,15 @@ export default function ConversationScreen() {
           />
         )}
 
+        {isRecording ? (
+          <View style={[styles.recordingBanner, { backgroundColor: colors.primarySoft }]}>
+            <View style={[styles.recordingDot, { backgroundColor: colors.primary }]} />
+            <Text style={[styles.recordingText, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
+              {t("conv.listening")}
+            </Text>
+          </View>
+        ) : null}
+
         <View
           style={[
             styles.inputBar,
@@ -325,25 +439,40 @@ export default function ConversationScreen() {
               blurOnSubmit={false}
             />
           </View>
-          <TouchableOpacity
-            style={[
-              styles.sendButton,
-              { backgroundColor: isStreaming || !inputText.trim() ? colors.primarySoft : colors.primary },
-            ]}
-            onPress={sendMessage}
-            disabled={isStreaming || !inputText.trim()}
-            activeOpacity={0.85}
-          >
-            {isStreaming ? (
-              <ActivityIndicator size="small" color={colors.primary} />
-            ) : (
-              <Ionicons
-                name={inputText.trim() ? "send" : "mic"}
-                size={20}
-                color={!inputText.trim() ? colors.primary : "#FFFFFF"}
-              />
-            )}
-          </TouchableOpacity>
+          {(() => {
+            const hasText = !!inputText.trim();
+            const busy = isStreaming || isTranscribing;
+            const bg = isRecording
+              ? colors.primary
+              : busy || !hasText
+                ? colors.primarySoft
+                : colors.primary;
+            const onPress = isRecording
+              ? stopAndTranscribe
+              : hasText
+                ? sendMessage
+                : startRecording;
+            return (
+              <TouchableOpacity
+                style={[styles.sendButton, { backgroundColor: bg }]}
+                onPress={onPress}
+                disabled={busy}
+                activeOpacity={0.85}
+              >
+                {busy ? (
+                  <ActivityIndicator size="small" color={colors.primary} />
+                ) : isRecording ? (
+                  <Ionicons name="stop" size={20} color="#FFFFFF" />
+                ) : (
+                  <Ionicons
+                    name={hasText ? "send" : "mic"}
+                    size={20}
+                    color={hasText ? "#FFFFFF" : colors.primary}
+                  />
+                )}
+              </TouchableOpacity>
+            );
+          })()}
         </View>
       </KeyboardAvoidingView>
     </View>
@@ -398,6 +527,22 @@ const styles = StyleSheet.create({
   aiBubble: { borderBottomLeftRadius: 6 },
   bubbleText: { fontSize: 15, lineHeight: 22 },
 
+  recordingBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "center",
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginBottom: 4,
+  },
+  recordingDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  recordingText: { fontSize: 13 },
   inputBar: {
     flexDirection: "row",
     alignItems: "flex-end",

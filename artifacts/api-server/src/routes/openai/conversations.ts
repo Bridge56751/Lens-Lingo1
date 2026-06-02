@@ -2,9 +2,56 @@ import { Router } from "express";
 import { eq, desc } from "drizzle-orm";
 import { db } from "@workspace/db";
 import { conversations, messages } from "@workspace/db";
-import { openai } from "@workspace/integrations-openai-ai-server";
+import { openai, toFile } from "@workspace/integrations-openai-ai-server";
 
 const router = Router();
+
+// POST /openai/transcribe - transcribe spoken audio to text (Whisper)
+router.post("/openai/transcribe", async (req, res) => {
+  const { audioBase64, mimeType, language } = req.body as {
+    audioBase64?: string;
+    mimeType?: string;
+    language?: string;
+  };
+
+  if (!audioBase64) {
+    res.status(400).json({ error: "audioBase64 is required" });
+    return;
+  }
+
+  if (audioBase64.length > 7_000_000) {
+    res.status(413).json({ error: "Audio is too long" });
+    return;
+  }
+
+  const extByMime: Record<string, string> = {
+    "audio/m4a": "m4a",
+    "audio/mp4": "m4a",
+    "audio/x-m4a": "m4a",
+    "audio/webm": "webm",
+    "audio/wav": "wav",
+    "audio/mpeg": "mp3",
+  };
+  const ext = extByMime[mimeType ?? ""] ?? "m4a";
+
+  try {
+    const buffer = Buffer.from(audioBase64, "base64");
+    const file = await toFile(buffer, `audio.${ext}`, {
+      type: mimeType ?? "audio/m4a",
+    });
+
+    const transcription = await openai.audio.transcriptions.create({
+      file,
+      model: "whisper-1",
+      ...(language ? { language } : {}),
+    });
+
+    res.json({ text: transcription.text });
+  } catch (err) {
+    req.log.error({ err }, "Transcription failed");
+    res.status(502).json({ error: "Transcription failed" });
+  }
+});
 
 // GET /openai/conversations - list all conversations
 router.get("/openai/conversations", async (req, res) => {

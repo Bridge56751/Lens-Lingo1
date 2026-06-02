@@ -56,7 +56,9 @@
     "zod-validation-error": "^3.4.0"
   },
   "dependencies": {
+    "expo-audio": "~1.1.1",
     "expo-camera": "^17.0.10",
+    "expo-file-system": "~19.0.23",
     "expo-speech": "~14.0.8"
   }
 }

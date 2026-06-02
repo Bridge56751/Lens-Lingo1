@@ -119,6 +119,15 @@ export type TKey =
   | "conv.about"
   | "conv.errorReply"
   | "conv.fallbackName"
+  | "conv.micDeniedTitle"
+  | "conv.micDeniedBody"
+  | "conv.micErrorTitle"
+  | "conv.micErrorBody"
+  | "conv.transcribeErrorTitle"
+  | "conv.transcribeErrorBody"
+  | "conv.listening"
+  | "conv.micTooLongTitle"
+  | "conv.micTooLongBody"
   | "history.today"
   | "history.yesterday"
   | "history.daysAgo"
@@ -236,6 +245,15 @@ const en: Record<TKey, string> = {
   "conv.about": "About: {name}",
   "conv.errorReply": "Sorry, something went wrong. Please try again.",
   "conv.fallbackName": "Conversation",
+  "conv.micDeniedTitle": "Microphone access needed",
+  "conv.micDeniedBody": "Please allow microphone access to speak with your tutor.",
+  "conv.micErrorTitle": "Recording problem",
+  "conv.micErrorBody": "Could not start recording. Please try again.",
+  "conv.transcribeErrorTitle": "Couldn\u2019t hear that",
+  "conv.transcribeErrorBody": "Sorry, we couldn\u2019t understand the audio. Please try again.",
+  "conv.listening": "Listening\u2026",
+  "conv.micTooLongTitle": "Recording too long",
+  "conv.micTooLongBody": "That recording is too long. Please try a shorter message.",
   "history.today": "Today",
   "history.yesterday": "Yesterday",
   "history.daysAgo": "{n} days ago",
