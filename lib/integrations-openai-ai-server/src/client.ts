@@ -2,7 +2,7 @@ import OpenAI from "openai";
 
 // Prefer the user's own OpenAI API key (direct OpenAI API) when available.
 // Fall back to Replit AI Integrations proxy env vars otherwise.
-const hasUserKey = !!process.env.OPENAI_API_KEY;
+const hasUserKey = !!process.env.OPENAI_API_KEY?.trim();
 
 if (!hasUserKey) {
   if (!process.env.AI_INTEGRATIONS_OPENAI_BASE_URL) {

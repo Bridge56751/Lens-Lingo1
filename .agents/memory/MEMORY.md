@@ -1,0 +1,1 @@
+- [Forked AI integration secrets](forked-ai-integration-secrets.md) — forked Repls carry stale global AI_INTEGRATIONS_* secrets that override re-provisioning and can't be deleted programmatically; cause "Replit AI Integrations is not configured" 404s.
