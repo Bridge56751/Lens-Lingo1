@@ -125,6 +125,8 @@ export type TKey =
   | "conv.micErrorBody"
   | "conv.transcribeErrorTitle"
   | "conv.transcribeErrorBody"
+  | "conv.transcribeEmptyTitle"
+  | "conv.transcribeEmptyBody"
   | "conv.listening"
   | "conv.micTooLongTitle"
   | "conv.micTooLongBody"
@@ -251,6 +253,8 @@ const en: Record<TKey, string> = {
   "conv.micErrorBody": "Could not start recording. Please try again.",
   "conv.transcribeErrorTitle": "Couldn\u2019t hear that",
   "conv.transcribeErrorBody": "Sorry, we couldn\u2019t understand the audio. Please try again.",
+  "conv.transcribeEmptyTitle": "Didn\u2019t catch anything",
+  "conv.transcribeEmptyBody": "We didn\u2019t hear any speech. Try speaking a little longer and closer to the mic.",
   "conv.listening": "Listening\u2026",
   "conv.micTooLongTitle": "Recording too long",
   "conv.micTooLongBody": "That recording is too long. Please try a shorter message.",

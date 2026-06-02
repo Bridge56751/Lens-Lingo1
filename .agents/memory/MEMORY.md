@@ -1,1 +1,2 @@
 - [Supabase from Replit](supabase-connection.md) — direct DB host is IPv6-only/unreachable; must use Session pooler + split-password env pattern.
+- [Expo voice flow](expo-voice-flow.md) — web blob: audio read, auto-send after transcribe, send mutex; test mic on device not web preview.

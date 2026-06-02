@@ -54,6 +54,28 @@ const WHISPER_LANG: Record<string, string> = {
 
 const MAX_AUDIO_BASE64_LEN = 7_000_000;
 
+// Reads a recorded audio file into base64. On web, expo-file-system's File API
+// can't read the blob: URLs that expo-audio produces, so fetch the blob and
+// convert it with FileReader instead. Native uses the File API directly.
+async function readAudio(uri: string): Promise<{ base64: string; mimeType: string }> {
+  if (Platform.OS === "web") {
+    const blob = await fetch(uri).then((r) => r.blob());
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = () => reject(new Error("Failed to read audio"));
+      reader.readAsDataURL(blob);
+    });
+    const base64 = dataUrl.includes(",")
+      ? dataUrl.slice(dataUrl.indexOf(",") + 1)
+      : "";
+    const mimeType = (blob.type || "audio/webm").split(";")[0] ?? "audio/webm";
+    return { base64, mimeType };
+  }
+  const base64 = await new File(uri).base64();
+  return { base64, mimeType: "audio/m4a" };
+}
+
 function SparkleIcon({ color }: { color: string }) {
   return (
     <View style={styles.sparkleWrap}>
@@ -131,8 +153,14 @@ export default function ConversationScreen() {
   const queryClient = useQueryClient();
   const inputRef = useRef<TextInput>(null);
   const flatListRef = useRef<FlatList<Message>>(null);
+  const sendingRef = useRef(false);
+  const inputTextRef = useRef("");
 
-  const [inputText, setInputText] = useState("");
+  const [inputText, setInputTextState] = useState("");
+  const setInputText = useCallback((value: string) => {
+    inputTextRef.current = value;
+    setInputTextState(value);
+  }, []);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingContent, setStreamingContent] = useState("");
@@ -202,12 +230,12 @@ export default function ConversationScreen() {
       const uri = audioRecorder.uri;
       if (!uri) throw new Error("No recording uri");
 
-      const audioBase64 = await new File(uri).base64();
+      const { base64: audioBase64, mimeType } = await readAudio(uri);
+      if (!audioBase64) throw new Error("Empty recording");
       if (audioBase64.length > MAX_AUDIO_BASE64_LEN) {
         Alert.alert(t("conv.micTooLongTitle"), t("conv.micTooLongBody"));
         return;
       }
-      const mimeType = Platform.OS === "web" ? "audio/webm" : "audio/m4a";
 
       const baseUrl = process.env.EXPO_PUBLIC_DOMAIN
         ? `https://${process.env.EXPO_PUBLIC_DOMAIN}`
@@ -231,9 +259,14 @@ export default function ConversationScreen() {
       const data = (await response.json()) as { text?: string };
       const transcript = data.text?.trim();
       if (transcript) {
-        setInputText((prev) => (prev ? `${prev} ${transcript}` : transcript));
-        setTimeout(() => inputRef.current?.focus(), 100);
+        // Auto-send so speaking is a natural back-and-forth: stop talking → AI replies.
+        const existing = inputTextRef.current.trim();
+        setInputText("");
+        setIsTranscribing(false);
+        await sendText(existing ? `${existing} ${transcript}` : transcript);
+        return;
       }
+      Alert.alert(t("conv.transcribeEmptyTitle"), t("conv.transcribeEmptyBody"));
     } catch {
       Alert.alert(t("conv.transcribeErrorTitle"), t("conv.transcribeErrorBody"));
     } finally {
@@ -241,11 +274,11 @@ export default function ConversationScreen() {
     }
   };
 
-  const sendMessage = useCallback(async () => {
-    const text = inputText.trim();
-    if (!text || isStreaming) return;
+  const sendText = useCallback(async (raw: string) => {
+    const text = raw.trim();
+    if (!text || sendingRef.current) return;
+    sendingRef.current = true;
 
-    setInputText("");
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
     const userMessage: Message = {
@@ -328,14 +361,22 @@ export default function ConversationScreen() {
       };
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
+      sendingRef.current = false;
       setIsStreaming(false);
       setStreamingContent("");
       queryClient.invalidateQueries({
         queryKey: getGetOpenaiConversationQueryKey(conversationId),
       });
-      setTimeout(() => inputRef.current?.focus(), 100);
     }
-  }, [inputText, isStreaming, conversationId, queryClient]);
+  }, [conversationId, queryClient, t]);
+
+  const sendMessage = useCallback(() => {
+    const text = inputText.trim();
+    if (!text || isStreaming || isTranscribing || sendingRef.current) return;
+    setInputText("");
+    void sendText(text);
+    setTimeout(() => inputRef.current?.focus(), 100);
+  }, [inputText, isStreaming, isTranscribing, sendText, setInputText]);
 
   const topPadding = Platform.OS === "web" ? 16 : insets.top;
   const bottomPadding = insets.bottom;
