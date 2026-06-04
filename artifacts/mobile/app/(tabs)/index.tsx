@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useCallback, useMemo, useRef } from "react";
 import {
   View,
   Text,
@@ -9,13 +9,25 @@ import {
   Image,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSequence,
+  withTiming,
+  withSpring,
+  Easing,
+} from "react-native-reanimated";
 import { useListOpenaiConversations } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { usePreferences, type Language } from "@/hooks/usePreferences";
 import { useT } from "@/hooks/useT";
+import { computeStreak, todayKey } from "@/lib/streak";
+
+const STREAK_SEEN_KEY = "@linguascan/streak-seen-day/v1";
 
 const HELLOS: Record<Language, string> = {
   English: "hello",
@@ -153,15 +165,8 @@ export default function HomeScreen() {
     today.setHours(0, 0, 0, 0);
     const todayCount = list.filter((c) => new Date(c.createdAt) >= today).length;
 
-    const days = new Set(
-      list.map((c) => {
-        const d = new Date(c.createdAt);
-        return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-      }),
-    );
-
     return {
-      streak: Math.max(1, days.size),
+      streak: computeStreak(list.map((c) => c.createdAt)),
       totalConvos: list.length,
       vocab: list.length * 5,
       dailyDone: todayCount,
@@ -171,6 +176,56 @@ export default function HomeScreen() {
 
   const topPadding = Platform.OS === "web" ? 16 : insets.top;
   const bottomPadding = Platform.OS === "web" ? 34 + 84 : insets.bottom + 90;
+
+  // Celebrate the streak with a little bounce the first time the user lands on
+  // Home on a new calendar day ("logs back in"). We persist the last-seen day so
+  // a routine re-focus on the same day doesn't replay it.
+  const flameScale = useSharedValue(1);
+  const numScale = useSharedValue(1);
+  const lastCelebratedDayRef = useRef<string | null>(null);
+
+  const playStreakAnimation = useCallback(() => {
+    flameScale.value = withSequence(
+      withTiming(1.55, { duration: 200, easing: Easing.out(Easing.quad) }),
+      withSpring(1, { damping: 5, stiffness: 180 }),
+    );
+    numScale.value = withSequence(
+      withTiming(1.4, { duration: 220, easing: Easing.out(Easing.quad) }),
+      withSpring(1, { damping: 6, stiffness: 200 }),
+    );
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  }, [flameScale, numScale]);
+
+  useFocusEffect(
+    useCallback(() => {
+      const today = todayKey();
+      // Already celebrated for today in this session — nothing to do. (Re-checked
+      // on every focus so a session that crosses midnight still fires next day.)
+      if (lastCelebratedDayRef.current === today) return;
+      let cancelled = false;
+      (async () => {
+        try {
+          const seen = await AsyncStorage.getItem(STREAK_SEEN_KEY);
+          if (!cancelled && seen !== today) {
+            lastCelebratedDayRef.current = today;
+            playStreakAnimation();
+            await AsyncStorage.setItem(STREAK_SEEN_KEY, today);
+          } else if (!cancelled) {
+            // Persisted today already — remember it so we don't re-hit storage.
+            lastCelebratedDayRef.current = today;
+          }
+        } catch {
+          // Non-critical: if storage fails, just skip the celebration.
+        }
+      })();
+      return () => {
+        cancelled = true;
+      };
+    }, [playStreakAnimation]),
+  );
+
+  const flameStyle = useAnimatedStyle(() => ({ transform: [{ scale: flameScale.value }] }));
+  const numStyle = useAnimatedStyle(() => ({ transform: [{ scale: numScale.value }] }));
 
   const goScan = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -198,11 +253,13 @@ export default function HomeScreen() {
           </View>
           <View style={styles.greetingRight}>
             <View style={[styles.streakPill, { backgroundColor: "#FFF1E6" }]}>
-              <Text style={{ fontSize: 14 }}>🔥</Text>
+              <Animated.Text style={[{ fontSize: 14 }, flameStyle]}>🔥</Animated.Text>
               <View>
-                <Text style={[styles.streakNum, { color: "#1A1B2E", fontFamily: "Inter_700Bold" }]}>
+                <Animated.Text
+                  style={[styles.streakNum, { color: "#1A1B2E", fontFamily: "Inter_700Bold" }, numStyle]}
+                >
                   {stats.streak}
-                </Text>
+                </Animated.Text>
                 <Text style={[styles.streakLabel, { color: "#7A7B8E", fontFamily: "Inter_500Medium" }]}>
                   {t("home.dayStreak")}
                 </Text>

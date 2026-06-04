@@ -13,6 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useListOpenaiConversations } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { useT } from "@/hooks/useT";
+import { computeStreak } from "@/lib/streak";
 
 type Conversation = { id: number; title: string; createdAt: string };
 
@@ -43,12 +44,7 @@ export default function ProgressScreen() {
       daysWithActivity.set(k, (daysWithActivity.get(k) ?? 0) + 1);
     }
 
-    let streakCount = 0;
-    const cursor = new Date(today);
-    while (daysWithActivity.has(dayKey(cursor))) {
-      streakCount += 1;
-      cursor.setDate(cursor.getDate() - 1);
-    }
+    const streakCount = computeStreak(list.map((c) => c.createdAt));
 
     const week: { label: string; count: number; isToday: boolean }[] = [];
     const labels = ["S", "M", "T", "W", "T", "F", "S"];
