@@ -10,6 +10,8 @@ export const conversations = pgTable("conversations", {
     onDelete: "cascade",
   }),
   title: text("title").notNull(),
+  targetLanguage: text("target_language"),
+  nativeLanguage: text("native_language"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 

@@ -278,6 +278,19 @@ router.post("/openai/conversations/:id/messages", async (req, res) => {
     { role: "user", content },
   ];
 
+  // Re-anchor the target language on every turn. The system prompt is set once at
+  // scan time; over a long chat (especially if the learner replies in their own
+  // language) the model can drift back to English. A high-recency system reminder
+  // right before generation keeps replies in the language being learned.
+  const targetLanguage =
+    owned.targetLanguage?.trim() || (owned.title ?? "").split(" • ")[1]?.trim();
+  if (targetLanguage) {
+    chatMessages.push({
+      role: "system",
+      content: `Reminder: reply in ${targetLanguage}, not English (unless the learner's language is English). Keep it short (2-4 sentences), add a brief parenthetical translation for any new word, gently correct mistakes, and end with one simple question in ${targetLanguage}.`,
+    });
+  }
+
   res.setHeader("Content-Type", "text/event-stream");
   res.setHeader("Cache-Control", "no-cache");
   res.setHeader("Connection", "keep-alive");

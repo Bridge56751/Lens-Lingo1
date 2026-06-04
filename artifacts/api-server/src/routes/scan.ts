@@ -6,6 +6,13 @@ import { openai } from "@workspace/integrations-openai-ai-server";
 
 const router = Router();
 
+// Item labels come from the vision model (untrusted) and get interpolated into a
+// high-priority system prompt. Collapse whitespace/newlines and cap length so a
+// malicious or odd image caption can't smuggle instruction-like text into it.
+function sanitizeLabel(value: string | undefined | null): string {
+  return (value ?? "").replace(/\s+/g, " ").trim().slice(0, 100);
+}
+
 router.post("/scan", async (req, res) => {
   const { imageBase64, targetLanguage, nativeLanguage } = req.body as {
     imageBase64?: string;
@@ -58,9 +65,9 @@ router.post("/scan", async (req, res) => {
         itemNameTranslated?: string;
         pronunciation?: string;
       };
-      itemName = parsed.itemName ?? itemName;
-      itemNameTranslated = parsed.itemNameTranslated ?? itemNameTranslated;
-      pronunciation = parsed.pronunciation ?? "";
+      itemName = sanitizeLabel(parsed.itemName) || itemName;
+      itemNameTranslated = sanitizeLabel(parsed.itemNameTranslated) || itemNameTranslated;
+      pronunciation = sanitizeLabel(parsed.pronunciation);
     }
   } catch (err) {
     req.log.error({ err }, "Vision identification failed, using defaults");
@@ -68,14 +75,19 @@ router.post("/scan", async (req, res) => {
 
   // Build system prompt for language learning
   const pronounceNote = pronunciation ? `, pronounced "${pronunciation}"` : "";
-  const systemPrompt = `You are an enthusiastic and encouraging language tutor helping a ${nativeLanguage} speaker learn ${targetLanguage}. The user has scanned an item: "${itemName}" (${itemNameTranslated} in ${targetLanguage}${pronounceNote}).
+  const systemPrompt = `You are an enthusiastic, patient language tutor helping a native ${nativeLanguage} speaker learn ${targetLanguage} through conversation. The user scanned an item: "${itemName}" (in ${targetLanguage}: "${itemNameTranslated}"${pronounceNote}).
 
-Your teaching style:
-- Keep responses SHORT (2-4 sentences max)
-- Use ${targetLanguage} primarily, with brief ${nativeLanguage} translations in parentheses for new words
-- Ask one simple question or give one small challenge to keep the conversation going
-- Be warm and encouraging
-- Do not use emojis`;
+CRITICAL LANGUAGE RULES (these override everything else):
+- ALWAYS write your replies in ${targetLanguage}. Never reply primarily in ${nativeLanguage}, even if the user writes or speaks to you in ${nativeLanguage}.
+- After any ${targetLanguage} sentence that uses a new or difficult word, add a short ${nativeLanguage} translation in parentheses so a beginner can follow.
+- If the user writes in ${nativeLanguage}, warmly encourage them to try in ${targetLanguage}, and still model the answer in ${targetLanguage}.
+- If the user makes a mistake in ${targetLanguage}, gently correct it in one short phrase, then continue the conversation.
+
+Teaching style:
+- Keep replies SHORT (2-4 sentences max).
+- Stay focused on the scanned item and everyday vocabulary related to it.
+- End every reply with one simple question in ${targetLanguage} to keep the conversation going.
+- Be warm and encouraging. Do not use emojis.`;
 
   const triggerMessage = `I just scanned a ${itemName}. Help me learn the word for it in ${targetLanguage}!`;
 
@@ -103,6 +115,8 @@ Your teaching style:
       .insert(conversations)
       .values({
         title: `${itemName} • ${targetLanguage}`,
+        targetLanguage,
+        nativeLanguage,
         customerId,
       })
       .returning();
