@@ -133,6 +133,11 @@ export type TKey =
   | "history.today"
   | "history.yesterday"
   | "history.daysAgo"
+  | "history.lockedTitle"
+  | "history.lockedBody"
+  | "history.switchAndOpen"
+  | "history.keepCurrent"
+  | "history.currentLangTag"
   | "badge.firstScan.title"
   | "badge.firstScan.desc"
   | "badge.chatty.title"
@@ -261,6 +266,12 @@ const en: Record<TKey, string> = {
   "history.today": "Today",
   "history.yesterday": "Yesterday",
   "history.daysAgo": "{n} days ago",
+  "history.lockedTitle": "Switch language to continue",
+  "history.lockedBody":
+    "This chat is in {lang}, but you're currently learning {current}. Switch your learning language to {lang} to open it.",
+  "history.switchAndOpen": "Switch to {lang}",
+  "history.keepCurrent": "Cancel",
+  "history.currentLangTag": "Learning now",
   "badge.firstScan.title": "First Scan",
   "badge.firstScan.desc": "Complete your first scan",
   "badge.chatty.title": "Chatty",

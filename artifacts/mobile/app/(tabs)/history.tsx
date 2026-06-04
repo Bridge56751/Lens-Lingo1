@@ -1,9 +1,9 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
   View,
   Text,
   StyleSheet,
-  FlatList,
+  SectionList,
   TouchableOpacity,
   Alert,
   Platform,
@@ -20,6 +20,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { getListOpenaiConversationsQueryKey } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { useT } from "@/hooks/useT";
+import { usePreferences, LANGUAGES, type Language } from "@/hooks/usePreferences";
 
 type Conversation = {
   id: number;
@@ -27,12 +28,27 @@ type Conversation = {
   createdAt: string;
 };
 
+function getLanguage(title: string): string {
+  return title.split(" • ")[1]?.trim() ?? "";
+}
+
+// Resolve the chat's language segment to a known, canonical Language (case
+// tolerant). Returns null when the title has no language or an unrecognized
+// one — those chats are treated as "unknown" and never gated/locked.
+function resolveLanguage(title: string): Language | null {
+  const seg = getLanguage(title);
+  if (!seg) return null;
+  return LANGUAGES.find((l) => l.toLowerCase() === seg.toLowerCase()) ?? null;
+}
+
 function ConversationItem({
   item,
+  locked,
   onPress,
   onDelete,
 }: {
   item: Conversation;
+  locked: boolean;
   onPress: () => void;
   onDelete: () => void;
 }) {
@@ -55,7 +71,7 @@ function ConversationItem({
 
   return (
     <TouchableOpacity
-      style={[styles.item, { backgroundColor: colors.card }]}
+      style={[styles.item, { backgroundColor: colors.card }, locked && styles.itemLocked]}
       onPress={onPress}
       activeOpacity={0.7}
       onLongPress={() => {
@@ -90,7 +106,11 @@ function ConversationItem({
           </Text>
         </View>
       </View>
-      <Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />
+      <Ionicons
+        name={locked ? "lock-closed" : "chevron-forward"}
+        size={locked ? 16 : 18}
+        color={colors.mutedForeground}
+      />
     </TouchableOpacity>
   );
 }
@@ -100,6 +120,7 @@ export default function HistoryScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
+  const { prefs, update } = usePreferences();
 
   const { data: conversations, isLoading, refetch } = useListOpenaiConversations();
   const { mutate: deleteConversation } = useDeleteOpenaiConversation();
@@ -118,10 +139,65 @@ export default function HistoryScreen() {
     );
   };
 
+  const switchAndOpen = (lang: Language, id: number) => {
+    // Avoid leaving target === native: if the chat's language is the user's
+    // native language, swap native to the language they were just learning.
+    if (lang === prefs.nativeLanguage) {
+      update("nativeLanguage", prefs.targetLanguage);
+    }
+    update("targetLanguage", lang);
+    Haptics.selectionAsync();
+    router.push(`/conversation/${id}`);
+  };
+
+  const handleOpen = (item: Conversation) => {
+    const chatLang = resolveLanguage(item.title);
+    // Open directly when it matches the current learning language (or we can't
+    // recognize what language the chat is in).
+    if (!chatLang || chatLang === prefs.targetLanguage) {
+      router.push(`/conversation/${item.id}`);
+      return;
+    }
+
+    const title = t("history.lockedTitle");
+    const body = t("history.lockedBody", { lang: chatLang, current: prefs.targetLanguage });
+    const doSwitch = () => switchAndOpen(chatLang, item.id);
+
+    if (Platform.OS === "web") {
+      if (typeof window !== "undefined" && window.confirm(`${title}\n\n${body}`)) {
+        doSwitch();
+      }
+      return;
+    }
+    Alert.alert(title, body, [
+      { text: t("history.keepCurrent"), style: "cancel" },
+      { text: t("history.switchAndOpen", { lang: chatLang }), onPress: doSwitch },
+    ]);
+  };
+
   const topPadding = Platform.OS === "web" ? 16 : insets.top;
   const bottomPadding = Platform.OS === "web" ? 34 + 84 : insets.bottom + 80;
 
   const visibleConversations = (conversations ?? []) as Conversation[];
+
+  // Group conversations by language, preserving the API order (most recent
+  // first) both for the order languages appear in and within each group.
+  const sections = useMemo(() => {
+    const groups = new Map<string, { canonical: Language | null; data: Conversation[] }>();
+    for (const c of visibleConversations) {
+      const canonical = resolveLanguage(c.title);
+      const label = canonical ?? getLanguage(c.title) ?? "";
+      const key = label || t("conv.fallbackName");
+      const existing = groups.get(key);
+      if (existing) existing.data.push(c);
+      else groups.set(key, { canonical, data: [c] });
+    }
+    return Array.from(groups.entries()).map(([language, g]) => ({
+      language,
+      canonical: g.canonical,
+      data: g.data,
+    }));
+  }, [visibleConversations, t]);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -151,13 +227,51 @@ export default function HistoryScreen() {
           </Text>
         </View>
       ) : (
-        <FlatList
-          data={visibleConversations}
+        <SectionList
+          sections={sections}
           keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
+          stickySectionHeadersEnabled={false}
+          renderSectionHeader={({ section }) => {
+            const isCurrent = section.canonical === prefs.targetLanguage;
+            const isLocked = section.canonical !== null && !isCurrent;
+            return (
+              <View style={styles.sectionHeader}>
+                <View
+                  style={[
+                    styles.sectionBar,
+                    { backgroundColor: isCurrent ? colors.primary : colors.mutedForeground },
+                  ]}
+                />
+                <Text
+                  style={[
+                    styles.sectionTitle,
+                    { color: colors.foreground, fontFamily: "Inter_700Bold" },
+                  ]}
+                >
+                  {section.language}
+                </Text>
+                {isCurrent ? (
+                  <View style={[styles.currentTag, { backgroundColor: colors.primarySoft }]}>
+                    <Text
+                      style={[
+                        styles.currentTagText,
+                        { color: colors.primary, fontFamily: "Inter_600SemiBold" },
+                      ]}
+                    >
+                      {t("history.currentLangTag")}
+                    </Text>
+                  </View>
+                ) : isLocked ? (
+                  <Ionicons name="lock-closed" size={13} color={colors.mutedForeground} />
+                ) : null}
+              </View>
+            );
+          }}
+          renderItem={({ item, section }) => (
             <ConversationItem
               item={item}
-              onPress={() => router.push(`/conversation/${item.id}`)}
+              locked={section.canonical !== null && section.canonical !== prefs.targetLanguage}
+              onPress={() => handleOpen(item)}
               onDelete={() => handleDelete(item.id)}
             />
           )}
@@ -181,6 +295,25 @@ const styles = StyleSheet.create({
   title: { fontSize: 30, letterSpacing: -0.5 },
   subtitle: { fontSize: 14, marginTop: 4 },
   listContent: { paddingHorizontal: 20, paddingTop: 4 },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingTop: 22,
+    paddingBottom: 10,
+  },
+  sectionBar: {
+    width: 3,
+    height: 16,
+    borderRadius: 2,
+  },
+  sectionTitle: { fontSize: 15, letterSpacing: -0.2 },
+  currentTag: {
+    paddingHorizontal: 9,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  currentTagText: { fontSize: 10, letterSpacing: 0.2 },
   item: {
     flexDirection: "row",
     alignItems: "center",
@@ -193,6 +326,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 1,
   },
+  itemLocked: { opacity: 0.55 },
   iconBox: {
     width: 48,
     height: 48,
