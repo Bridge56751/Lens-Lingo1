@@ -102,21 +102,30 @@ export default function ScanScreen() {
   };
 
   const handleGallery = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images"],
-      quality: 0.7,
-      base64: true,
-      allowsEditing: true,
-      aspect: [4, 3],
-    });
-    if (!result.canceled && result.assets[0]?.base64) {
-      setScannedImage(result.assets[0].uri);
-      setScanResult(null);
-      await scanItem(result.assets[0].base64);
+    if (isScanningRef.current) return;
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        quality: 0.7,
+        base64: true,
+        allowsEditing: true,
+        aspect: [4, 3],
+      });
+      if (!result.canceled && result.assets[0]?.base64) {
+        setScannedImage(result.assets[0].uri);
+        setScanResult(null);
+        await scanItem(result.assets[0].base64);
+      }
+    } catch (err) {
+      Alert.alert(t("scan.scanFailedTitle"), t("scan.scanFailedBody"));
     }
   };
 
+  const isScanningRef = useRef(false);
+
   const scanItem = async (imageBase64: string) => {
+    if (isScanningRef.current) return;
+    isScanningRef.current = true;
     setIsScanning(true);
     startScanAnimation();
 
@@ -154,6 +163,7 @@ export default function ScanScreen() {
       Alert.alert(t("scan.scanFailedTitle"), t("scan.scanFailedBody"));
       setScannedImage(null);
     } finally {
+      isScanningRef.current = false;
       setIsScanning(false);
       stopScanAnimation();
     }

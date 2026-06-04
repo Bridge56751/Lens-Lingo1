@@ -180,7 +180,7 @@ export default function ConversationScreen() {
     };
   }, [audioRecorder]);
 
-  const { data: conversation, isLoading } = useGetOpenaiConversation(conversationId, {
+  const { data: conversation, isLoading, dataUpdatedAt } = useGetOpenaiConversation(conversationId, {
     query: {
       queryKey: getGetOpenaiConversationQueryKey(conversationId),
       enabled: !!conversationId,
@@ -188,6 +188,9 @@ export default function ConversationScreen() {
   });
 
   useEffect(() => {
+    // Don't overwrite optimistic/in-flight messages while a send is active;
+    // the post-send query invalidation will re-run this and reconcile cleanly.
+    if (sendingRef.current) return;
     if (conversation?.messages) {
       const serverMessages = conversation.messages.map((m) => ({
         id: m.id.toString(),
@@ -196,7 +199,7 @@ export default function ConversationScreen() {
       }));
       setMessages(serverMessages);
     }
-  }, [conversation?.messages?.length]);
+  }, [conversation?.messages?.length, dataUpdatedAt]);
 
   const parts = (conversation?.title ?? "").split(" • ");
   const itemName = parts[0] ?? t("conv.fallbackName");
@@ -329,19 +332,23 @@ export default function ConversationScreen() {
         for (const line of lines) {
           if (!line.startsWith("data: ")) continue;
           const jsonStr = line.slice(6);
+          let parsed: { content?: string; done?: boolean; error?: string } | null = null;
           try {
-            const parsed = JSON.parse(jsonStr) as {
+            parsed = JSON.parse(jsonStr) as {
               content?: string;
               done?: boolean;
               error?: string;
             };
-            if (parsed.done) break;
-            if (parsed.content) {
-              fullText += parsed.content;
-              setStreamingContent(fullText);
-            }
           } catch {
             // ignore parse errors
+          }
+          if (!parsed) continue;
+          // Surface server-side stream errors instead of silently ending with no reply.
+          if (parsed.error) throw new Error(parsed.error);
+          if (parsed.done) break;
+          if (parsed.content) {
+            fullText += parsed.content;
+            setStreamingContent(fullText);
           }
         }
       }

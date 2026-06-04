@@ -40,21 +40,37 @@ const STORAGE_KEY = "@linguascan/preferences/v1";
 type Listener = (p: Preferences) => void;
 let cached: Preferences = { ...DEFAULTS };
 let loaded = false;
+// Updates made before the initial storage read resolves. They must win over
+// (and be merged into) the persisted values so a fast tap isn't clobbered.
+const pending: Partial<Preferences> = {};
 const listeners = new Set<Listener>();
+// Single-flight guard: many components mount usePreferences at once; without
+// this they'd each read storage concurrently and a late resolver could
+// overwrite newer in-memory updates.
+let loadPromise: Promise<void> | null = null;
 
-async function ensureLoaded() {
-  if (loaded) return;
-  try {
-    const raw = await AsyncStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw) as Partial<Preferences>;
-      cached = { ...DEFAULTS, ...parsed };
+function ensureLoaded(): Promise<void> {
+  if (loaded) return Promise.resolve();
+  if (loadPromise) return loadPromise;
+  loadPromise = (async () => {
+    try {
+      const raw = await AsyncStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as Partial<Preferences>;
+        cached = { ...DEFAULTS, ...parsed, ...pending };
+      }
+    } catch {
+      // ignore
     }
-  } catch {
-    // ignore
-  }
-  loaded = true;
-  listeners.forEach((l) => l(cached));
+    loaded = true;
+    // Persist now if there were updates queued before load completed; writing
+    // earlier could have clobbered other persisted keys we hadn't read yet.
+    const hadPending = Object.keys(pending).length > 0;
+    for (const k of Object.keys(pending)) delete pending[k as keyof Preferences];
+    if (hadPending) void writeCached();
+    listeners.forEach((l) => l(cached));
+  })();
+  return loadPromise;
 }
 
 async function writeCached() {
@@ -80,7 +96,12 @@ export function usePreferences() {
   const update = useCallback(<K extends keyof Preferences>(key: K, value: Preferences[K]) => {
     cached = { ...cached, [key]: value };
     listeners.forEach((l) => l(cached));
-    void writeCached();
+    if (loaded) {
+      void writeCached();
+    } else {
+      // Queue until the initial read resolves; ensureLoaded merges + persists.
+      pending[key] = value;
+    }
   }, []);
 
   return { prefs, update };

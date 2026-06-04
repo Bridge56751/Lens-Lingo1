@@ -20,9 +20,15 @@ export const SPEECH_LOCALES: Record<Language, string> = {
 
 /** Speak a word aloud in the given language, cancelling anything in progress. */
 export function speakWord(word: string, language: Language): void {
-  Speech.stop();
-  Speech.speak(word, {
-    language: SPEECH_LOCALES[language] ?? "en-US",
-    rate: 0.9,
-  });
+  // TTS support varies by platform/runtime (notably web); never let a speech
+  // failure crash the caller.
+  try {
+    Speech.stop();
+    Speech.speak(word, {
+      language: SPEECH_LOCALES[language] ?? "en-US",
+      rate: 0.9,
+    });
+  } catch {
+    // ignore — speech is a non-critical enhancement
+  }
 }
