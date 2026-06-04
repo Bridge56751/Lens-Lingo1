@@ -75,6 +75,8 @@ export type TKey =
   | "settings.sameLangTitle"
   | "settings.sameLangBody"
   | "settings.continueAnyway"
+  | "settings.nativeComingSoonTitle"
+  | "settings.nativeComingSoonBody"
   | "vocab.title"
   | "vocab.all"
   | "vocab.empty"
@@ -223,6 +225,8 @@ const en: Record<TKey, string> = {
   "settings.sameLangTitle": "Same language?",
   "settings.sameLangBody": "You picked {lang} as both the language you speak and the one you\u2019re learning. You probably won\u2019t learn much that way.",
   "settings.continueAnyway": "Use it anyway",
+  "settings.nativeComingSoonTitle": "Coming soon",
+  "settings.nativeComingSoonBody": "More native languages are coming soon. For now, LinguaScan is set up for English speakers.",
   "vocab.title": "Vocabulary",
   "vocab.all": "All",
   "vocab.empty": "No words yet",

@@ -172,7 +172,12 @@ export default function SettingsScreen() {
             title={t("settings.iSpeak")}
             subtitle={nativeLabel}
             right={<Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />}
-            onPress={() => setPicker("native")}
+            onPress={() =>
+              Alert.alert(
+                t("settings.nativeComingSoonTitle"),
+                t("settings.nativeComingSoonBody"),
+              )
+            }
           />
         </View>
 
