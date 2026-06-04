@@ -2,3 +2,4 @@
 - [Expo voice flow](expo-voice-flow.md) — web blob: audio read, auto-send after transcribe, send mutex; test mic on device not web preview.
 - [Tutor language anchoring](tutor-language-anchoring.md) — always reply in target language via strong prompt + post-user system reminder; persist target/native lang as columns, sanitize vision labels.
 - [Day streak](day-streak.md) — derived from conversation createdAt dates (no DB column); consecutive-days-ending-today/yesterday semantics; celebrate animation once per new calendar day.
+- [Practice flashcards](practice-flashcards.md) — don't rebuild card deck on React Query refetch (resets progress); shared TTS lives in lib/speech.ts.

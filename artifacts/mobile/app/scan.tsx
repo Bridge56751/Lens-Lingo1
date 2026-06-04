@@ -31,22 +31,7 @@ import { useColors } from "@/hooks/useColors";
 import { usePreferences, LANGUAGES, type Language } from "@/hooks/usePreferences";
 import { useT } from "@/hooks/useT";
 import { getDeviceIdSync } from "@/lib/device";
-
-const SPEECH_LOCALES: Record<Language, string> = {
-  English: "en-US",
-  Spanish: "es-ES",
-  French: "fr-FR",
-  German: "de-DE",
-  Italian: "it-IT",
-  Portuguese: "pt-PT",
-  Japanese: "ja-JP",
-  Chinese: "zh-CN",
-  Korean: "ko-KR",
-  Arabic: "ar-SA",
-  Russian: "ru-RU",
-  Hindi: "hi-IN",
-  Dutch: "nl-NL",
-};
+import { SPEECH_LOCALES } from "@/lib/speech";
 
 function CornerBrackets({ color }: { color: string }) {
   return (

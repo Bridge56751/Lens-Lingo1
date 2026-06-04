@@ -13,6 +13,7 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useListVocabulary } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
+import { usePreferences } from "@/hooks/usePreferences";
 import { useT } from "@/hooks/useT";
 
 type Entry = {
@@ -29,9 +30,11 @@ export default function VocabularyScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { data, isLoading } = useListVocabulary();
+  const { prefs } = usePreferences();
   const [activeLang, setActiveLang] = useState<string | null>(null);
 
   const entries = (data ?? []) as Entry[];
+  const hasTargetVocab = entries.some((e) => e.language === prefs.targetLanguage);
 
   const languages = useMemo(() => {
     const counts = new Map<string, number>();
@@ -58,7 +61,17 @@ export default function VocabularyScreen() {
         <Text style={[styles.headerTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
           {t("vocab.title")}
         </Text>
-        <View style={{ width: 40 }} />
+        {hasTargetVocab ? (
+          <TouchableOpacity
+            onPress={() => router.push("/practice")}
+            style={styles.iconBtn}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="school" size={24} color={colors.primary} />
+          </TouchableOpacity>
+        ) : (
+          <View style={{ width: 40 }} />
+        )}
       </View>
 
       {languages.length > 1 && (

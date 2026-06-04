@@ -81,6 +81,21 @@ export type TKey =
   | "vocab.emptySub"
   | "vocab.unique"
   | "vocab.from"
+  | "vocab.practice"
+  | "practice.title"
+  | "practice.listen"
+  | "practice.tapHear"
+  | "practice.showWord"
+  | "practice.gotIt"
+  | "practice.again"
+  | "practice.progress"
+  | "practice.from"
+  | "practice.doneTitle"
+  | "practice.doneBody"
+  | "practice.restart"
+  | "practice.close"
+  | "practice.empty"
+  | "practice.emptySub"
   | "progress.title"
   | "progress.today"
   | "progress.complete"
@@ -214,6 +229,21 @@ const en: Record<TKey, string> = {
   "vocab.emptySub": "Scan an object and start a conversation to build your vocabulary.",
   "vocab.unique": "{n} unique words",
   "vocab.from": "from \u201C{title}\u201D",
+  "vocab.practice": "Practice",
+  "practice.title": "Practice",
+  "practice.listen": "Listen and say it out loud",
+  "practice.tapHear": "Tap to hear again",
+  "practice.showWord": "Show word",
+  "practice.gotIt": "Got it",
+  "practice.again": "Practice again",
+  "practice.progress": "{current} of {total}",
+  "practice.from": "from \u201C{title}\u201D",
+  "practice.doneTitle": "Session complete!",
+  "practice.doneBody": "You knew {known} of {total} words.",
+  "practice.restart": "Practice again",
+  "practice.close": "Done",
+  "practice.empty": "No words to practice yet",
+  "practice.emptySub": "Chat about scanned objects in {lang} to collect words, then come back to practice.",
   "progress.title": "Daily Progress",
   "progress.today": "TODAY",
   "progress.complete": "Goal complete. Nice work!",
