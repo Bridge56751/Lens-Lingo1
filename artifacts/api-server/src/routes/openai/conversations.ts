@@ -6,6 +6,25 @@ import { openai, toFile } from "@workspace/integrations-openai-ai-server";
 
 const router = Router();
 
+// Languages the app supports. Used to validate the client-supplied target
+// language before it is interpolated into a high-priority system reminder
+// (an allowlist prevents prompt-injection via an arbitrary language string).
+const SUPPORTED_LANGUAGES = new Set([
+  "English",
+  "Spanish",
+  "French",
+  "German",
+  "Italian",
+  "Portuguese",
+  "Japanese",
+  "Chinese",
+  "Korean",
+  "Arabic",
+  "Russian",
+  "Hindi",
+  "Dutch",
+]);
+
 // POST /openai/transcribe - transcribe spoken audio to text (Whisper)
 router.post("/openai/transcribe", async (req, res) => {
   const { audioBase64, mimeType, language } = req.body as {
@@ -214,7 +233,10 @@ router.post("/openai/conversations/:id/messages", async (req, res) => {
     return;
   }
 
-  const { content } = req.body as { content?: string };
+  const { content, targetLanguage: requestedLanguage } = req.body as {
+    content?: string;
+    targetLanguage?: string;
+  };
   if (!content) {
     res.status(400).json({ error: "content is required" });
     return;
@@ -278,12 +300,30 @@ router.post("/openai/conversations/:id/messages", async (req, res) => {
     { role: "user", content },
   ];
 
-  // Re-anchor the target language on every turn. The system prompt is set once at
-  // scan time; over a long chat (especially if the learner replies in their own
-  // language) the model can drift back to English. A high-recency system reminder
-  // right before generation keeps replies in the language being learned.
+  // Re-anchor the target language on every turn. The learning language is driven
+  // by the user's current app settings, sent on each request. We validate it
+  // against the supported allowlist (it gets interpolated into a system message)
+  // and, when it differs from what's stored, persist it so transcription and
+  // future turns stay consistent. Fall back to the stored column, then the title.
+  const settingsLanguage =
+    typeof requestedLanguage === "string" && SUPPORTED_LANGUAGES.has(requestedLanguage.trim())
+      ? requestedLanguage.trim()
+      : undefined;
+  if (settingsLanguage && settingsLanguage !== owned.targetLanguage) {
+    // Best-effort: persisting the language must never abort the reply turn.
+    try {
+      await db
+        .update(conversations)
+        .set({ targetLanguage: settingsLanguage })
+        .where(eq(conversations.id, id));
+    } catch (err) {
+      req.log.error({ err }, "failed to persist conversation target language");
+    }
+  }
   const targetLanguage =
-    owned.targetLanguage?.trim() || (owned.title ?? "").split(" • ")[1]?.trim();
+    settingsLanguage ||
+    owned.targetLanguage?.trim() ||
+    (owned.title ?? "").split(" • ")[1]?.trim();
   if (targetLanguage) {
     chatMessages.push({
       role: "system",

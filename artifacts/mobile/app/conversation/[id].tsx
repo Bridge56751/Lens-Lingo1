@@ -27,6 +27,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { getGetOpenaiConversationQueryKey } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { useT } from "@/hooks/useT";
+import { usePreferences } from "@/hooks/usePreferences";
 import { getDeviceIdSync } from "@/lib/device";
 import { fetch as expoFetch } from "expo/fetch";
 
@@ -146,6 +147,7 @@ function TypingIndicator({ colors }: { colors: ReturnType<typeof useColors> }) {
 
 export default function ConversationScreen() {
   const t = useT();
+  const { prefs } = usePreferences();
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -198,7 +200,7 @@ export default function ConversationScreen() {
 
   const parts = (conversation?.title ?? "").split(" • ");
   const itemName = parts[0] ?? t("conv.fallbackName");
-  const language = parts[1] ?? "";
+  const language = prefs.targetLanguage;
 
   const startRecording = async () => {
     if (isRecording || isTranscribing || isStreaming) return;
@@ -303,7 +305,7 @@ export default function ConversationScreen() {
             "Content-Type": "application/json",
             ...(getDeviceIdSync() ? { "x-device-id": getDeviceIdSync()! } : {}),
           },
-          body: JSON.stringify({ content: text }),
+          body: JSON.stringify({ content: text, targetLanguage: prefs.targetLanguage }),
         },
       );
 
@@ -368,7 +370,7 @@ export default function ConversationScreen() {
         queryKey: getGetOpenaiConversationQueryKey(conversationId),
       });
     }
-  }, [conversationId, queryClient, t]);
+  }, [conversationId, queryClient, t, prefs.targetLanguage]);
 
   const sendMessage = useCallback(() => {
     const text = inputText.trim();
