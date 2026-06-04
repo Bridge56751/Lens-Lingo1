@@ -172,12 +172,7 @@ export default function SettingsScreen() {
             title={t("settings.iSpeak")}
             subtitle={nativeLabel}
             right={<Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />}
-            onPress={() =>
-              Alert.alert(
-                t("settings.nativeComingSoonTitle"),
-                t("settings.nativeComingSoonBody"),
-              )
-            }
+            onPress={() => setPicker("native")}
           />
         </View>
 
@@ -264,12 +259,18 @@ export default function SettingsScreen() {
                   picker === "native"
                     ? lang === prefs.nativeLanguage
                     : lang === prefs.targetLanguage;
+                const comingSoon = picker === "native" && lang !== "English";
                 const nativeName =
                   LOCALE_NATIVE_NAMES[lang as Locale] ?? lang;
                 return (
                   <TouchableOpacity
                     key={lang}
-                    style={[styles.langOption, active && { backgroundColor: colors.primarySoft }]}
+                    disabled={comingSoon}
+                    style={[
+                      styles.langOption,
+                      active && { backgroundColor: colors.primarySoft },
+                      comingSoon && { opacity: 0.45 },
+                    ]}
                     onPress={() => {
                       const isNative = picker === "native";
                       const other = isNative ? prefs.targetLanguage : prefs.nativeLanguage;
@@ -337,7 +338,20 @@ export default function SettingsScreen() {
                         </Text>
                       )}
                     </View>
-                    {active && <Ionicons name="checkmark" size={20} color={colors.primary} />}
+                    {comingSoon ? (
+                      <View style={[styles.comingSoonBadge, { backgroundColor: colors.muted }]}>
+                        <Text
+                          style={[
+                            styles.comingSoonText,
+                            { color: colors.mutedForeground, fontFamily: "Inter_600SemiBold" },
+                          ]}
+                        >
+                          {t("settings.nativeComingSoonTitle")}
+                        </Text>
+                      </View>
+                    ) : (
+                      active && <Ionicons name="checkmark" size={20} color={colors.primary} />
+                    )}
                   </TouchableOpacity>
                 );
               })}
@@ -429,4 +443,10 @@ const styles = StyleSheet.create({
   },
   langOptionText: { fontSize: 15 },
   langOptionSub: { fontSize: 11, marginTop: 2 },
+  comingSoonBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+  },
+  comingSoonText: { fontSize: 11 },
 });
