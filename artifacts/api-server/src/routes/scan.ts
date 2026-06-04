@@ -50,7 +50,7 @@ router.post("/scan", async (req, res) => {
             },
             {
               type: "text",
-              text: `Identify the main object in this image. Respond with only valid JSON in this exact format: {"itemName": "English name of the item", "itemNameTranslated": "${targetLanguage} translation", "pronunciation": "phonetic pronunciation in ${targetLanguage} using English letters"}`,
+              text: `Identify the main object in this image. Respond with only valid JSON in this exact format: {"itemName": "name of the item in ${nativeLanguage}", "itemNameTranslated": "name of the item in ${targetLanguage}", "pronunciation": "phonetic pronunciation of the ${targetLanguage} name using English letters"}`,
             },
           ],
         },
