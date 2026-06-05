@@ -28,34 +28,21 @@ const queryClient = new QueryClient();
 
 function RootLayoutNav() {
   return (
-    <Stack>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(tabs)" />
       <Stack.Screen
         name="scan"
         options={{
-          headerShown: false,
           presentation: "modal",
           animation: "slide_from_bottom",
         }}
       />
-      <Stack.Screen
-        name="settings"
-        options={{
-          headerShown: false,
-          presentation: "card",
-        }}
-      />
-      <Stack.Screen name="vocabulary" options={{ headerShown: false, presentation: "card" }} />
-      <Stack.Screen name="practice" options={{ headerShown: false, presentation: "card" }} />
-      <Stack.Screen name="progress" options={{ headerShown: false, presentation: "card" }} />
-      <Stack.Screen name="challenges" options={{ headerShown: false, presentation: "card" }} />
-      <Stack.Screen
-        name="conversation/[id]"
-        options={{
-          headerShown: false,
-          presentation: "card",
-        }}
-      />
+      <Stack.Screen name="settings" options={{ presentation: "card" }} />
+      <Stack.Screen name="vocabulary" options={{ presentation: "card" }} />
+      <Stack.Screen name="practice" options={{ presentation: "card" }} />
+      <Stack.Screen name="progress" options={{ presentation: "card" }} />
+      <Stack.Screen name="challenges" options={{ presentation: "card" }} />
+      <Stack.Screen name="conversation/[id]" options={{ presentation: "card" }} />
     </Stack>
   );
 }
