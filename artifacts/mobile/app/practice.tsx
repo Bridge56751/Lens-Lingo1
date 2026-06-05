@@ -11,12 +11,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import * as Speech from "expo-speech";
 import { useListVocabulary } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { usePreferences } from "@/hooks/usePreferences";
 import { useT } from "@/hooks/useT";
-import { speakWord } from "@/lib/speech";
+import { speakWord, stopSpeaking } from "@/lib/speech";
 
 type Entry = {
   word: string;
@@ -91,7 +90,7 @@ export default function PracticeScreen() {
   useFocusEffect(
     React.useCallback(() => {
       return () => {
-        Speech.stop();
+        stopSpeaking();
       };
     }, []),
   );
@@ -112,7 +111,7 @@ export default function PracticeScreen() {
 
   const advance = (known: boolean) => {
     if (!card) return;
-    Speech.stop();
+    stopSpeaking();
     Haptics.impactAsync(
       known ? Haptics.ImpactFeedbackStyle.Medium : Haptics.ImpactFeedbackStyle.Light,
     );

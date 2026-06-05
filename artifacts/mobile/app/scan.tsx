@@ -16,7 +16,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import * as Haptics from "expo-haptics";
-import * as Speech from "expo-speech";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import Animated, {
   useSharedValue,
@@ -31,7 +30,7 @@ import { useColors } from "@/hooks/useColors";
 import { usePreferences, LANGUAGES, type Language } from "@/hooks/usePreferences";
 import { useT } from "@/hooks/useT";
 import { getDeviceIdSync } from "@/lib/device";
-import { SPEECH_LOCALES } from "@/lib/speech";
+import { speakWord, stopSpeaking } from "@/lib/speech";
 
 function CornerBrackets({ color }: { color: string }) {
   return (
@@ -177,7 +176,7 @@ export default function ScanScreen() {
       isOpeningRef.current = false;
       setIsOpening(false);
       return () => {
-        Speech.stop();
+        stopSpeaking();
       };
     }, []),
   );
@@ -190,7 +189,7 @@ export default function ScanScreen() {
   };
 
   const reset = () => {
-    Speech.stop();
+    stopSpeaking();
     isOpeningRef.current = false;
     setIsOpening(false);
     setScannedImage(null);
@@ -199,12 +198,8 @@ export default function ScanScreen() {
 
   const speakTranslation = () => {
     if (!scanResult) return;
-    Speech.stop();
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    Speech.speak(scanResult.itemNameTranslated, {
-      language: SPEECH_LOCALES[selectedLanguage] ?? "en-US",
-      rate: 0.9,
-    });
+    speakWord(scanResult.itemNameTranslated, selectedLanguage);
   };
 
   const topPadding = Platform.OS === "web" ? 16 : insets.top;
