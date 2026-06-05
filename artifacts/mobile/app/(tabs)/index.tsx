@@ -451,7 +451,7 @@ export default function HomeScreen() {
             iconBg="#FEF3C7"
             title={t("home.vocabulary")}
             subtitle={t("home.words", { n: stats.vocab })}
-            onPress={() => router.push("/vocab-bank")}
+            onPress={() => router.push("/vocabulary")}
           />
         </View>
         <View style={styles.statsRow}>
