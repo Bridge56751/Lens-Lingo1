@@ -27,8 +27,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { getGetOpenaiConversationQueryKey } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { useT } from "@/hooks/useT";
-import { usePreferences } from "@/hooks/usePreferences";
+import { usePreferences, type Language } from "@/hooks/usePreferences";
 import { getDeviceIdSync } from "@/lib/device";
+import { speakWord } from "@/lib/speech";
 import { fetch as expoFetch } from "expo/fetch";
 
 type Message = {
@@ -85,7 +86,16 @@ function SparkleIcon({ color }: { color: string }) {
   );
 }
 
-function MessageBubble({ message, colors }: { message: Message; colors: ReturnType<typeof useColors> }) {
+function MessageBubble({
+  message,
+  colors,
+  language,
+}: {
+  message: Message;
+  colors: ReturnType<typeof useColors>;
+  language: Language;
+}) {
+  const t = useT();
   const isUser = message.role === "user";
 
   if (isUser) {
@@ -128,6 +138,20 @@ function MessageBubble({ message, colors }: { message: Message; colors: ReturnTy
         >
           {message.content}
         </Text>
+        <TouchableOpacity
+          style={styles.speakButton}
+          onPress={() => {
+            Haptics.selectionAsync();
+            speakWord(message.content, language);
+          }}
+          hitSlop={8}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="volume-medium" size={16} color={colors.primary} />
+          <Text style={[styles.speakLabel, { color: colors.primary, fontFamily: "Inter_500Medium" }]}>
+            {t("alphabet.tapToHear")}
+          </Text>
+        </TouchableOpacity>
       </View>
       <SparkleIcon color={colors.primary} />
     </View>
@@ -361,6 +385,8 @@ export default function ConversationScreen() {
         };
         setMessages((prev) => [...prev, aiMessage]);
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        // Read the tutor's reply aloud so it "speaks back" in the target language.
+        speakWord(fullText, prefs.targetLanguage);
       }
     } catch (err) {
       const errorMessage: Message = {
@@ -445,7 +471,9 @@ export default function ConversationScreen() {
             ref={flatListRef}
             data={displayMessages}
             keyExtractor={(item) => item.id}
-            renderItem={({ item }) => <MessageBubble message={item} colors={colors} />}
+            renderItem={({ item }) => (
+              <MessageBubble message={item} colors={colors} language={language} />
+            )}
             contentContainerStyle={[styles.messageList, { paddingBottom: 16 }]}
             keyboardDismissMode="interactive"
             keyboardShouldPersistTaps="handled"
@@ -583,6 +611,13 @@ const styles = StyleSheet.create({
   userBubble: { borderBottomRightRadius: 6 },
   aiBubble: { borderBottomLeftRadius: 6 },
   bubbleText: { fontSize: 15, lineHeight: 22 },
+  speakButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginTop: 8,
+  },
+  speakLabel: { fontSize: 12 },
 
   recordingBanner: {
     flexDirection: "row",
