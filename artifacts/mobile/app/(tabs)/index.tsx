@@ -181,20 +181,43 @@ export default function HomeScreen() {
   // Home on a new calendar day ("logs back in"). We persist the last-seen day so
   // a routine re-focus on the same day doesn't replay it.
   const flameScale = useSharedValue(1);
+  const flameTranslateY = useSharedValue(0);
+  const flameOpacity = useSharedValue(1);
   const numScale = useSharedValue(1);
+  const numShakeX = useSharedValue(0);
   const lastCelebratedDayRef = useRef<string | null>(null);
 
   const playStreakAnimation = useCallback(() => {
+    // Flame shoots up from the ground: start low, small and faded, then rocket
+    // up past its resting spot and settle back down.
+    flameTranslateY.value = withSequence(
+      withTiming(16, { duration: 0 }),
+      withTiming(-8, { duration: 320, easing: Easing.out(Easing.cubic) }),
+      withSpring(0, { damping: 6, stiffness: 160 }),
+    );
     flameScale.value = withSequence(
-      withTiming(1.55, { duration: 200, easing: Easing.out(Easing.quad) }),
+      withTiming(0.4, { duration: 0 }),
+      withTiming(1.5, { duration: 320, easing: Easing.out(Easing.cubic) }),
       withSpring(1, { damping: 5, stiffness: 180 }),
     );
+    flameOpacity.value = withSequence(
+      withTiming(0, { duration: 0 }),
+      withTiming(1, { duration: 180 }),
+    );
+    // Number: subtle side-to-side shake (a few px, never off the page) + tiny pop.
+    numShakeX.value = withSequence(
+      withTiming(-2.5, { duration: 50 }),
+      withTiming(2.5, { duration: 60 }),
+      withTiming(-2, { duration: 55 }),
+      withTiming(1.5, { duration: 50 }),
+      withTiming(0, { duration: 50 }),
+    );
     numScale.value = withSequence(
-      withTiming(1.4, { duration: 220, easing: Easing.out(Easing.quad) }),
-      withSpring(1, { damping: 6, stiffness: 200 }),
+      withTiming(1.25, { duration: 200, easing: Easing.out(Easing.quad) }),
+      withSpring(1, { damping: 7, stiffness: 200 }),
     );
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-  }, [flameScale, numScale]);
+  }, [flameScale, flameTranslateY, flameOpacity, numScale, numShakeX]);
 
   useFocusEffect(
     useCallback(() => {
@@ -224,8 +247,13 @@ export default function HomeScreen() {
     }, [playStreakAnimation]),
   );
 
-  const flameStyle = useAnimatedStyle(() => ({ transform: [{ scale: flameScale.value }] }));
-  const numStyle = useAnimatedStyle(() => ({ transform: [{ scale: numScale.value }] }));
+  const flameStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: flameTranslateY.value }, { scale: flameScale.value }],
+    opacity: flameOpacity.value,
+  }));
+  const numStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: numShakeX.value }, { scale: numScale.value }],
+  }));
 
   const goScan = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
