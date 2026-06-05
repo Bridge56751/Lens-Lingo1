@@ -34,17 +34,6 @@ import { useT } from "@/hooks/useT";
 import { getDeviceIdSync } from "@/lib/device";
 import { speakWord, stopSpeaking, prefetchSpeech } from "@/lib/speech";
 
-function CornerBrackets({ color }: { color: string }) {
-  return (
-    <View style={[StyleSheet.absoluteFill, { pointerEvents: "none" }]}>
-      <View style={[styles.corner, styles.cornerTL, { borderColor: color }]} />
-      <View style={[styles.corner, styles.cornerTR, { borderColor: color }]} />
-      <View style={[styles.corner, styles.cornerBL, { borderColor: color }]} />
-      <View style={[styles.corner, styles.cornerBR, { borderColor: color }]} />
-    </View>
-  );
-}
-
 export default function ScanScreen() {
   const t = useT();
   const colors = useColors();
@@ -354,10 +343,9 @@ export default function ScanScreen() {
           </View>
         )}
 
-        {/* Scan frame (corner brackets over the live camera) */}
+        {/* Scanning indicator, centered over the live camera */}
         <View style={styles.frameLayer}>
           <Animated.View style={[styles.scanFrame, { width: frameWidth, height: frameHeight }, pulseStyle]}>
-            <CornerBrackets color="rgba(255,255,255,0.92)" />
             {isScanning && (
               <View style={styles.scanningBadge}>
                 <ActivityIndicator size="small" color="#FFFFFF" />
@@ -391,32 +379,24 @@ export default function ScanScreen() {
               <Text style={[styles.topIconText, { fontFamily: "Inter_600SemiBold" }]}>
                 {t(`difficulty.${prefs.difficulty}` as const)}
               </Text>
+              <Ionicons name="chevron-down" size={15} color="rgba(255,255,255,0.7)" />
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.topIconButton}
-              onPress={() => {
-                Haptics.selectionAsync();
-                router.push("/settings");
-              }}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="globe-outline" size={18} color="#FFFFFF" />
-              <Text style={[styles.topIconText, { fontFamily: "Inter_600SemiBold" }]}>
+            <View style={styles.langBadge}>
+              <Ionicons name="globe-outline" size={18} color="rgba(255,255,255,0.85)" />
+              <Text style={[styles.langBadgeText, { fontFamily: "Inter_600SemiBold" }]}>
                 {selectedLanguage}
               </Text>
-            </TouchableOpacity>
+            </View>
           </View>
         </View>
 
         <View style={[styles.guidance, { pointerEvents: "none" }]}>
-          <View style={styles.hintPill}>
-            <Text style={[styles.hintText, { fontFamily: "Inter_500Medium" }]}>
-              {t("scan.hint")}
-            </Text>
-          </View>
-          <Text style={[styles.changeHint, { fontFamily: "Inter_500Medium" }]}>
-            {t("scan.changeHint")}
+          <Text style={[styles.scanTitle, { fontFamily: "Inter_700Bold" }]}>
+            {t("scan.title")}
+          </Text>
+          <Text style={[styles.scanSubtitle, { fontFamily: "Inter_500Medium" }]}>
+            {t("scan.hint")}
           </Text>
         </View>
       </View>
@@ -571,17 +551,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 
-  corner: {
-    position: "absolute",
-    width: 36,
-    height: 36,
-    borderColor: "#FFFFFF",
-  },
-  cornerTL: { top: 0, left: 0, borderTopWidth: 3, borderLeftWidth: 3, borderTopLeftRadius: 12 },
-  cornerTR: { top: 0, right: 0, borderTopWidth: 3, borderRightWidth: 3, borderTopRightRadius: 12 },
-  cornerBL: { bottom: 0, left: 0, borderBottomWidth: 3, borderLeftWidth: 3, borderBottomLeftRadius: 12 },
-  cornerBR: { bottom: 0, right: 0, borderBottomWidth: 3, borderRightWidth: 3, borderBottomRightRadius: 12 },
-
   scanningBadge: {
     position: "absolute",
     bottom: -44,
@@ -613,13 +582,23 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   guidance: {
-    marginTop: 16,
+    marginTop: 28,
     alignItems: "center",
-    gap: 8,
+    gap: 6,
   },
-  changeHint: {
-    color: "rgba(255,255,255,0.75)",
-    fontSize: 12,
+  scanTitle: {
+    color: "#FFFFFF",
+    fontSize: 28,
+    textShadowColor: "rgba(0,0,0,0.5)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 6,
+  },
+  scanSubtitle: {
+    color: "rgba(255,255,255,0.8)",
+    fontSize: 15,
+    textShadowColor: "rgba(0,0,0,0.5)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 5,
   },
   topIconButton: {
     flexDirection: "row",
@@ -631,6 +610,16 @@ const styles = StyleSheet.create({
     borderRadius: 22,
   },
   topIconText: { color: "#FFFFFF", fontSize: 13 },
+  langBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "rgba(0,0,0,0.3)",
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 22,
+  },
+  langBadgeText: { color: "rgba(255,255,255,0.85)", fontSize: 13 },
   levelBackdrop: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.4)",
@@ -675,14 +664,6 @@ const styles = StyleSheet.create({
     borderRadius: 24,
   },
   justChatText: { color: "#FFFFFF", fontSize: 14 },
-
-  hintPill: {
-    backgroundColor: "rgba(0,0,0,0.55)",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 18,
-  },
-  hintText: { color: "#FFFFFF", fontSize: 13 },
 
   bottomArea: {
     position: "absolute",

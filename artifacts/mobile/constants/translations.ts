@@ -156,7 +156,7 @@ export type TKey =
   | "scan.justChat"
   | "scan.chooseLanguage"
   | "scan.hint"
-  | "scan.changeHint"
+  | "scan.title"
   | "conv.placeholder"
   | "conv.title"
   | "conv.about"
@@ -468,8 +468,8 @@ const en: Record<TKey, string> = {
   "scan.gallery": "Gallery",
   "scan.justChat": "Just chat — no camera",
   "scan.chooseLanguage": "Choose a language",
-  "scan.hint": "Point your camera at any item to scan",
-  "scan.changeHint": "Tap to change your level or language",
+  "scan.hint": "Point your camera at anything to learn it",
+  "scan.title": "Scan any item",
   "conv.placeholder": "Tap to speak or type\u2026",
   "conv.title": "Conversation",
   "conv.about": "About: {name}",
