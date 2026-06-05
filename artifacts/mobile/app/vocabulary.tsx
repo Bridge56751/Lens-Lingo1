@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -6,28 +6,18 @@ import {
   ScrollView,
   TouchableOpacity,
   Platform,
-  ActivityIndicator,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import {
-  useListVocabulary,
   useListVocabSelections,
+  type VocabSelection,
 } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { usePreferences } from "@/hooks/usePreferences";
 import { useT } from "@/hooks/useT";
 import VocabBank from "@/components/VocabBank";
-
-type Entry = {
-  word: string;
-  language: string;
-  count: number;
-  firstSeenAt: string;
-  conversationId: number;
-  conversationTitle: string;
-};
 
 type Tab = "myWords" | "bank";
 
@@ -36,32 +26,56 @@ export default function VocabularyScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{ tab?: string }>();
-  const { data, isLoading } = useListVocabulary();
   const { prefs } = usePreferences();
   const { data: selections } = useListVocabSelections({
     targetLanguage: prefs.targetLanguage,
   });
-  const pickedCount = (selections ?? []).length;
-  const [activeLang, setActiveLang] = useState<string | null>(null);
+  const pickedWords = useMemo(
+    () => (selections ?? []) as VocabSelection[],
+    [selections],
+  );
+  const pickedCount = pickedWords.length;
+
+  // Which picked words are checked for the next study session. Newly picked
+  // words default to selected; the user can narrow the set down (e.g. 5/22).
+  const [studyIds, setStudyIds] = useState<Set<number>>(new Set());
+  const prevIds = useRef<Set<number>>(new Set());
+  useEffect(() => {
+    setStudyIds((prev) => {
+      const next = new Set<number>();
+      for (const w of pickedWords) {
+        if (prev.has(w.id) || !prevIds.current.has(w.id)) next.add(w.id);
+      }
+      return next;
+    });
+    prevIds.current = new Set(pickedWords.map((w) => w.id));
+  }, [pickedWords]);
+
+  const allSelected = pickedCount > 0 && studyIds.size === pickedCount;
+
+  const toggleStudy = (id: number) =>
+    setStudyIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
+  const toggleAll = () =>
+    setStudyIds(allSelected ? new Set() : new Set(pickedWords.map((w) => w.id)));
+
+  const startStudy = () => {
+    if (studyIds.size === 0) return;
+    const ids = pickedWords
+      .filter((w) => studyIds.has(w.id))
+      .map((w) => w.id)
+      .join(",");
+    router.push(`/vocab-study?ids=${ids}`);
+  };
+
   const [activeTab, setActiveTab] = useState<Tab>(
     params.tab === "bank" ? "bank" : "myWords",
   );
-
-  const entries = (data ?? []) as Entry[];
-  const hasTargetVocab = entries.some((e) => e.language === prefs.targetLanguage);
-
-  const languages = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const e of entries) counts.set(e.language, (counts.get(e.language) ?? 0) + 1);
-    return Array.from(counts.entries())
-      .sort((a, b) => b[1] - a[1])
-      .map(([lang, count]) => ({ lang, count }));
-  }, [entries]);
-
-  const filtered = useMemo(() => {
-    const list = activeLang ? entries.filter((e) => e.language === activeLang) : entries;
-    return [...list].sort((a, b) => b.count - a.count);
-  }, [entries, activeLang]);
 
   const topPadding = Platform.OS === "web" ? 16 : insets.top;
   const bottomPadding = Platform.OS === "web" ? 34 : insets.bottom + 16;
@@ -77,17 +91,7 @@ export default function VocabularyScreen() {
         <Text style={[styles.headerTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
           {t("vocab.title")}
         </Text>
-        {showMyWords && hasTargetVocab ? (
-          <TouchableOpacity
-            onPress={() => router.push("/practice")}
-            style={styles.iconBtn}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="school" size={24} color={colors.primary} />
-          </TouchableOpacity>
-        ) : (
-          <View style={{ width: 40 }} />
-        )}
+        <View style={{ width: 40 }} />
       </View>
 
       <View style={styles.segment}>
@@ -104,102 +108,107 @@ export default function VocabularyScreen() {
         />
       </View>
 
-      {/* My Words tab — kept mounted so its filter state persists across switches */}
+      {/* My Words tab — the words you picked from the bank, ready to study */}
       <View style={[styles.flex, !showMyWords && styles.hidden, { pointerEvents: showMyWords ? "auto" : "none" }]}>
-        {pickedCount > 0 && (
-          <TouchableOpacity
-            style={[styles.studyCard, { backgroundColor: colors.primarySoft }]}
-            onPress={() => router.push("/vocab-study")}
-            activeOpacity={0.85}
-          >
-            <View style={[styles.studyIcon, { backgroundColor: colors.primary }]}>
-              <Ionicons name="albums" size={20} color="#FFFFFF" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.studyTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-                {t("vocab.studyPicked")}
-              </Text>
-              <Text style={[styles.studySub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-                {t("vocab.studyPickedSub", { n: pickedCount })}
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={colors.primary} />
-          </TouchableOpacity>
-        )}
-        {languages.length > 1 && (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.chipsRow}
-          >
-            <Chip
-              label={t("vocab.all")}
-              count={entries.length}
-              active={activeLang === null}
-              onPress={() => setActiveLang(null)}
-            />
-            {languages.map(({ lang, count }) => (
-              <Chip
-                key={lang}
-                label={lang}
-                count={count}
-                active={activeLang === lang}
-                onPress={() => setActiveLang(lang)}
-              />
-            ))}
-          </ScrollView>
-        )}
-
-        {isLoading ? (
-          <View style={styles.empty}>
-            <ActivityIndicator color={colors.primary} />
-          </View>
-        ) : filtered.length === 0 ? (
+        {pickedCount === 0 ? (
           <View style={styles.empty}>
             <View style={[styles.emptyIcon, { backgroundColor: colors.primarySoft }]}>
-              <Ionicons name="book" size={32} color={colors.primary} />
+              <Ionicons name="albums" size={32} color={colors.primary} />
             </View>
             <Text style={[styles.emptyTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-              {t("vocab.empty")}
+              {t("vocab.studyEmpty")}
             </Text>
             <Text style={[styles.emptySub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-              {t("vocab.emptySub")}
+              {t("vocab.studyEmptySub", { lang: prefs.targetLanguage })}
             </Text>
+            <TouchableOpacity
+              style={[styles.primaryBtn, { backgroundColor: colors.primary }]}
+              onPress={() => setActiveTab("bank")}
+              activeOpacity={0.85}
+            >
+              <Ionicons name="book" size={18} color="#FFFFFF" />
+              <Text style={[styles.primaryBtnText, { fontFamily: "Inter_600SemiBold" }]}>
+                {t("vocab.openBank")}
+              </Text>
+            </TouchableOpacity>
           </View>
         ) : (
-          <ScrollView
-            contentContainerStyle={{ padding: 18, paddingBottom: bottomPadding, gap: 8 }}
-            showsVerticalScrollIndicator={false}
-          >
-            <Text style={[styles.summary, { color: colors.mutedForeground, fontFamily: "Inter_500Medium" }]}>
-              {t("vocab.unique", { n: filtered.length })}
-            </Text>
-            {filtered.map((e) => (
-              <TouchableOpacity
-                key={`${e.language}-${e.word}`}
-                style={[styles.wordRow, { backgroundColor: colors.card }]}
-                onPress={() => router.push(`/conversation/${e.conversationId}`)}
-                activeOpacity={0.7}
-              >
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.word, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-                    {e.word}
-                  </Text>
-                  <Text
-                    style={[styles.wordSub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}
-                    numberOfLines={1}
-                  >
-                    {e.language} · {t("vocab.from", { title: e.conversationTitle.split(" • ")[0] ?? "" })}
-                  </Text>
-                </View>
-                <View style={[styles.countPill, { backgroundColor: colors.primarySoft }]}>
-                  <Text style={[styles.countText, { color: colors.primary, fontFamily: "Inter_700Bold" }]}>
-                    ×{e.count}
-                  </Text>
-                </View>
+          <>
+            <TouchableOpacity
+              style={[
+                styles.studyBtn,
+                { backgroundColor: colors.primary, opacity: studyIds.size > 0 ? 1 : 0.5 },
+              ]}
+              onPress={startStudy}
+              activeOpacity={0.85}
+              disabled={studyIds.size === 0}
+            >
+              <Ionicons name="albums" size={18} color="#FFFFFF" />
+              <Text style={[styles.studyBtnText, { fontFamily: "Inter_600SemiBold" }]}>
+                {t("vocab.studySelected")}
+              </Text>
+              <View style={styles.studyCountPill}>
+                <Text style={styles.studyCountText}>
+                  {studyIds.size}/{pickedCount}
+                </Text>
+              </View>
+            </TouchableOpacity>
+
+            <View style={styles.selectBar}>
+              <Text style={[styles.selectHint, { color: colors.mutedForeground, fontFamily: "Inter_500Medium" }]}>
+                {t("vocab.tapToSelect")}
+              </Text>
+              <TouchableOpacity onPress={toggleAll} activeOpacity={0.7} hitSlop={8}>
+                <Text style={[styles.selectAll, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
+                  {allSelected ? t("vocab.clearSel") : t("vocab.selectAll")}
+                </Text>
               </TouchableOpacity>
-            ))}
-          </ScrollView>
+            </View>
+
+            <ScrollView
+              contentContainerStyle={{ padding: 18, paddingTop: 4, paddingBottom: bottomPadding, gap: 8 }}
+              showsVerticalScrollIndicator={false}
+            >
+              {pickedWords.map((w) => {
+                const checked = studyIds.has(w.id);
+                return (
+                  <TouchableOpacity
+                    key={w.id}
+                    style={[styles.wordRow, { backgroundColor: colors.card }]}
+                    onPress={() => toggleStudy(w.id)}
+                    activeOpacity={0.7}
+                  >
+                    <View
+                      style={[
+                        styles.checkbox,
+                        checked
+                          ? { backgroundColor: colors.primary, borderColor: colors.primary }
+                          : { borderColor: colors.border ?? colors.mutedForeground },
+                      ]}
+                    >
+                      {checked && <Ionicons name="checkmark" size={15} color="#FFFFFF" />}
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.word, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
+                        {w.word}
+                      </Text>
+                      <Text
+                        style={[styles.wordSub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}
+                        numberOfLines={1}
+                      >
+                        {w.translation}
+                      </Text>
+                    </View>
+                    <View style={[styles.levelPill, { backgroundColor: colors.primarySoft }]}>
+                      <Text style={[styles.levelText, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
+                        {w.level}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </>
         )}
       </View>
 
@@ -254,46 +263,6 @@ function SegmentButton({
   );
 }
 
-function Chip({
-  label,
-  count,
-  active,
-  onPress,
-}: {
-  label: string;
-  count: number;
-  active: boolean;
-  onPress: () => void;
-}) {
-  const colors = useColors();
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      activeOpacity={0.7}
-      style={[
-        styles.chip,
-        {
-          backgroundColor: active ? colors.primary : colors.card,
-          borderColor: active ? colors.primary : colors.border ?? "transparent",
-        },
-      ]}
-    >
-      <Text
-        style={[
-          styles.chipText,
-          {
-            color: active ? "#FFFFFF" : colors.foreground,
-            fontFamily: "Inter_600SemiBold",
-          },
-        ]}
-      >
-        {label}
-        <Text style={{ opacity: 0.7 }}> · {count}</Text>
-      </Text>
-    </TouchableOpacity>
-  );
-}
-
 const styles = StyleSheet.create({
   container: { flex: 1 },
   flex: { flex: 1 },
@@ -333,28 +302,35 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   segBadgeText: { color: "#FFFFFF", fontSize: 11, fontFamily: "Inter_700Bold" },
-  studyCard: {
+
+  studyBtn: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    justifyContent: "center",
+    gap: 10,
     marginHorizontal: 18,
-    marginBottom: 6,
-    padding: 14,
+    marginBottom: 10,
+    paddingVertical: 14,
     borderRadius: 16,
   },
-  studyIcon: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
-  studyTitle: { fontSize: 15 },
-  studySub: { fontSize: 12, marginTop: 2 },
-  chipsRow: { paddingHorizontal: 18, paddingVertical: 8, gap: 8 },
-  chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+  studyBtnText: { color: "#FFFFFF", fontSize: 16 },
+  studyCountPill: {
+    backgroundColor: "rgba(255,255,255,0.25)",
     borderRadius: 999,
-    borderWidth: 1,
-    marginRight: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
   },
-  chipText: { fontSize: 13 },
-  summary: { fontSize: 12, paddingHorizontal: 4, marginBottom: 4 },
+  studyCountText: { color: "#FFFFFF", fontSize: 13, fontFamily: "Inter_700Bold" },
+
+  selectBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 22,
+  },
+  selectHint: { fontSize: 12 },
+  selectAll: { fontSize: 13 },
+
   wordRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -362,10 +338,19 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     gap: 12,
   },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 7,
+    borderWidth: 2,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   word: { fontSize: 16, textTransform: "capitalize" },
-  wordSub: { fontSize: 12, marginTop: 2 },
-  countPill: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
-  countText: { fontSize: 12 },
+  wordSub: { fontSize: 13, marginTop: 2 },
+  levelPill: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
+  levelText: { fontSize: 11, textTransform: "capitalize" },
+
   empty: { flex: 1, alignItems: "center", justifyContent: "center", padding: 32, gap: 12 },
   emptyIcon: {
     width: 72,
@@ -376,4 +361,15 @@ const styles = StyleSheet.create({
   },
   emptyTitle: { fontSize: 18 },
   emptySub: { fontSize: 14, textAlign: "center", maxWidth: 280 },
+  primaryBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    paddingVertical: 14,
+    paddingHorizontal: 22,
+    borderRadius: 16,
+    marginTop: 6,
+  },
+  primaryBtnText: { color: "#FFFFFF", fontSize: 16 },
 });

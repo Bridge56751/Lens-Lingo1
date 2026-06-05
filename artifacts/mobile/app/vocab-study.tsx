@@ -11,7 +11,7 @@ import {
   KeyboardAvoidingView,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { router, useFocusEffect } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import {
@@ -36,8 +36,20 @@ export default function VocabStudyScreen() {
   const target = prefs.targetLanguage;
   const native = prefs.nativeLanguage;
 
+  const { ids } = useLocalSearchParams<{ ids?: string | string[] }>();
+  const idsParam = Array.isArray(ids) ? ids.join(",") : ids;
+
   const { data: selections, isLoading } = useListVocabSelections({ targetLanguage: target });
-  const deck = useMemo(() => (selections ?? []) as VocabSelection[], [selections]);
+  const deck = useMemo(() => {
+    const all = (selections ?? []) as VocabSelection[];
+    if (!idsParam) return all;
+    const idSet = new Set(
+      idsParam.split(",").map((s) => parseInt(s, 10)).filter((n) => !Number.isNaN(n)),
+    );
+    if (idSet.size === 0) return all;
+    const subset = all.filter((s) => idSet.has(s.id));
+    return subset.length > 0 ? subset : all;
+  }, [selections, idsParam]);
 
   const [pos, setPos] = useState(0);
   const card = deck[pos];

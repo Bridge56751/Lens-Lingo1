@@ -1,7 +1,17 @@
 ---
 name: Practice flashcard mode
-description: Session-state pitfall when building card decks from a React Query list, and where shared TTS lives.
+description: Vocabulary model (two sources), the My Words selection-subset flow, session-state pitfalls building card decks, and where shared TTS lives.
 ---
+
+# Vocabulary model — two distinct sources
+There are two separate vocab datasets; don't conflate them:
+- **Picked words** = words the user adds from the Word Bank (`useListVocabSelections`, filtered by `targetLanguage`). These have a stored `translation` + `level`.
+- **Chat-collected words** = words harvested from tutor conversations (`useListVocabulary`). No stored translation; count-based.
+
+The Vocabulary screen's **"My Words" tab shows PICKED words** (selections), NOT chat vocab. Users expect what they pick in the bank to show up in My Words — surfacing chat vocab there caused a "no words yet even though I selected one" bug. The chat-vocab list + the old `/practice` route were removed from the Vocabulary UI; `/practice.tsx` + `useListVocabulary` still exist but are currently unlinked/orphaned.
+
+## My Words → select subset → study flow
+My Words lists picked words with per-row checkboxes. A local `studyIds: Set<number>` tracks which are checked; a reconcile effect keyed on the memoized `pickedWords` (NOT on `studyIds`) auto-selects newly-picked words while preserving prior deselections and dropping removed ids. "Study selected words" pushes `/vocab-study?ids=a,b,c`; `vocab-study` parses `ids` (normalize `string | string[]`) and filters the deck, falling back to the full deck when ids are missing/invalid/no-match.
 
 # Practice / flashcard sessions
 
