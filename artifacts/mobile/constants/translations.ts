@@ -190,6 +190,8 @@ export type TKey =
   | "vocab.add"
   | "vocab.added"
   | "vocab.myWords"
+  | "vocab.studyPicked"
+  | "vocab.studyPickedSub"
   | "vocab.bankEmpty"
   | "vocab.bankError"
   | "vocab.studyTitle"
@@ -237,6 +239,8 @@ const en: Record<TKey, string> = {
   "vocab.add": "Add",
   "vocab.added": "Added",
   "vocab.myWords": "My Words",
+  "vocab.studyPicked": "Study picked words",
+  "vocab.studyPickedSub": "{n} words ready to practice",
   "vocab.bankEmpty": "No words available yet. Please try again.",
   "vocab.bankError": "Couldn’t load the word bank. Pull to retry.",
   "vocab.studyTitle": "Study",

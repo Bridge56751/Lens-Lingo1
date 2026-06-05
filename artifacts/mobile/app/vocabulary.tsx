@@ -11,7 +11,10 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { useListVocabulary } from "@workspace/api-client-react";
+import {
+  useListVocabulary,
+  useListVocabSelections,
+} from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { usePreferences } from "@/hooks/usePreferences";
 import { useT } from "@/hooks/useT";
@@ -35,6 +38,10 @@ export default function VocabularyScreen() {
   const params = useLocalSearchParams<{ tab?: string }>();
   const { data, isLoading } = useListVocabulary();
   const { prefs } = usePreferences();
+  const { data: selections } = useListVocabSelections({
+    targetLanguage: prefs.targetLanguage,
+  });
+  const pickedCount = (selections ?? []).length;
   const [activeLang, setActiveLang] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>(
     params.tab === "bank" ? "bank" : "myWords",
@@ -88,6 +95,7 @@ export default function VocabularyScreen() {
           label={t("vocab.myWords")}
           active={showMyWords}
           onPress={() => setActiveTab("myWords")}
+          badge={pickedCount}
         />
         <SegmentButton
           label={t("vocab.bankTitle")}
@@ -98,6 +106,26 @@ export default function VocabularyScreen() {
 
       {/* My Words tab — kept mounted so its filter state persists across switches */}
       <View style={[styles.flex, !showMyWords && styles.hidden, { pointerEvents: showMyWords ? "auto" : "none" }]}>
+        {pickedCount > 0 && (
+          <TouchableOpacity
+            style={[styles.studyCard, { backgroundColor: colors.primarySoft }]}
+            onPress={() => router.push("/vocab-study")}
+            activeOpacity={0.85}
+          >
+            <View style={[styles.studyIcon, { backgroundColor: colors.primary }]}>
+              <Ionicons name="albums" size={20} color="#FFFFFF" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.studyTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
+                {t("vocab.studyPicked")}
+              </Text>
+              <Text style={[styles.studySub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                {t("vocab.studyPickedSub", { n: pickedCount })}
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={colors.primary} />
+          </TouchableOpacity>
+        )}
         {languages.length > 1 && (
           <ScrollView
             horizontal
@@ -187,10 +215,12 @@ function SegmentButton({
   label,
   active,
   onPress,
+  badge,
 }: {
   label: string;
   active: boolean;
   onPress: () => void;
+  badge?: number;
 }) {
   const colors = useColors();
   return (
@@ -202,17 +232,24 @@ function SegmentButton({
         { backgroundColor: active ? colors.card : "transparent" },
       ]}
     >
-      <Text
-        style={[
-          styles.segmentText,
-          {
-            color: active ? colors.foreground : colors.mutedForeground,
-            fontFamily: active ? "Inter_700Bold" : "Inter_600SemiBold",
-          },
-        ]}
-      >
-        {label}
-      </Text>
+      <View style={styles.segmentInner}>
+        <Text
+          style={[
+            styles.segmentText,
+            {
+              color: active ? colors.foreground : colors.mutedForeground,
+              fontFamily: active ? "Inter_700Bold" : "Inter_600SemiBold",
+            },
+          ]}
+        >
+          {label}
+        </Text>
+        {badge != null && badge > 0 && (
+          <View style={[styles.segBadge, { backgroundColor: colors.primary }]}>
+            <Text style={styles.segBadgeText}>{badge}</Text>
+          </View>
+        )}
+      </View>
     </TouchableOpacity>
   );
 }
@@ -286,6 +323,28 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   segmentText: { fontSize: 14 },
+  segmentInner: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6 },
+  segBadge: {
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    paddingHorizontal: 5,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  segBadgeText: { color: "#FFFFFF", fontSize: 11, fontFamily: "Inter_700Bold" },
+  studyCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginHorizontal: 18,
+    marginBottom: 6,
+    padding: 14,
+    borderRadius: 16,
+  },
+  studyIcon: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
+  studyTitle: { fontSize: 15 },
+  studySub: { fontSize: 12, marginTop: 2 },
   chipsRow: { paddingHorizontal: 18, paddingVertical: 8, gap: 8 },
   chip: {
     paddingHorizontal: 14,

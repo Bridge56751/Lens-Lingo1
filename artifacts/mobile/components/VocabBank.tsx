@@ -10,7 +10,7 @@ import {
   Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { router, useFocusEffect } from "expo-router";
+import { useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useQueryClient } from "@tanstack/react-query";
@@ -128,46 +128,15 @@ export default function VocabBank() {
     }
   };
 
-  const selectedCount = selectedByWord.size;
   const isEmptyBank = LEVELS.every((level) => grouped[level].length === 0);
   const [selectedLevel, setSelectedLevel] = useState<Level>("beginner");
   const visibleWords = grouped[selectedLevel];
 
-  const ActionRow = (
-    <View style={styles.actionRow}>
-      <Text
-        style={[styles.subtitle, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}
-        numberOfLines={2}
-      >
-        {t("vocab.bankSub", { lang: target })}
-      </Text>
-      <TouchableOpacity
-        onPress={() => router.push("/vocab-study")}
-        style={[styles.myWordsBtn, { backgroundColor: colors.primarySoft }]}
-        activeOpacity={0.8}
-      >
-        <Ionicons name="albums" size={16} color={colors.primary} />
-        <Text style={[styles.myWordsBtnText, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
-          {t("vocab.myWords")}
-        </Text>
-        {selectedCount > 0 && (
-          <View style={[styles.countBadge, { backgroundColor: colors.primary }]}>
-            <Text style={styles.countBadgeText}>{selectedCount}</Text>
-          </View>
-        )}
-      </TouchableOpacity>
-    </View>
-  );
-
   if (isLoading) {
     return (
       <View style={styles.flex}>
-        {ActionRow}
         <View style={styles.center}>
           <ActivityIndicator color={colors.primary} />
-          <Text style={[styles.loadingText, { color: colors.mutedForeground, fontFamily: "Inter_500Medium" }]}>
-            {t("vocab.bankSub", { lang: target })}
-          </Text>
         </View>
       </View>
     );
@@ -176,7 +145,6 @@ export default function VocabBank() {
   if (isError) {
     return (
       <View style={styles.flex}>
-        {ActionRow}
         <View style={styles.center}>
           <Text style={[styles.bigSub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
             {t("vocab.bankError")}
@@ -198,8 +166,6 @@ export default function VocabBank() {
 
   return (
     <View style={styles.flex}>
-      {ActionRow}
-
       <View style={styles.tabsRow}>
         {LEVELS.map((level) => {
           const active = level === selectedLevel;
@@ -307,34 +273,7 @@ export default function VocabBank() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  actionRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    paddingHorizontal: 20,
-    paddingBottom: 12,
-  },
-  subtitle: { flex: 1, fontSize: 14 },
-  myWordsBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 999,
-  },
-  myWordsBtnText: { fontSize: 13 },
-  countBadge: {
-    minWidth: 18,
-    height: 18,
-    borderRadius: 9,
-    paddingHorizontal: 4,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  countBadgeText: { color: "#FFFFFF", fontSize: 11, fontFamily: "Inter_700Bold" },
-
-  tabsRow: { flexDirection: "row", gap: 6, paddingHorizontal: 16, paddingBottom: 14 },
+  tabsRow: { flexDirection: "row", gap: 6, paddingHorizontal: 16, paddingBottom: 14, paddingTop: 4 },
   tab: {
     flex: 1,
     paddingVertical: 8,
@@ -346,7 +285,6 @@ const styles = StyleSheet.create({
   tabText: { fontSize: 11 },
 
   center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 32, gap: 14 },
-  loadingText: { fontSize: 14, textAlign: "center" },
   bigSub: { fontSize: 14, textAlign: "center", maxWidth: 300, lineHeight: 20, alignSelf: "center" },
 
   wordCard: {
