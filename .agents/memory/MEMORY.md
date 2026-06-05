@@ -5,5 +5,6 @@
 - [Practice flashcards](practice-flashcards.md) — don't rebuild card deck on React Query refetch (resets progress); shared TTS lives in lib/speech.ts.
 - [SSE streaming contract](sse-streaming-contract.md) — chat stream emits {content}/{done}/{error}; client MUST handle {error} or server failures look like a silent no-reply.
 - [TTS architecture](web-tts.md) — natural voice via OpenAI POST /api/openai/tts (gpt-4o-mini-tts) played by shared speakWord, device synth fallback; never call expo-speech/synth in screens.
+- [Alphabet progress](alphabet-progress.md) — mastery persisted per language::scriptId; pre-load updates must union completions + tombstone resets (no clobber); hide flag is language-scoped.
 - [Vocab bank cache](vocab-bank-cache.md) — Word Bank is a shared per-language-pair cache; adding a difficulty level needs a missing-level top-up or cached pairs never get it.
 - [Conversation seeding rule](conversation-seeding.md) — every conversation-creation path must seed ≥1 message + set target/native lang columns, else send-message route 404s / loses language anchor.

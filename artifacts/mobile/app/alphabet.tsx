@@ -18,6 +18,7 @@ import { usePreferences } from "@/hooks/usePreferences";
 import { useT } from "@/hooks/useT";
 import { speakWord, prefetchSpeech, stopSpeaking } from "@/lib/speech";
 import { ALPHABETS, RTL_LANGUAGES } from "@/constants/alphabets";
+import { useAlphabetProgress } from "@/lib/alphabetProgress";
 
 const NON_LATIN_LANGS = new Set(["Japanese", "Chinese", "Korean", "Arabic", "Russian", "Hindi"]);
 
@@ -26,11 +27,11 @@ export default function AlphabetScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { prefs } = usePreferences();
+  const { completedSet, markComplete, resetScript } = useAlphabetProgress();
   const scripts = useMemo(() => ALPHABETS[prefs.targetLanguage] ?? [], [prefs.targetLanguage]);
   const isRTL = RTL_LANGUAGES.includes(prefs.targetLanguage);
   const [scriptIndex, setScriptIndex] = useState(0);
   const [index, setIndex] = useState(0);
-  const [completed, setCompleted] = useState<Record<string, Set<number>>>({});
   const fade = useRef(new Animated.Value(1)).current;
   const scale = useRef(new Animated.Value(1)).current;
   const exampleScale = useRef(new Animated.Value(1)).current;
@@ -38,7 +39,7 @@ export default function AlphabetScreen() {
   const script = scripts[scriptIndex];
   const letters = script?.letters ?? [];
   const scriptKey = script?.id ?? "";
-  const scriptCompleted = completed[scriptKey] ?? new Set<number>();
+  const scriptCompleted = completedSet(prefs.targetLanguage, scriptKey);
 
   const topPadding = Platform.OS === "web" ? 16 : insets.top;
   const bottomPadding = Platform.OS === "web" ? 34 : insets.bottom + 16;
@@ -71,13 +72,7 @@ export default function AlphabetScreen() {
   );
 
   const markCompleted = (idx: number) => {
-    setCompleted((prev) => {
-      const next = { ...prev };
-      const set = new Set(next[scriptKey] ?? []);
-      set.add(idx);
-      next[scriptKey] = set;
-      return next;
-    });
+    markComplete(prefs.targetLanguage, scriptKey, idx);
   };
 
   const speak = (text: string, which: "letter" | "example" = "letter") => {
@@ -120,11 +115,7 @@ export default function AlphabetScreen() {
   };
 
   const restart = () => {
-    setCompleted((prev) => {
-      const next = { ...prev };
-      delete next[scriptKey];
-      return next;
-    });
+    resetScript(prefs.targetLanguage, scriptKey);
     setIndex(0);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   };

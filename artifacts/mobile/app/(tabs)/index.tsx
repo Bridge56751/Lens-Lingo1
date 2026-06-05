@@ -29,6 +29,7 @@ import { useColors } from "@/hooks/useColors";
 import { usePreferences, type Language } from "@/hooks/usePreferences";
 import { useT } from "@/hooks/useT";
 import { computeStreak, todayKey } from "@/lib/streak";
+import { useAlphabetProgress } from "@/lib/alphabetProgress";
 
 const STREAK_SEEN_KEY = "@linguascan/streak-seen-day/v1";
 
@@ -167,6 +168,8 @@ function PathCard({
   ctaFg,
   ctaBorder,
   watermark,
+  progress,
+  progressLabel,
   onPress,
 }: {
   tag: string;
@@ -181,6 +184,8 @@ function PathCard({
   ctaFg: string;
   ctaBorder?: string;
   watermark: string;
+  progress?: number;
+  progressLabel?: string;
   onPress: () => void;
 }) {
   return (
@@ -208,6 +213,23 @@ function PathCard({
       <Text style={[styles.pathSub, { color: fg, fontFamily: "Inter_500Medium" }]}>
         {subtitle}
       </Text>
+      {progress !== undefined && (
+        <View style={styles.pathProgressWrap}>
+          <View style={[styles.pathProgressTrack, { backgroundColor: "rgba(0,0,0,0.14)" }]}>
+            <View
+              style={[
+                styles.pathProgressFill,
+                { width: `${Math.min(100, Math.max(0, progress * 100))}%`, backgroundColor: fg },
+              ]}
+            />
+          </View>
+          {progressLabel ? (
+            <Text style={[styles.pathProgressLabel, { color: fg, fontFamily: "Inter_600SemiBold" }]}>
+              {progressLabel}
+            </Text>
+          ) : null}
+        </View>
+      )}
       <View
         style={[
           styles.pathCta,
@@ -225,11 +247,58 @@ function PathCard({
   );
 }
 
+function AlphabetMasteredStrip({
+  onReview,
+  onHide,
+}: {
+  onReview: () => void;
+  onHide: () => void;
+}) {
+  const t = useT();
+  const colors = useColors();
+  return (
+    <TouchableOpacity
+      style={[styles.masteredStrip, { backgroundColor: colors.card }]}
+      onPress={() => {
+        Haptics.selectionAsync();
+        onReview();
+      }}
+      activeOpacity={0.8}
+    >
+      <View style={[styles.masteredIcon, { backgroundColor: "#DCFCE7" }]}>
+        <Ionicons name="checkmark-circle" size={20} color="#22C55E" />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={[styles.masteredTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
+          {t("home.alphabetMastered")}
+        </Text>
+        <Text style={[styles.masteredSub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+          {t("home.alphabetMasteredSub")}
+        </Text>
+      </View>
+      <TouchableOpacity
+        onPress={(e) => {
+          e.stopPropagation();
+          Haptics.selectionAsync();
+          onHide();
+        }}
+        hitSlop={10}
+        style={styles.masteredClose}
+        activeOpacity={0.6}
+      >
+        <Ionicons name="close" size={18} color={colors.mutedForeground} />
+      </TouchableOpacity>
+    </TouchableOpacity>
+  );
+}
+
 export default function HomeScreen() {
   const t = useT();
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { prefs } = usePreferences();
+  const { prefs, update } = usePreferences();
+  const { languageProgress } = useAlphabetProgress();
+  const alphabet = languageProgress(prefs.targetLanguage);
   const { data: conversations } = useListOpenaiConversations();
 
   const list = (conversations ?? []) as Conversation[];
@@ -476,20 +545,42 @@ export default function HomeScreen() {
 
         {/* Learning paths */}
         <View style={{ gap: 14 }}>
-          <PathCard
-            tag={t("home.pathAlphabetTag")}
-            title={t("home.pathAlphabetTitle")}
-            subtitle={t("home.pathAlphabetSub")}
-            cta={t("home.pathAlphabetCta")}
-            bg="#FBBF24"
-            fg="#422006"
-            tagBg="rgba(255,255,255,0.55)"
-            tagFg="#422006"
-            ctaBg="#422006"
-            ctaFg="#FBBF24"
-            watermark="Aa"
-            onPress={() => router.push("/alphabet")}
-          />
+          {!prefs.alphabetCardHidden[prefs.targetLanguage] &&
+            (alphabet.mastered ? (
+              <AlphabetMasteredStrip
+                onReview={() => router.push("/alphabet")}
+                onHide={() =>
+                  update("alphabetCardHidden", {
+                    ...prefs.alphabetCardHidden,
+                    [prefs.targetLanguage]: true,
+                  })
+                }
+              />
+            ) : (
+              <PathCard
+                tag={t("home.pathAlphabetTag")}
+                title={t("home.pathAlphabetTitle")}
+                subtitle={t("home.pathAlphabetSub")}
+                cta={t("home.pathAlphabetCta")}
+                bg="#FBBF24"
+                fg="#422006"
+                tagBg="rgba(255,255,255,0.55)"
+                tagFg="#422006"
+                ctaBg="#422006"
+                ctaFg="#FBBF24"
+                watermark="Aa"
+                progress={alphabet.total > 0 ? alphabet.ratio : undefined}
+                progressLabel={
+                  alphabet.completed > 0
+                    ? t("home.alphabetProgress", {
+                        done: alphabet.completed,
+                        total: alphabet.total,
+                      })
+                    : undefined
+                }
+                onPress={() => router.push("/alphabet")}
+              />
+            ))}
           <PathCard
             tag={t("home.pathSentencesTag")}
             title={t("home.pathSentencesTitle")}
@@ -704,6 +795,33 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   pathCtaText: { fontSize: 14 },
+  pathProgressWrap: { marginTop: 14, gap: 6 },
+  pathProgressTrack: { height: 8, borderRadius: 4, overflow: "hidden" },
+  pathProgressFill: { height: "100%", borderRadius: 4 },
+  pathProgressLabel: { fontSize: 12 },
+  masteredStrip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: 14,
+    borderRadius: 16,
+  },
+  masteredIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 11,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  masteredTitle: { fontSize: 15 },
+  masteredSub: { fontSize: 12, marginTop: 2 },
+  masteredClose: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   statsRow: { flexDirection: "row", gap: 10 },
   tile: {
     flex: 1,

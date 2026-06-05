@@ -47,6 +47,11 @@ export type TKey =
   | "home.pathAlphabetTitle"
   | "home.pathAlphabetSub"
   | "home.pathAlphabetCta"
+  | "home.alphabetMastered"
+  | "home.alphabetMasteredSub"
+  | "home.alphabetReview"
+  | "home.alphabetProgress"
+  | "home.alphabetHide"
   | "home.pathSentencesTag"
   | "home.pathSentencesTitle"
   | "home.pathSentencesSub"
@@ -78,6 +83,8 @@ export type TKey =
   | "settings.about"
   | "settings.haptics"
   | "settings.hapticsSub"
+  | "settings.alphabetCard"
+  | "settings.alphabetCardSub"
   | "settings.daily"
   | "settings.dailySub"
   | "settings.help"
@@ -309,6 +316,11 @@ const en: Record<TKey, string> = {
   "home.pathAlphabetTitle": "Learn the ABC's",
   "home.pathAlphabetSub": "Letters \u00b7 Sounds \u00b7 Reading",
   "home.pathAlphabetCta": "Start Learning",
+  "home.alphabetMastered": "Alphabet mastered",
+  "home.alphabetMasteredSub": "Tap to review anytime",
+  "home.alphabetReview": "Review",
+  "home.alphabetProgress": "{done} / {total} mastered",
+  "home.alphabetHide": "Hide",
   "home.pathSentencesTag": "PHRASES",
   "home.pathSentencesTitle": "Simple Sentences",
   "home.pathSentencesSub": "Greet \u00b7 Ask \u00b7 Get Around",
@@ -340,6 +352,8 @@ const en: Record<TKey, string> = {
   "settings.about": "ABOUT",
   "settings.haptics": "Haptic feedback",
   "settings.hapticsSub": "Vibrate on actions",
+  "settings.alphabetCard": "Alphabet card",
+  "settings.alphabetCardSub": "Show the {lang} alphabet card on Home",
   "settings.daily": "Daily reminder",
   "settings.dailySub": "Practice every day",
   "settings.help": "Help & support",

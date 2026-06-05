@@ -25,6 +25,9 @@ export type Preferences = {
   displayName: string;
   hapticsEnabled: boolean;
   notificationsEnabled: boolean;
+  // Per-language flag for hiding the Home alphabet card (keyed by target
+  // language). A language is absent/false until the user hides it.
+  alphabetCardHidden: Record<string, boolean>;
 };
 
 const DEFAULTS: Preferences = {
@@ -33,6 +36,7 @@ const DEFAULTS: Preferences = {
   displayName: "Friend",
   hapticsEnabled: true,
   notificationsEnabled: true,
+  alphabetCardHidden: {},
 };
 
 const STORAGE_KEY = "@linguascan/preferences/v1";
