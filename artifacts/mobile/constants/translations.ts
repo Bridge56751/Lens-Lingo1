@@ -172,6 +172,7 @@ export type TKey =
   | "vocab.beginner"
   | "vocab.intermediate"
   | "vocab.advanced"
+  | "vocab.expert"
   | "vocab.add"
   | "vocab.added"
   | "vocab.myWords"
@@ -208,6 +209,7 @@ const en: Record<TKey, string> = {
   "vocab.beginner": "Beginner",
   "vocab.intermediate": "Intermediate",
   "vocab.advanced": "Advanced",
+  "vocab.expert": "Expert",
   "vocab.add": "Add",
   "vocab.added": "Added",
   "vocab.myWords": "My Words",

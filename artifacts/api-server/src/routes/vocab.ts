@@ -24,7 +24,7 @@ const SUPPORTED_LANGUAGES = new Set([
   "Dutch",
 ]);
 
-const LEVELS = ["beginner", "intermediate", "advanced"] as const;
+const LEVELS = ["beginner", "intermediate", "advanced", "expert"] as const;
 type Level = (typeof LEVELS)[number];
 
 function validLanguage(value: unknown): string | undefined {
@@ -49,14 +49,15 @@ async function generateBank(
   nativeLanguage: string,
 ): Promise<Record<Level, GeneratedWord[]>> {
   const prompt = `Create a vocabulary study list for a native ${nativeLanguage} speaker learning ${targetLanguage}.
-Provide common, genuinely useful single words or short phrases at three difficulty levels:
+Provide common, genuinely useful single words or short phrases at four difficulty levels:
 - beginner: 12 of the most essential everyday words
 - intermediate: 12 useful words a learner meets after the basics
 - advanced: 12 richer, less common words
+- expert: 12 sophisticated, nuanced words a near-fluent speaker would learn
 
 For each entry give the word written in ${targetLanguage} and its translation in ${nativeLanguage}.
 Respond with ONLY valid JSON in exactly this shape:
-{"beginner":[{"word":"...","translation":"..."}],"intermediate":[{"word":"...","translation":"..."}],"advanced":[{"word":"...","translation":"..."}]}`;
+{"beginner":[{"word":"...","translation":"..."}],"intermediate":[{"word":"...","translation":"..."}],"advanced":[{"word":"...","translation":"..."}],"expert":[{"word":"...","translation":"..."}]}`;
 
   const response = await openai.chat.completions.create({
     model: "gpt-4o",
@@ -72,6 +73,7 @@ Respond with ONLY valid JSON in exactly this shape:
     beginner: [],
     intermediate: [],
     advanced: [],
+    expert: [],
   };
   for (const level of LEVELS) {
     const raw = Array.isArray(parsed[level]) ? (parsed[level] as unknown[]) : [];
@@ -108,17 +110,25 @@ router.get("/vocab/bank", async (req, res) => {
     )
     .orderBy(asc(vocabBank.id));
 
-  if (rows.length === 0) {
+  // Regenerate when nothing is cached, or when a newly-added level is missing
+  // from a previously-cached pair (onConflictDoNothing tops up only new rows).
+  const presentLevels = new Set(rows.map((r) => r.level));
+  const missingLevel = LEVELS.some((level) => !presentLevels.has(level));
+
+  if (rows.length === 0 || missingLevel) {
     try {
       const generated = await generateBank(targetLanguage, nativeLanguage);
-      const values = LEVELS.flatMap((level) =>
-        generated[level].map((w) => ({
-          targetLanguage,
-          nativeLanguage,
-          level,
-          word: w.word,
-          translation: w.translation,
-        })),
+      // Only insert levels that aren't already cached so topping up a new level
+      // doesn't bloat existing levels with extra words on every regeneration.
+      const values = LEVELS.filter((level) => !presentLevels.has(level)).flatMap(
+        (level) =>
+          generated[level].map((w) => ({
+            targetLanguage,
+            nativeLanguage,
+            level,
+            word: w.word,
+            translation: w.translation,
+          })),
       );
       if (values.length > 0) {
         await db.insert(vocabBank).values(values).onConflictDoNothing();

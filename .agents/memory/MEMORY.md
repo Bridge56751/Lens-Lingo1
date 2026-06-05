@@ -5,3 +5,4 @@
 - [Practice flashcards](practice-flashcards.md) — don't rebuild card deck on React Query refetch (resets progress); shared TTS lives in lib/speech.ts.
 - [SSE streaming contract](sse-streaming-contract.md) — chat stream emits {content}/{done}/{error}; client MUST handle {error} or server failures look like a silent no-reply.
 - [TTS architecture](web-tts.md) — natural voice via OpenAI POST /api/openai/tts (gpt-4o-mini-tts) played by shared speakWord, device synth fallback; never call expo-speech/synth in screens.
+- [Vocab bank cache](vocab-bank-cache.md) — Word Bank is a shared per-language-pair cache; adding a difficulty level needs a missing-level top-up or cached pairs never get it.

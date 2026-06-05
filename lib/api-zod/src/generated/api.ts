@@ -101,7 +101,7 @@ export const GetVocabBankResponse = zod.object({
   "words": zod.array(zod.object({
   "word": zod.string(),
   "translation": zod.string(),
-  "level": zod.string().describe('beginner | intermediate | advanced')
+  "level": zod.string().describe('beginner | intermediate | advanced | expert')
 }))
 })
 

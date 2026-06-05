@@ -28,13 +28,14 @@ import { usePreferences } from "@/hooks/usePreferences";
 import { useT } from "@/hooks/useT";
 import { speakWord, prefetchSpeech, stopSpeaking } from "@/lib/speech";
 
-const LEVELS = ["beginner", "intermediate", "advanced"] as const;
+const LEVELS = ["beginner", "intermediate", "advanced", "expert"] as const;
 type Level = (typeof LEVELS)[number];
 
 const LEVEL_COLORS: Record<Level, { bg: string; fg: string }> = {
   beginner: { bg: "#DCFCE7", fg: "#16A34A" },
   intermediate: { bg: "#FEF3C7", fg: "#D97706" },
   advanced: { bg: "#FEE2E2", fg: "#DC2626" },
+  expert: { bg: "#EDE9FE", fg: "#7C3AED" },
 };
 
 export default function VocabBankScreen() {
@@ -78,6 +79,7 @@ export default function VocabBankScreen() {
       beginner: [],
       intermediate: [],
       advanced: [],
+      expert: [],
     };
     for (const w of bank?.words ?? []) {
       if ((LEVELS as readonly string[]).includes(w.level)) {

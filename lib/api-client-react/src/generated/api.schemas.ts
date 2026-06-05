@@ -77,7 +77,7 @@ export interface OpenaiError {
 export interface VocabBankWord {
   word: string;
   translation: string;
-  /** beginner | intermediate | advanced */
+  /** beginner | intermediate | advanced | expert */
   level: string;
 }
 

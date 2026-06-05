@@ -480,7 +480,7 @@ components:
           type: string
         level:
           type: string
-          description: beginner | intermediate | advanced
+          description: beginner | intermediate | advanced | expert
       required:
         - word
         - translation
