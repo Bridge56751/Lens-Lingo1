@@ -487,12 +487,14 @@ export default function HomeScreen() {
           </View>
         </View>
 
+        <View style={[styles.headerDivider, { backgroundColor: colors.border }]} />
+
         {/* Streak card */}
         <View style={styles.streakCard}>
           <View style={[styles.streakRow, { backgroundColor: "#FEF3C7" }]}>
             <View style={styles.streakRowLeft}>
               <View style={styles.streakIconCircle}>
-                <Animated.Text style={[{ fontSize: 20 }, flameStyle]}>🔥</Animated.Text>
+                <Animated.Text style={[{ fontSize: 16 }, flameStyle]}>🔥</Animated.Text>
               </View>
               <Text style={[styles.streakRowLabel, { color: "#D97706", fontFamily: "Inter_700Bold" }]}>
                 {t("home.dailyStreak")}
@@ -509,7 +511,7 @@ export default function HomeScreen() {
           <View style={[styles.streakRow, { backgroundColor: "#DCFCE7" }]}>
             <View style={styles.streakRowLeft}>
               <View style={styles.streakIconCircle}>
-                <Ionicons name="trophy" size={20} color="#22C55E" />
+                <Ionicons name="trophy" size={16} color="#22C55E" />
               </View>
               <Text style={[styles.streakRowLabel, { color: "#16A34A", fontFamily: "Inter_700Bold" }]}>
                 {t("home.bestStreak")}
@@ -730,38 +732,42 @@ const styles = StyleSheet.create({
   },
   learningChipText: { fontSize: 13 },
   greetingRight: { flexDirection: "row", alignItems: "center", gap: 10 },
+  headerDivider: {
+    height: 1,
+    marginTop: -4,
+    marginBottom: -4,
+  },
   streakCard: {
-    gap: 8,
-    marginTop: 16,
+    gap: 6,
   },
   streakRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 8,
-    paddingLeft: 8,
-    paddingRight: 10,
-    borderRadius: 18,
+    paddingVertical: 5,
+    paddingLeft: 5,
+    paddingRight: 8,
+    borderRadius: 14,
   },
-  streakRowLeft: { flexDirection: "row", alignItems: "center", gap: 12 },
+  streakRowLeft: { flexDirection: "row", alignItems: "center", gap: 10 },
   streakIconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#FFFFFF",
   },
-  streakRowLabel: { fontSize: 16 },
+  streakRowLabel: { fontSize: 14 },
   streakCountPill: {
-    minWidth: 48,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 14,
+    minWidth: 40,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 11,
     alignItems: "center",
     backgroundColor: "#FFFFFF",
   },
-  streakCountText: { fontSize: 17, lineHeight: 20 },
+  streakCountText: { fontSize: 15, lineHeight: 18 },
   avatar: {
     width: 52,
     height: 52,
