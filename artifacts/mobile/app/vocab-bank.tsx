@@ -213,6 +213,9 @@ export default function VocabBankScreen() {
               activeOpacity={0.85}
             >
               <Text
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.8}
                 style={[
                   styles.tabText,
                   {
@@ -329,15 +332,16 @@ const styles = StyleSheet.create({
   countBadgeText: { color: "#FFFFFF", fontSize: 11, fontFamily: "Inter_700Bold" },
   subtitle: { paddingHorizontal: 20, paddingBottom: 12, fontSize: 14 },
 
-  tabsRow: { flexDirection: "row", gap: 8, paddingHorizontal: 20, paddingBottom: 14 },
+  tabsRow: { flexDirection: "row", gap: 6, paddingHorizontal: 16, paddingBottom: 14 },
   tab: {
     flex: 1,
     paddingVertical: 8,
+    paddingHorizontal: 4,
     borderRadius: 999,
     alignItems: "center",
     justifyContent: "center",
   },
-  tabText: { fontSize: 12 },
+  tabText: { fontSize: 11 },
 
   center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 32, gap: 14 },
   loadingText: { fontSize: 14, textAlign: "center" },
