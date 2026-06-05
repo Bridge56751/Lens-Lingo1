@@ -109,43 +109,6 @@ function StatTile({
   );
 }
 
-function ConversationRow({ item }: { item: Conversation }) {
-  const t = useT();
-  const colors = useColors();
-  const parts = item.title.split(" • ");
-  const itemName = parts[0] ?? item.title;
-  const language = parts[1] ?? "";
-
-  return (
-    <TouchableOpacity
-      style={[styles.convoRow, { backgroundColor: colors.card }]}
-      onPress={() => router.push(`/conversation/${item.id}`)}
-      activeOpacity={0.7}
-    >
-      <View style={[styles.convoThumb, { backgroundColor: colors.primarySoft }]}>
-        <Ionicons name="cube" size={22} color={colors.primary} />
-      </View>
-      <View style={styles.convoBody}>
-        <Text style={[styles.convoName, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-          {itemName}
-        </Text>
-        <Text
-          style={[styles.convoSub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}
-          numberOfLines={1}
-        >
-          {language ? t("home.practicing", { lang: language }) : t("home.tapToContinue")}
-        </Text>
-      </View>
-      <View style={[styles.continueBtn, { backgroundColor: colors.primarySoft }]}>
-        <Ionicons name="chatbubble" size={12} color={colors.primary} />
-        <Text style={[styles.continueText, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
-          Continue
-        </Text>
-      </View>
-    </TouchableOpacity>
-  );
-}
-
 function PathCard({
   tag,
   title,
@@ -557,42 +520,6 @@ export default function HomeScreen() {
           />
         </View>
 
-        {/* Continue your conversations */}
-        <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-            {t("home.continueConvos")}
-          </Text>
-          {list.length > 0 && (
-            <TouchableOpacity onPress={() => router.navigate("/(tabs)/history")} activeOpacity={0.7}>
-              <Text style={[styles.seeAll, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
-                See all
-              </Text>
-            </TouchableOpacity>
-          )}
-        </View>
-
-        {list.length === 0 ? (
-          <View style={[styles.emptyCard, { backgroundColor: colors.card }]}>
-            <View style={[styles.emptyIcon, { backgroundColor: colors.primarySoft }]}>
-              <Ionicons name="scan" size={26} color={colors.primary} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.emptyTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-                No scans yet
-              </Text>
-              <Text style={[styles.emptyBody, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-                Tap Scan an Item to get started.
-              </Text>
-            </View>
-          </View>
-        ) : (
-          <View style={{ gap: 10 }}>
-            {list.slice(0, 3).map((item) => (
-              <ConversationRow key={item.id} item={item} />
-            ))}
-          </View>
-        )}
-
         {/* New here CTA */}
         <View style={[styles.tourCard, { backgroundColor: colors.primarySoft }]}>
           <View style={[styles.tourBot, { backgroundColor: colors.primary }]}>
@@ -804,59 +731,6 @@ const styles = StyleSheet.create({
   tileSubtitle: { fontSize: 11, lineHeight: 14 },
   progressTrack: { height: 5, borderRadius: 3, overflow: "hidden", marginTop: 2 },
   progressFill: { height: "100%", borderRadius: 3 },
-
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: 4,
-  },
-  sectionTitle: { fontSize: 16 },
-  seeAll: { fontSize: 13 },
-
-  convoRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 12,
-    borderRadius: 16,
-    gap: 12,
-  },
-  convoThumb: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  convoBody: { flex: 1, gap: 3 },
-  convoName: { fontSize: 14 },
-  convoSub: { fontSize: 12 },
-  continueBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 12,
-  },
-  continueText: { fontSize: 11 },
-
-  emptyCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 16,
-    borderRadius: 16,
-    gap: 12,
-  },
-  emptyIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  emptyTitle: { fontSize: 15 },
-  emptyBody: { fontSize: 12, marginTop: 2 },
 
   tourCard: {
     flexDirection: "row",

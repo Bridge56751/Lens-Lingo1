@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { and, eq, desc, sql } from "drizzle-orm";
+import { and, eq, desc, like, sql } from "drizzle-orm";
 import { db } from "@workspace/db";
 import { conversations, customers, messages } from "@workspace/db";
 import { openai, toFile } from "@workspace/integrations-openai-ai-server";
@@ -16,6 +16,71 @@ import {
 } from "../../lib/languages";
 
 const router = Router();
+
+// Default title prefix used for free (non-scan) chats at creation time. Once a
+// few turns exist we replace it with a topic derived from the conversation.
+const FREE_CHAT_TITLE_PREFIX = "Free Chat";
+
+// Generate a short topic title for a free chat from its messages and persist it,
+// keeping the `Topic • Language` format so the language can still be parsed from
+// the title as a fallback. Best-effort: failures must never affect the reply.
+async function autoTitleFreeChat(opts: {
+  conversationId: number;
+  currentTitle: string;
+  nativeLanguage: string;
+  targetLanguage: string;
+  transcript: { role: string; content: string }[];
+  log: { error: (obj: unknown, msg: string) => void };
+}): Promise<void> {
+  // Only the default placeholder ("Free Chat • <language>") is eligible. Anchor
+  // on the separator so a real topic that merely begins with these words is not
+  // re-titled on a later turn.
+  if (!opts.currentTitle.startsWith(`${FREE_CHAT_TITLE_PREFIX} • `)) return;
+  if (!opts.targetLanguage) return;
+  try {
+    const convo = opts.transcript
+      .filter((m) => m.role !== "system")
+      .slice(-8)
+      .map((m) => `${m.role === "user" ? "Learner" : "Tutor"}: ${m.content}`)
+      .join("\n");
+    if (!convo.trim()) return;
+
+    const resp = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      max_completion_tokens: 20,
+      messages: [
+        {
+          role: "system",
+          content: `You name language-learning chat sessions. Given the conversation, reply with a SHORT topic title of 2-4 words in ${opts.nativeLanguage}, Title Case, describing what they are talking about. No quotes, no punctuation, no language names, no extra words.`,
+        },
+        { role: "user", content: convo },
+      ],
+    });
+
+    let topic = (resp.choices[0]?.message?.content ?? "")
+      .replace(/["'.]/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (!topic) return;
+    if (topic.length > 40) topic = topic.slice(0, 40).trim();
+    // Never regenerate the placeholder itself, which would keep it eligible.
+    if (topic.toLowerCase() === FREE_CHAT_TITLE_PREFIX.toLowerCase()) return;
+
+    // Atomic + idempotent: only overwrite while the title is still a default
+    // placeholder, so concurrent turns can't double-title.
+    await db
+      .update(conversations)
+      .set({ title: `${topic} • ${opts.targetLanguage}` })
+      .where(
+        and(
+          eq(conversations.id, opts.conversationId),
+          like(conversations.title, `${FREE_CHAT_TITLE_PREFIX} • %`),
+        ),
+      );
+  } catch (err) {
+    opts.log.error({ err }, "auto-title generation failed");
+  }
+}
 
 // POST /openai/transcribe - transcribe spoken audio to text (Whisper)
 router.post("/openai/transcribe", async (req, res) => {
@@ -532,6 +597,24 @@ router.post("/openai/conversations/:id/messages", async (req, res) => {
 
   res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
   res.end();
+
+  // Give free chats a real topic name once there's something to summarize.
+  // Fire-and-forget so it never delays the reply; it no-ops unless the title
+  // is still the default "Free Chat" placeholder.
+  if (fullResponse) {
+    void autoTitleFreeChat({
+      conversationId: id,
+      currentTitle: owned.title,
+      nativeLanguage: safeLanguage(owned.nativeLanguage) || "English",
+      targetLanguage: targetLanguage || safeLanguage(owned.targetLanguage) || "",
+      transcript: [
+        ...allMessages.map((m) => ({ role: m.role, content: m.content })),
+        { role: "user", content },
+        { role: "assistant", content: fullResponse },
+      ],
+      log: req.log,
+    });
+  }
 });
 
 // Minimum learner turns required before a conversation can be graded.

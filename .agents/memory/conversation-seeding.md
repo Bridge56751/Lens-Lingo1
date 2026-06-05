@@ -15,3 +15,6 @@ Any new way to create a conversation (scan, free chat, future entry points) MUST
 - Mirror the scan route's transaction pattern: insert conversation + seed messages + bump usage counters atomically.
 - Validate any client-supplied language against the `SUPPORTED_LANGUAGES` allowlist before interpolating into prompts (prompt-injection guard) — shared across scan, free-chat, and message routes.
 - Title format `"<name> • <Language>"` keeps Home/History/Conversation title parsing working.
+
+## Free-chat auto-titling
+Free (non-scan) chats are created with placeholder title `Free Chat • <lang>`. After the streamed reply completes in the messages route, `autoTitleFreeChat` fire-and-forgets a gpt-4o-mini call to derive a 2-4 word topic and persists `${topic} • ${targetLanguage}`. Idempotency is enforced at the DB level: the UPDATE has `WHERE title LIKE 'Free Chat • %'`, plus a startsWith guard and a guard that refuses to regenerate the placeholder. Always keep the ` • ` separator in any title — history.tsx parses language via `title.split(" • ")[1]`.
