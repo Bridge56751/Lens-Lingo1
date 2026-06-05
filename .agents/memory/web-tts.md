@@ -56,3 +56,17 @@ stale taps (AbortController per request); every screen calls `stopSpeaking()` on
 clear the queue and abort pending requests. **Why:** with one shared, rate-limited TTS
 route, concurrency is the enemy of latency — fewer concurrent requests beats a faster
 model.
+
+**Server-side cache is the cross-session/cross-user win.** The client LRU is
+per-session (lost on reload) and per-device, so the same small fixed word set (bank,
+flashcards, alphabet) was re-synthesized by OpenAI on every cold start — measured
+963-2012ms per `/api/openai/tts` call, and it sent `Cache-Control: no-store`. The
+route now keeps its own in-memory LRU (`Map<string,Buffer>`, key `${voice}:${input}`,
+cap 400) plus in-flight de-dup (`Map<string,Promise<Buffer>>`) so concurrent first-time
+misses for the same clip collapse to ONE synth. Responses set `Cache-Control: private,
+max-age=86400` and an `X-TTS-Cache: hit|miss` header. Measured: miss ~1.1s, hit ~7ms.
+**Why:** HTTP caching can't help (endpoint is POST — browsers don't cache POST), so the
+server cache + the client cache are complementary, not redundant. The client always
+sends only `{text}` so voice defaults to "nova" → one canonical key per word → high hit
+rate. Flashcard screens (`vocab-study.tsx`) prefetch the next 3 cards to warm both caches
+before the user advances.

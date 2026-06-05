@@ -25,7 +25,7 @@ import {
 import { useColors } from "@/hooks/useColors";
 import { usePreferences } from "@/hooks/usePreferences";
 import { useT } from "@/hooks/useT";
-import { speakWord, stopSpeaking } from "@/lib/speech";
+import { speakWord, prefetchSpeech, stopSpeaking } from "@/lib/speech";
 
 export default function VocabStudyScreen() {
   const t = useT();
@@ -85,10 +85,15 @@ export default function VocabStudyScreen() {
     }
   }, [pos, card]);
 
-  // Speak the word when a new card appears.
+  // Speak the word when a new card appears, and warm the audio for the next few
+  // cards so advancing feels instant instead of waiting on a fresh synth.
   useEffect(() => {
     if (card) speakWord(card.word, target);
-  }, [pos, card, target]);
+    for (let i = 1; i <= 3; i++) {
+      const upcoming = deck[pos + i];
+      if (upcoming) prefetchSpeech(upcoming.word, target);
+    }
+  }, [pos, card, target, deck]);
 
   useFocusEffect(
     React.useCallback(() => {
