@@ -214,13 +214,11 @@ export default function VocabBankScreen() {
             >
               <Text
                 numberOfLines={1}
-                adjustsFontSizeToFit
-                minimumFontScale={0.8}
                 style={[
                   styles.tabText,
                   {
                     color: active ? lc.fg : colors.mutedForeground,
-                    fontFamily: active ? "Inter_700Bold" : "Inter_600SemiBold",
+                    fontFamily: "Inter_600SemiBold",
                   },
                 ]}
               >
