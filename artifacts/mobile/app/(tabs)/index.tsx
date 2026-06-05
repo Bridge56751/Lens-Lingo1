@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Platform,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
@@ -171,6 +172,7 @@ function PathCard({
   progress,
   progressLabel,
   onPress,
+  loading,
 }: {
   tag: string;
   title: string;
@@ -187,15 +189,18 @@ function PathCard({
   progress?: number;
   progressLabel?: string;
   onPress: () => void;
+  loading?: boolean;
 }) {
   return (
     <TouchableOpacity
-      style={[styles.pathCard, { backgroundColor: bg }]}
+      style={[styles.pathCard, { backgroundColor: bg, opacity: loading ? 0.7 : 1 }]}
       onPress={() => {
+        if (loading) return;
         Haptics.selectionAsync();
         onPress();
       }}
       activeOpacity={0.9}
+      disabled={loading}
     >
       <View style={styles.pathWatermark} pointerEvents="none">
         <Text style={[styles.pathWatermarkText, { color: fg }]} numberOfLines={1}>
@@ -238,10 +243,16 @@ function PathCard({
             : { backgroundColor: ctaBg },
         ]}
       >
-        <Text style={[styles.pathCtaText, { color: ctaFg, fontFamily: "Inter_700Bold" }]}>
-          {cta}
-        </Text>
-        <Ionicons name="arrow-forward" size={16} color={ctaFg} />
+        {loading ? (
+          <ActivityIndicator size="small" color={ctaFg} />
+        ) : (
+          <>
+            <Text style={[styles.pathCtaText, { color: ctaFg, fontFamily: "Inter_700Bold" }]}>
+              {cta}
+            </Text>
+            <Ionicons name="arrow-forward" size={16} color={ctaFg} />
+          </>
+        )}
       </View>
     </TouchableOpacity>
   );
@@ -620,6 +631,7 @@ export default function HomeScreen() {
             ctaFg="#C2410C"
             watermark="AI"
             onPress={goFreeChat}
+            loading={startChat.isPending}
           />
         </View>
 
