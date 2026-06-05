@@ -364,9 +364,12 @@ export default function HomeScreen() {
       >
         {/* Greeting row */}
         <View style={styles.greetingRow}>
-          <View style={{ flex: 1 }}>
+          <View style={{ flex: 1, minWidth: 0 }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-              <Text style={[styles.greeting, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
+              <Text
+                numberOfLines={1}
+                style={[styles.greeting, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}
+              >
                 {t("home.greeting", { name: prefs.displayName })}
               </Text>
             </View>
@@ -388,7 +391,10 @@ export default function HomeScreen() {
           <View style={styles.streakPills}>
             <View style={[styles.streakPill, { backgroundColor: "#FEF3C7" }]}>
               <Text style={{ fontSize: 12 }}>🔥</Text>
-              <Text style={[styles.streakPillLabel, { color: "#D97706", fontFamily: "Inter_600SemiBold" }]}>
+              <Text
+                numberOfLines={1}
+                style={[styles.streakPillLabel, { color: "#D97706", fontFamily: "Inter_600SemiBold" }]}
+              >
                 {t("home.dailyStreak")}
               </Text>
               <Text style={[styles.streakPillNum, { color: "#D97706", fontFamily: "Inter_700Bold" }]}>
@@ -397,7 +403,10 @@ export default function HomeScreen() {
             </View>
             <View style={[styles.streakPill, { backgroundColor: "#DCFCE7" }]}>
               <Ionicons name="trophy" size={12} color="#22C55E" />
-              <Text style={[styles.streakPillLabel, { color: "#16A34A", fontFamily: "Inter_600SemiBold" }]}>
+              <Text
+                numberOfLines={1}
+                style={[styles.streakPillLabel, { color: "#16A34A", fontFamily: "Inter_600SemiBold" }]}
+              >
                 {t("home.bestStreak")}
               </Text>
               <Text style={[styles.streakPillNum, { color: "#16A34A", fontFamily: "Inter_700Bold" }]}>
@@ -617,8 +626,8 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   scroll: { paddingHorizontal: 18, gap: 16 },
 
-  greetingRow: { flexDirection: "row", alignItems: "center", gap: 10 },
-  greeting: { fontSize: 22, letterSpacing: -0.4 },
+  greetingRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  greeting: { fontSize: 20, letterSpacing: -0.4 },
   learningChip: {
     flexDirection: "row",
     alignItems: "center",
@@ -634,6 +643,7 @@ const styles = StyleSheet.create({
     marginBottom: -2,
   },
   streakPills: {
+    width: 132,
     gap: 6,
   },
   streakPill: {
