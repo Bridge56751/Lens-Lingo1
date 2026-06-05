@@ -438,6 +438,19 @@ export default function HomeScreen() {
                 {t("home.greeting", { name: prefs.displayName })}
               </Text>
             </View>
+            <TouchableOpacity
+              style={styles.learningChip}
+              onPress={() => {
+                Haptics.selectionAsync();
+                router.push("/settings");
+              }}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="globe-outline" size={14} color={colors.primary} />
+              <Text style={[styles.learningChipText, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
+                {t("settings.learningSub", { lang: prefs.targetLanguage })}
+              </Text>
+            </TouchableOpacity>
           </View>
           <View style={styles.greetingRight}>
             <View style={[styles.streakPill, { backgroundColor: "#FFF1E6" }]}>
@@ -681,6 +694,14 @@ const styles = StyleSheet.create({
 
   greetingRow: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
   greeting: { fontSize: 24, letterSpacing: -0.4 },
+  learningChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    marginTop: 4,
+    alignSelf: "flex-start",
+  },
+  learningChipText: { fontSize: 13 },
   greetingRight: { flexDirection: "row", alignItems: "center", gap: 10 },
   streakPill: {
     flexDirection: "row",
