@@ -206,13 +206,15 @@ export default function ScanScreen() {
   };
 
   const topPadding = Platform.OS === "web" ? 16 : insets.top;
-  const bottomPadding = Platform.OS === "web" ? 34 + 84 : insets.bottom + 90;
+  // The scan screen is a pushed route with no bottom tab bar, so the controls
+  // sit right at the very bottom edge (just clear of the home indicator).
+  const bottomPadding = Platform.OS === "web" ? 24 : insets.bottom + 16;
 
   // Big, near-full-height viewfinder. The frame is centered, so we leave room
   // for the top bar above and the capture/history/gallery controls below.
   const { width: screenW, height: screenH } = useWindowDimensions();
   const frameWidth = Math.min(screenW - 36, 480);
-  const frameHeight = Math.max(280, screenH - (topPadding + 70) - (bottomPadding + 80));
+  const frameHeight = Math.max(280, screenH - (topPadding + 70) - (bottomPadding + 96));
   const hintTop = Math.max(topPadding + 56, (screenH - frameHeight) / 2 - 46);
 
   // RESULT SCREEN
