@@ -46,16 +46,21 @@ export default function AlphabetScreen() {
   const isLast = index === letters.length - 1;
   const isDone = scriptCompleted.size === letters.length && letters.length > 0;
 
-  // Warm the TTS cache for the visible letter + example so taps play instantly.
+  // Warm the TTS cache for the visible letter + example, plus the NEXT letter, so
+  // both tapping and advancing play instantly even on first encounter.
   useEffect(() => {
-    if (!current) return;
     const useChar = NON_LATIN_LANGS.has(prefs.targetLanguage);
-    const letterText = useChar
-      ? current.char.split(/\s+/)[0]
-      : (current.name ?? current.char).replace(/\s*\(.*\)\s*/g, "").trim();
-    prefetchSpeech(letterText, prefs.targetLanguage);
-    prefetchSpeech(current.example.replace(/\s*\(.*\)/, ""), prefs.targetLanguage);
-  }, [current, prefs.targetLanguage]);
+    const warm = (letter: (typeof letters)[number] | undefined) => {
+      if (!letter) return;
+      const letterText = useChar
+        ? letter.char.split(/\s+/)[0]
+        : (letter.name ?? letter.char).replace(/\s*\(.*\)\s*/g, "").trim();
+      prefetchSpeech(letterText, prefs.targetLanguage);
+      prefetchSpeech(letter.example.replace(/\s*\(.*\)/, ""), prefs.targetLanguage);
+    };
+    warm(current);
+    warm(letters[index + 1]);
+  }, [current, index, letters, prefs.targetLanguage]);
 
   // Stop playback and cancel pending prefetches when leaving the screen, so
   // rapid navigation doesn't leave a queue of requests saturating the server.

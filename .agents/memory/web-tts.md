@@ -70,3 +70,15 @@ server cache + the client cache are complementary, not redundant. The client alw
 sends only `{text}` so voice defaults to "nova" → one canonical key per word → high hit
 rate. Flashcard screens (`vocab-study.tsx`) prefetch the next 3 cards to warm both caches
 before the user advances.
+
+**There is no reliable model/format trick for COLD (uncached) latency — don't re-chase it.**
+Benchmarked OpenAI TTS direct (the server uses the user's `OPENAI_API_KEY`, so calls already
+bypass the AI-Integrations proxy): a cold single-word synth is ~0.7–1.5s and *noisy*. `tts-1`
+(the "low-latency" model) was sometimes faster but spiked to 6s on individual calls; `opus`
+format is smaller but not consistently faster to first byte; for one-word clips TTFB ≈ full
+response, so HTTP streaming buys almost nothing. **Conclusion:** kept `gpt-4o-mini-tts` / `mp3`
+for quality + consistency. The only real lever for not-yet-cached audio is **prefetching ahead**
+on every screen the user steps through (alphabet warms current+next letter, sentences warms the
+open category, vocab bank warms visible words, flashcards warm next 3) so it's a cache hit by
+tap time. **Why:** cold synth time is a hard floor we can't shrink — move the work earlier
+instead of trying to make it faster.

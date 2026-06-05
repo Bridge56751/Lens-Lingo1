@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -19,7 +19,7 @@ import {
 import { useColors } from "@/hooks/useColors";
 import { usePreferences } from "@/hooks/usePreferences";
 import { useT } from "@/hooks/useT";
-import { speakWord, stopSpeaking } from "@/lib/speech";
+import { speakWord, prefetchSpeech, stopSpeaking } from "@/lib/speech";
 
 const CATEGORIES = [
   "greetings",
@@ -83,6 +83,12 @@ export default function SentencesScreen() {
   const [selectedCategory, setSelectedCategory] = useState<Category>("greetings");
   const visible = grouped[selectedCategory];
   const isEmptyBank = CATEGORIES.every((c) => grouped[c].length === 0);
+
+  // Warm the TTS cache for every phrase in the open category so the first tap on
+  // any of them plays instantly instead of waiting on a cold synth.
+  useEffect(() => {
+    for (const s of visible) prefetchSpeech(s.phrase, target);
+  }, [visible, target]);
 
   const hear = (phrase: string) => {
     Haptics.selectionAsync();
