@@ -36,7 +36,7 @@ import { speakWord, stopSpeaking, prefetchSpeech } from "@/lib/speech";
 
 function CornerBrackets({ color }: { color: string }) {
   return (
-    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+    <View style={[StyleSheet.absoluteFill, { pointerEvents: "none" }]}>
       <View style={[styles.corner, styles.cornerTL, { borderColor: color }]} />
       <View style={[styles.corner, styles.cornerTR, { borderColor: color }]} />
       <View style={[styles.corner, styles.cornerBL, { borderColor: color }]} />
@@ -235,13 +235,14 @@ export default function ScanScreen() {
   // sit right at the very bottom edge (just clear of the home indicator).
   const bottomPadding = Platform.OS === "web" ? 24 : insets.bottom + 16;
 
-  // Anchor the viewfinder just below the top guidance zone rather than
-  // vertically centering it (which left an empty grey band at the top).
+  // Full-bleed camera with a centered scan frame (corner brackets). The frame
+  // is clamped to leave room for the top guidance and bottom controls.
   const { width: screenW, height: screenH } = useWindowDimensions();
-  const frameTop = topPadding + 140;
-  const bottomReserve = bottomPadding + 150;
-  const frameWidth = Math.min(screenW - 40, 460);
-  const frameHeight = Math.max(240, screenH - frameTop - bottomReserve);
+  const frameWidth = Math.min(screenW - 48, 420);
+  const frameHeight = Math.max(
+    220,
+    Math.min(Math.round(frameWidth * 1.3), screenH - (topPadding + 170) - (bottomPadding + 190)),
+  );
 
   // RESULT SCREEN
   if (scannedImage && scanResult && !isScanning) {
@@ -353,30 +354,24 @@ export default function ScanScreen() {
           </View>
         )}
 
-        {/* Dim overlay around frame */}
-        <View pointerEvents="none" style={styles.dimOverlay}>
-          <View style={[styles.dimTop, { height: frameTop }]} />
-          <View style={[styles.dimMiddle, { height: frameHeight }]}>
-            <View style={styles.dimSide} />
-            <Animated.View style={[styles.scanFrame, { width: frameWidth, height: frameHeight }, pulseStyle]}>
-              <CornerBrackets color="#FFFFFF" />
-              {isScanning && (
-                <View style={styles.scanningBadge}>
-                  <ActivityIndicator size="small" color="#FFFFFF" />
-                  <Text style={[styles.scanningBadgeText, { fontFamily: "Inter_600SemiBold" }]}>
-                    {t("scan.identifying")}
-                  </Text>
-                </View>
-              )}
-            </Animated.View>
-            <View style={styles.dimSide} />
-          </View>
-          <View style={styles.dimSide} />
+        {/* Scan frame (corner brackets over the live camera) */}
+        <View style={styles.frameLayer}>
+          <Animated.View style={[styles.scanFrame, { width: frameWidth, height: frameHeight }, pulseStyle]}>
+            <CornerBrackets color="rgba(255,255,255,0.92)" />
+            {isScanning && (
+              <View style={styles.scanningBadge}>
+                <ActivityIndicator size="small" color="#FFFFFF" />
+                <Text style={[styles.scanningBadgeText, { fontFamily: "Inter_600SemiBold" }]}>
+                  {t("scan.identifying")}
+                </Text>
+              </View>
+            )}
+          </Animated.View>
         </View>
       </View>
 
       {/* Top zone: close + level/language chips + guidance */}
-      <View style={[styles.topZone, { paddingTop: topPadding + 8 }]} pointerEvents="box-none">
+      <View style={[styles.topZone, { paddingTop: topPadding + 8, pointerEvents: "box-none" }]}>
         <View style={styles.topRow}>
           <TouchableOpacity
             style={styles.closeButton}
@@ -414,7 +409,7 @@ export default function ScanScreen() {
           </View>
         </View>
 
-        <View pointerEvents="none" style={styles.guidance}>
+        <View style={[styles.guidance, { pointerEvents: "none" }]}>
           <View style={styles.hintPill}>
             <Text style={[styles.hintText, { fontFamily: "Inter_500Medium" }]}>
               {t("scan.hint")}
@@ -483,11 +478,8 @@ export default function ScanScreen() {
         </Pressable>
       </Modal>
 
-      {/* Skip the camera — start a free chat with the tutor */}
-      <View
-        pointerEvents="box-none"
-        style={[styles.justChatWrap, { bottom: bottomPadding + 116 }]}
-      >
+      {/* Bottom controls: free-chat pill + capture row in one tappable stack */}
+      <View style={[styles.bottomArea, { paddingBottom: bottomPadding }]}>
         <TouchableOpacity
           style={styles.justChatPill}
           onPress={goFreeChat}
@@ -503,53 +495,47 @@ export default function ScanScreen() {
             {t("scan.justChat")}
           </Text>
         </TouchableOpacity>
-      </View>
 
-      {/* Bottom controls */}
-      <View
-        style={[
-          styles.bottomBar,
-          { paddingBottom: bottomPadding },
-        ]}
-      >
-        <TouchableOpacity
-          style={styles.sideButton}
-          onPress={() => router.dismissTo("/(tabs)/history")}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="time-outline" size={22} color="#FFFFFF" />
-          <Text style={[styles.sideButtonText, { fontFamily: "Inter_500Medium" }]}>
-            {t("scan.history")}
-          </Text>
-        </TouchableOpacity>
+        <View style={styles.bottomRow}>
+          <TouchableOpacity
+            style={styles.sideButton}
+            onPress={() => router.dismissTo("/(tabs)/history")}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="time-outline" size={22} color="#FFFFFF" />
+            <Text style={[styles.sideButtonText, { fontFamily: "Inter_500Medium" }]}>
+              {t("scan.history")}
+            </Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          onPress={handleCapture}
-          activeOpacity={0.85}
-          disabled={isScanning || !canUseCamera}
-          style={styles.captureWrap}
-        >
-          <View style={[styles.captureOuter, { opacity: !canUseCamera ? 0.4 : 1 }]}>
-            <View style={[styles.captureInner, { backgroundColor: isScanning ? colors.primary : "#FFFFFF" }]}>
-              {isScanning ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
-              ) : (
-                <Ionicons name="scan" size={26} color={colors.primary} />
-              )}
+          <TouchableOpacity
+            onPress={handleCapture}
+            activeOpacity={0.85}
+            disabled={isScanning || !canUseCamera}
+            style={styles.captureWrap}
+          >
+            <View style={[styles.captureOuter, { opacity: !canUseCamera ? 0.4 : 1 }]}>
+              <View style={[styles.captureInner, { backgroundColor: isScanning ? colors.primary : "#FFFFFF" }]}>
+                {isScanning ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <Ionicons name="scan" size={26} color={colors.primary} />
+                )}
+              </View>
             </View>
-          </View>
-        </TouchableOpacity>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.sideButton}
-          onPress={handleGallery}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="images-outline" size={22} color="#FFFFFF" />
-          <Text style={[styles.sideButtonText, { fontFamily: "Inter_500Medium" }]}>
-            {t("scan.gallery")}
-          </Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.sideButton}
+            onPress={handleGallery}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="images-outline" size={22} color="#FFFFFF" />
+            <Text style={[styles.sideButtonText, { fontFamily: "Inter_500Medium" }]}>
+              {t("scan.gallery")}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -574,9 +560,12 @@ const styles = StyleSheet.create({
   },
   permissionButtonText: { color: "#FFFFFF", fontSize: 14 },
 
-  dimOverlay: { ...StyleSheet.absoluteFillObject },
-  dimSide: { flex: 1, backgroundColor: "rgba(10,10,18,0.55)" },
-  dimMiddle: { flexDirection: "row" },
+  frameLayer: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: "center",
+    justifyContent: "center",
+    pointerEvents: "none",
+  },
   scanFrame: {
     alignItems: "center",
     justifyContent: "center",
@@ -676,12 +665,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 
-  justChatWrap: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    alignItems: "center",
-  },
   justChatPill: {
     flexDirection: "row",
     alignItems: "center",
@@ -693,7 +676,6 @@ const styles = StyleSheet.create({
   },
   justChatText: { color: "#FFFFFF", fontSize: 14 },
 
-  dimTop: { backgroundColor: "rgba(10,10,18,0.55)" },
   hintPill: {
     backgroundColor: "rgba(0,0,0,0.55)",
     paddingHorizontal: 16,
@@ -702,16 +684,22 @@ const styles = StyleSheet.create({
   },
   hintText: { color: "#FFFFFF", fontSize: 13 },
 
-  bottomBar: {
+  bottomArea: {
     position: "absolute",
     left: 0,
     right: 0,
     bottom: 0,
+    alignItems: "center",
+    gap: 18,
+    paddingTop: 16,
+    pointerEvents: "box-none",
+  },
+  bottomRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    width: "100%",
     paddingHorizontal: 32,
-    paddingTop: 20,
   },
   sideButton: { alignItems: "center", gap: 4, width: 64 },
   sideButtonText: { color: "#FFFFFF", fontSize: 11 },

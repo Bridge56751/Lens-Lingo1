@@ -8,3 +8,4 @@
 - [Alphabet progress](alphabet-progress.md) — mastery persisted per language::scriptId; pre-load updates must union completions + tombstone resets (no clobber); hide flag is language-scoped.
 - [Vocab bank cache](vocab-bank-cache.md) — Word Bank is a shared per-language-pair cache; adding a difficulty level needs a missing-level top-up or cached pairs never get it.
 - [Conversation seeding rule](conversation-seeding.md) — every conversation-creation path must seed ≥1 message + set target/native lang columns, else send-message route 404s / loses language anchor.
+- [Scan overlay touch](scan-overlay-touch.md) — a later full-width absolute sibling steals a floating control's taps even with a gap; merge into one box-none container; full-bleed frame avoids grey banding.
