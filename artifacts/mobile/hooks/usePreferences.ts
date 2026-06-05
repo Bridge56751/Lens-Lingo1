@@ -33,6 +33,9 @@ export type Preferences = {
   // Per-language flag for hiding the Home alphabet card (keyed by target
   // language). A language is absent/false until the user hides it.
   alphabetCardHidden: Record<string, boolean>;
+  // Best (longest) consecutive-day login streak ever reached. Persisted so it
+  // survives even if the conversations it was derived from are deleted.
+  bestStreak: number;
 };
 
 const DEFAULTS: Preferences = {
@@ -43,6 +46,7 @@ const DEFAULTS: Preferences = {
   notificationsEnabled: true,
   difficulty: "Beginner",
   alphabetCardHidden: {},
+  bestStreak: 0,
 };
 
 const STORAGE_KEY = "@linguascan/preferences/v1";

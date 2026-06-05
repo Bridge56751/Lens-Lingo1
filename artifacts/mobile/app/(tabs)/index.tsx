@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef } from "react";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import {
   View,
   Text,
@@ -30,7 +30,7 @@ import {
 import { useColors } from "@/hooks/useColors";
 import { usePreferences, type Language } from "@/hooks/usePreferences";
 import { useT } from "@/hooks/useT";
-import { computeStreak, todayKey } from "@/lib/streak";
+import { computeStreak, computeBestStreak, todayKey } from "@/lib/streak";
 import { useAlphabetProgress } from "@/lib/alphabetProgress";
 
 const STREAK_SEEN_KEY = "@linguascan/streak-seen-day/v1";
@@ -318,12 +318,24 @@ export default function HomeScreen() {
   const list = (conversations ?? []) as Conversation[];
 
   const stats = useMemo(() => {
+    const dates = list.map((c) => c.createdAt);
     return {
-      streak: computeStreak(list.map((c) => c.createdAt)),
+      streak: computeStreak(dates),
+      bestStreak: computeBestStreak(dates),
       totalConvos: list.length,
       vocab: vocabSelections?.length ?? 0,
     };
   }, [list, vocabSelections]);
+
+  // Best streak is the longest run ever — never let it drop, even if the
+  // conversations it was derived from are deleted, by persisting the high-water
+  // mark in preferences.
+  const bestStreak = Math.max(stats.bestStreak, stats.streak, prefs.bestStreak ?? 0);
+  useEffect(() => {
+    if (bestStreak > (prefs.bestStreak ?? 0)) {
+      update("bestStreak", bestStreak);
+    }
+  }, [bestStreak, prefs.bestStreak, update]);
 
   const topPadding = Platform.OS === "web" ? 16 : insets.top;
   const bottomPadding = Platform.OS === "web" ? 34 + 84 : insets.bottom + 90;
@@ -462,19 +474,6 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
           <View style={styles.greetingRight}>
-            <View style={[styles.streakPill, { backgroundColor: "#FFF1E6" }]}>
-              <Animated.Text style={[{ fontSize: 20 }, flameStyle]}>🔥</Animated.Text>
-              <View>
-                <Animated.Text
-                  style={[styles.streakNum, { color: "#1A1B2E", fontFamily: "Inter_700Bold" }, numStyle]}
-                >
-                  {stats.streak}
-                </Animated.Text>
-                <Text style={[styles.streakLabel, { color: "#7A7B8E", fontFamily: "Inter_500Medium" }]}>
-                  {t("home.dayStreak")}
-                </Text>
-              </View>
-            </View>
             <TouchableOpacity
               style={[styles.avatar, { borderColor: colors.primary }]}
               onPress={() => {
@@ -485,6 +484,42 @@ export default function HomeScreen() {
             >
               <Ionicons name="person" size={26} color={colors.primary} />
             </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Streak card */}
+        <View style={styles.streakCard}>
+          <View style={[styles.streakRow, { backgroundColor: "#FEF3C7" }]}>
+            <View style={styles.streakRowLeft}>
+              <View style={styles.streakIconCircle}>
+                <Animated.Text style={[{ fontSize: 20 }, flameStyle]}>🔥</Animated.Text>
+              </View>
+              <Text style={[styles.streakRowLabel, { color: "#D97706", fontFamily: "Inter_700Bold" }]}>
+                {t("home.dailyStreak")}
+              </Text>
+            </View>
+            <View style={styles.streakCountPill}>
+              <Animated.Text
+                style={[styles.streakCountText, { color: "#D97706", fontFamily: "Inter_700Bold" }, numStyle]}
+              >
+                {stats.streak}
+              </Animated.Text>
+            </View>
+          </View>
+          <View style={[styles.streakRow, { backgroundColor: "#DCFCE7" }]}>
+            <View style={styles.streakRowLeft}>
+              <View style={styles.streakIconCircle}>
+                <Ionicons name="trophy" size={20} color="#22C55E" />
+              </View>
+              <Text style={[styles.streakRowLabel, { color: "#16A34A", fontFamily: "Inter_700Bold" }]}>
+                {t("home.bestStreak")}
+              </Text>
+            </View>
+            <View style={styles.streakCountPill}>
+              <Text style={[styles.streakCountText, { color: "#16A34A", fontFamily: "Inter_700Bold" }]}>
+                {bestStreak}
+              </Text>
+            </View>
           </View>
         </View>
 
@@ -695,16 +730,38 @@ const styles = StyleSheet.create({
   },
   learningChipText: { fontSize: 13 },
   greetingRight: { flexDirection: "row", alignItems: "center", gap: 10 },
-  streakPill: {
+  streakCard: {
+    gap: 8,
+    marginTop: 16,
+  },
+  streakRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 9,
+    justifyContent: "space-between",
+    paddingVertical: 8,
+    paddingLeft: 8,
+    paddingRight: 10,
     borderRadius: 18,
   },
-  streakNum: { fontSize: 20, lineHeight: 22 },
-  streakLabel: { fontSize: 11, lineHeight: 13 },
+  streakRowLeft: { flexDirection: "row", alignItems: "center", gap: 12 },
+  streakIconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFFFFF",
+  },
+  streakRowLabel: { fontSize: 16 },
+  streakCountPill: {
+    minWidth: 48,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 14,
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+  },
+  streakCountText: { fontSize: 17, lineHeight: 20 },
   avatar: {
     width: 52,
     height: 52,

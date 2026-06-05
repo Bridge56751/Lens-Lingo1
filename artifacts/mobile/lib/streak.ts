@@ -40,6 +40,41 @@ export function computeStreak(isoDates: string[]): number {
   return streak;
 }
 
+/**
+ * Longest run of consecutive active calendar days anywhere in history (the
+ * "best" streak). Today counts as activity (consistent with computeStreak), so
+ * the result is always at least 1 once the app has been opened.
+ */
+export function computeBestStreak(isoDates: string[]): number {
+  const days = activeDayKeys(isoDates);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  days.add(dayKey(today));
+
+  if (days.size === 0) return 0;
+
+  // Map each day key to a DST-safe ordinal (whole days since the UTC epoch) so
+  // consecutive calendar days always differ by exactly 1.
+  const ordinals = Array.from(days).map((k) => {
+    const [y, m, d] = k.split("-").map(Number);
+    return Math.floor(Date.UTC(y, m, d) / 86_400_000);
+  });
+  ordinals.sort((a, b) => a - b);
+
+  let best = 1;
+  let run = 1;
+  for (let i = 1; i < ordinals.length; i += 1) {
+    if (ordinals[i] === ordinals[i - 1] + 1) {
+      run += 1;
+    } else if (ordinals[i] !== ordinals[i - 1]) {
+      run = 1;
+    }
+    if (run > best) best = run;
+  }
+  return best;
+}
+
 /** Today's local calendar day key, used to detect a fresh login on a new day. */
 export function todayKey(): string {
   const d = new Date();

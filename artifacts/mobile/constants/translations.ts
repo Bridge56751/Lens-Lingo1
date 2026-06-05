@@ -23,6 +23,8 @@ export type TKey =
   | "home.subtitleLine1"
   | "home.subtitleLine2"
   | "home.dayStreak"
+  | "home.dailyStreak"
+  | "home.bestStreak"
   | "home.alphabet"
   | "home.alphabetDesc"
   | "home.letters"
@@ -335,6 +337,8 @@ const en: Record<TKey, string> = {
   "home.subtitleLine1": "Scan something around you",
   "home.subtitleLine2": "and start a real conversation.",
   "home.dayStreak": "Day streak",
+  "home.dailyStreak": "Daily Streak",
+  "home.bestStreak": "Best Streak",
   "home.alphabet": "Alphabet",
   "home.alphabetDesc": "Learn the {lang} letters",
   "home.letters": "{n} letters",
