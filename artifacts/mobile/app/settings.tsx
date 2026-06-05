@@ -17,7 +17,13 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useColors } from "@/hooks/useColors";
-import { usePreferences, LANGUAGES, type Language } from "@/hooks/usePreferences";
+import {
+  usePreferences,
+  LANGUAGES,
+  DIFFICULTIES,
+  type Language,
+  type Difficulty,
+} from "@/hooks/usePreferences";
 import { useT } from "@/hooks/useT";
 import { LOCALE_NATIVE_NAMES, LOCALES, type Locale } from "@/constants/translations";
 
@@ -64,7 +70,7 @@ function Row({
   );
 }
 
-type PickerKind = "learning" | "native" | null;
+type PickerKind = "learning" | "native" | "difficulty" | null;
 
 export default function SettingsScreen() {
   const colors = useColors();
@@ -200,6 +206,15 @@ export default function SettingsScreen() {
             }
           />
           <Row
+            icon="school"
+            iconBg="#EDE9FE"
+            iconColor="#8B5CF6"
+            title={t("settings.difficulty")}
+            subtitle={t(`difficulty.${prefs.difficulty}` as const)}
+            right={<Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />}
+            onPress={() => setPicker("difficulty")}
+          />
+          <Row
             icon="text"
             iconBg="#FEF9C3"
             iconColor="#CA8A04"
@@ -272,8 +287,57 @@ export default function SettingsScreen() {
         <Pressable style={styles.modalBackdrop} onPress={() => setPicker(null)}>
           <Pressable style={[styles.modalCard, { backgroundColor: colors.card }]} onPress={(e) => e.stopPropagation()}>
             <Text style={[styles.modalTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-              {picker === "native" ? t("settings.chooseNative") : t("settings.chooseLearning")}
+              {picker === "difficulty"
+                ? t("settings.chooseDifficulty")
+                : picker === "native"
+                  ? t("settings.chooseNative")
+                  : t("settings.chooseLearning")}
             </Text>
+            {picker === "difficulty" ? (
+              <View>
+                {DIFFICULTIES.map((level) => {
+                  const active = level === prefs.difficulty;
+                  return (
+                    <TouchableOpacity
+                      key={level}
+                      style={[
+                        styles.langOption,
+                        active && { backgroundColor: colors.primarySoft },
+                      ]}
+                      onPress={() => {
+                        update("difficulty", level as Difficulty);
+                        setPicker(null);
+                        Haptics.selectionAsync();
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <View style={{ flex: 1 }}>
+                        <Text
+                          style={[
+                            styles.langOptionText,
+                            {
+                              color: active ? colors.primary : colors.foreground,
+                              fontFamily: active ? "Inter_600SemiBold" : "Inter_500Medium",
+                            },
+                          ]}
+                        >
+                          {t(`difficulty.${level}` as const)}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.langOptionSub,
+                            { color: colors.mutedForeground, fontFamily: "Inter_400Regular" },
+                          ]}
+                        >
+                          {t(`difficulty.${level}Desc` as const)}
+                        </Text>
+                      </View>
+                      {active && <Ionicons name="checkmark" size={20} color={colors.primary} />}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            ) : (
             <ScrollView style={{ maxHeight: 420 }}>
               {(picker === "native" ? LOCALES : LANGUAGES).map((lang) => {
                 const active =
@@ -377,6 +441,7 @@ export default function SettingsScreen() {
                 );
               })}
             </ScrollView>
+            )}
           </Pressable>
         </Pressable>
       </Modal>

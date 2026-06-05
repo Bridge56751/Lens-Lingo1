@@ -16,6 +16,8 @@ export interface ScanRequest {
   targetLanguage: string;
   /** User's native language (e.g. "English") */
   nativeLanguage: string;
+  /** Conversation difficulty tier ("Beginner", "Intermediate", "Advanced") */
+  difficulty?: string;
 }
 
 export interface ScanResult {
@@ -52,12 +54,39 @@ export interface OpenaiConversationInput {
 
 export interface OpenaiMessageInput {
   content: string;
+  /** Current learning language (re-anchored each turn) */
+  targetLanguage?: string;
+  /** Conversation difficulty tier ("Beginner", "Intermediate", "Advanced") */
+  difficulty?: string;
+}
+
+export interface OpenaiGradeMistake {
+  error: string;
+  correction: string;
+}
+
+export interface OpenaiConversationGrade {
+  /** Overall score from 0 to 100 */
+  score: number;
+  summary: string;
+  strengths: string[];
+  mistakes: OpenaiGradeMistake[];
+  suggestions: string[];
+  gradedAt?: string | null;
+}
+
+export interface OpenaiGradeInput {
+  targetLanguage?: string;
+  nativeLanguage?: string;
+  difficulty?: string;
 }
 
 export interface OpenaiConversationWithMessages {
   id: number;
   title: string;
   createdAt: string;
+  difficulty?: string | null;
+  grade?: OpenaiConversationGrade | null;
   messages: OpenaiMessage[];
 }
 

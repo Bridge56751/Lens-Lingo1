@@ -19,12 +19,17 @@ export const LANGUAGES = [
 
 export type Language = (typeof LANGUAGES)[number];
 
+export const DIFFICULTIES = ["Beginner", "Intermediate", "Advanced"] as const;
+export type Difficulty = (typeof DIFFICULTIES)[number];
+
 export type Preferences = {
   targetLanguage: Language;
   nativeLanguage: string;
   displayName: string;
   hapticsEnabled: boolean;
   notificationsEnabled: boolean;
+  // Conversation difficulty tier that shapes the tutor's dialogue and grading.
+  difficulty: Difficulty;
   // Per-language flag for hiding the Home alphabet card (keyed by target
   // language). A language is absent/false until the user hides it.
   alphabetCardHidden: Record<string, boolean>;
@@ -36,6 +41,7 @@ const DEFAULTS: Preferences = {
   displayName: "Friend",
   hapticsEnabled: true,
   notificationsEnabled: true,
+  difficulty: "Beginner",
   alphabetCardHidden: {},
 };
 

@@ -13,4 +13,6 @@ export interface ScanRequest {
   targetLanguage: string;
   /** User's native language (e.g. "English") */
   nativeLanguage: string;
+  /** Conversation difficulty tier ("Beginner", "Intermediate", "Advanced") */
+  difficulty?: string;
 }

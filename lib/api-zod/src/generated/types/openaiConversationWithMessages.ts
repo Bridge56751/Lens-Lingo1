@@ -5,11 +5,14 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { OpenaiConversationGrade } from './openaiConversationGrade';
 import type { OpenaiMessage } from './openaiMessage';
 
 export interface OpenaiConversationWithMessages {
   id: number;
   title: string;
   createdAt: Date;
+  difficulty?: string | null;
+  grade?: OpenaiConversationGrade | null;
   messages: OpenaiMessage[];
 }

@@ -23,7 +23,8 @@ export const HealthCheckResponse = zod.object({
 export const ScanItemBody = zod.object({
   "imageBase64": zod.string().describe('Base64-encoded image data'),
   "targetLanguage": zod.string().describe('Language to learn (e.g. \"Spanish\", \"French\", \"Japanese\")'),
-  "nativeLanguage": zod.string().describe('User\'s native language (e.g. \"English\")')
+  "nativeLanguage": zod.string().describe('User\'s native language (e.g. \"English\")'),
+  "difficulty": zod.string().optional().describe('Conversation difficulty tier (\"Beginner\", \"Intermediate\", \"Advanced\")')
 })
 
 
@@ -57,6 +58,18 @@ export const GetOpenaiConversationResponse = zod.object({
   "id": zod.number(),
   "title": zod.string(),
   "createdAt": zod.coerce.date(),
+  "difficulty": zod.string().nullish(),
+  "grade": zod.object({
+  "score": zod.number().describe('Overall score from 0 to 100'),
+  "summary": zod.string(),
+  "strengths": zod.array(zod.string()),
+  "mistakes": zod.array(zod.object({
+  "error": zod.string(),
+  "correction": zod.string()
+})),
+  "suggestions": zod.array(zod.string()),
+  "gradedAt": zod.coerce.date().nullish()
+}).nullish(),
   "messages": zod.array(zod.object({
   "id": zod.number(),
   "conversationId": zod.number(),
@@ -226,7 +239,35 @@ export const SendOpenaiMessageParams = zod.object({
 })
 
 export const SendOpenaiMessageBody = zod.object({
-  "content": zod.string()
+  "content": zod.string(),
+  "targetLanguage": zod.string().optional().describe('Current learning language (re-anchored each turn)'),
+  "difficulty": zod.string().optional().describe('Conversation difficulty tier (\"Beginner\", \"Intermediate\", \"Advanced\")')
+})
+
+
+/**
+ * @summary Grade the learner's performance in a conversation
+ */
+export const GradeOpenaiConversationParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GradeOpenaiConversationBody = zod.object({
+  "targetLanguage": zod.string().optional(),
+  "nativeLanguage": zod.string().optional(),
+  "difficulty": zod.string().optional()
+})
+
+export const GradeOpenaiConversationResponse = zod.object({
+  "score": zod.number().describe('Overall score from 0 to 100'),
+  "summary": zod.string(),
+  "strengths": zod.array(zod.string()),
+  "mistakes": zod.array(zod.object({
+  "error": zod.string(),
+  "correction": zod.string()
+})),
+  "suggestions": zod.array(zod.string()),
+  "gradedAt": zod.coerce.date().nullish()
 })
 
 

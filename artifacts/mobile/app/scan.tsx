@@ -9,6 +9,8 @@ import {
   ScrollView,
   Platform,
   Alert,
+  Modal,
+  Pressable,
   useWindowDimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -26,7 +28,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColors";
-import { usePreferences } from "@/hooks/usePreferences";
+import { usePreferences, DIFFICULTIES, type Difficulty } from "@/hooks/usePreferences";
 import { useT } from "@/hooks/useT";
 import { getDeviceIdSync } from "@/lib/device";
 import { speakWord, stopSpeaking, prefetchSpeech } from "@/lib/speech";
@@ -48,8 +50,9 @@ export default function ScanScreen() {
   const insets = useSafeAreaInsets();
   const cameraRef = useRef<CameraView>(null);
   const [permission, requestPermission] = useCameraPermissions();
-  const { prefs } = usePreferences();
+  const { prefs, update } = usePreferences();
   const selectedLanguage = prefs.targetLanguage;
+  const [levelPickerOpen, setLevelPickerOpen] = useState(false);
   const [scannedImage, setScannedImage] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState<{
@@ -141,6 +144,7 @@ export default function ScanScreen() {
           imageBase64,
           targetLanguage: selectedLanguage,
           nativeLanguage: prefs.nativeLanguage,
+          difficulty: prefs.difficulty,
         }),
       });
 
@@ -358,19 +362,89 @@ export default function ScanScreen() {
 
         <View style={{ flex: 1 }} />
 
-        <TouchableOpacity
-          style={styles.topIconButton}
-          onPress={() =>
-            Alert.alert(t("scan.languageLockedTitle"), t("scan.languageLockedBody"))
-          }
-          activeOpacity={0.8}
-        >
-          <Ionicons name="globe-outline" size={18} color="#FFFFFF" />
-          <Text style={[styles.topIconText, { fontFamily: "Inter_600SemiBold" }]}>
-            {selectedLanguage}
-          </Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection: "row", gap: 8 }}>
+          <TouchableOpacity
+            style={styles.topIconButton}
+            onPress={() => setLevelPickerOpen(true)}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="school-outline" size={18} color="#FFFFFF" />
+            <Text style={[styles.topIconText, { fontFamily: "Inter_600SemiBold" }]}>
+              {t(`difficulty.${prefs.difficulty}` as const)}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.topIconButton}
+            onPress={() =>
+              Alert.alert(t("scan.languageLockedTitle"), t("scan.languageLockedBody"))
+            }
+            activeOpacity={0.8}
+          >
+            <Ionicons name="globe-outline" size={18} color="#FFFFFF" />
+            <Text style={[styles.topIconText, { fontFamily: "Inter_600SemiBold" }]}>
+              {selectedLanguage}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
+
+      {/* Difficulty picker */}
+      <Modal
+        visible={levelPickerOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setLevelPickerOpen(false)}
+      >
+        <Pressable style={styles.levelBackdrop} onPress={() => setLevelPickerOpen(false)}>
+          <Pressable
+            style={[styles.levelCard, { backgroundColor: colors.card }]}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <Text style={[styles.levelTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
+              {t("scan.chooseLevel")}
+            </Text>
+            {DIFFICULTIES.map((level) => {
+              const active = level === prefs.difficulty;
+              return (
+                <TouchableOpacity
+                  key={level}
+                  style={[styles.levelOption, active && { backgroundColor: colors.primarySoft }]}
+                  onPress={() => {
+                    update("difficulty", level as Difficulty);
+                    setLevelPickerOpen(false);
+                    Haptics.selectionAsync();
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <View style={{ flex: 1 }}>
+                    <Text
+                      style={[
+                        styles.levelOptionText,
+                        {
+                          color: active ? colors.primary : colors.foreground,
+                          fontFamily: active ? "Inter_600SemiBold" : "Inter_500Medium",
+                        },
+                      ]}
+                    >
+                      {t(`difficulty.${level}` as const)}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.levelOptionSub,
+                        { color: colors.mutedForeground, fontFamily: "Inter_400Regular" },
+                      ]}
+                    >
+                      {t(`difficulty.${level}Desc` as const)}
+                    </Text>
+                  </View>
+                  {active && <Ionicons name="checkmark" size={20} color={colors.primary} />}
+                </TouchableOpacity>
+              );
+            })}
+          </Pressable>
+        </Pressable>
+      </Modal>
 
       {/* Hint text */}
       <View pointerEvents="none" style={[styles.hintWrap, { top: hintTop }]}>
@@ -503,6 +577,31 @@ const styles = StyleSheet.create({
     borderRadius: 22,
   },
   topIconText: { color: "#FFFFFF", fontSize: 13 },
+  levelBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 24,
+  },
+  levelCard: {
+    width: "100%",
+    maxWidth: 360,
+    borderRadius: 20,
+    padding: 16,
+    gap: 4,
+  },
+  levelTitle: { fontSize: 18, paddingHorizontal: 8, paddingTop: 4, paddingBottom: 8 },
+  levelOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  levelOptionText: { fontSize: 15 },
+  levelOptionSub: { fontSize: 11, marginTop: 2 },
   closeButton: {
     width: 40,
     height: 40,

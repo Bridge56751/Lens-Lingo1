@@ -26,9 +26,11 @@ import type {
   HealthStatus,
   ListVocabSelectionsParams,
   OpenaiConversation,
+  OpenaiConversationGrade,
   OpenaiConversationInput,
   OpenaiConversationWithMessages,
   OpenaiError,
+  OpenaiGradeInput,
   OpenaiMessage,
   OpenaiMessageInput,
   ScanRequest,
@@ -1332,5 +1334,77 @@ export const useSendOpenaiMessage = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getSendOpenaiMessageMutationOptions(options));
+    }
+
+export const getGradeOpenaiConversationUrl = (id: number,) => {
+
+
+
+
+  return `/api/openai/conversations/${id}/grade`
+}
+
+/**
+ * @summary Grade the learner's performance in a conversation
+ */
+export const gradeOpenaiConversation = async (id: number,
+    openaiGradeInput?: OpenaiGradeInput, options?: RequestInit): Promise<OpenaiConversationGrade> => {
+
+  return customFetch<OpenaiConversationGrade>(getGradeOpenaiConversationUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      openaiGradeInput,)
+  }
+);}
+
+
+
+
+export const getGradeOpenaiConversationMutationOptions = <TError = ErrorType<OpenaiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof gradeOpenaiConversation>>, TError,{id: number;data?: BodyType<OpenaiGradeInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof gradeOpenaiConversation>>, TError,{id: number;data?: BodyType<OpenaiGradeInput>}, TContext> => {
+
+const mutationKey = ['gradeOpenaiConversation'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof gradeOpenaiConversation>>, {id: number;data?: BodyType<OpenaiGradeInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  gradeOpenaiConversation(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type GradeOpenaiConversationMutationResult = NonNullable<Awaited<ReturnType<typeof gradeOpenaiConversation>>>
+    export type GradeOpenaiConversationMutationBody = BodyType<OpenaiGradeInput> | undefined
+    export type GradeOpenaiConversationMutationError = ErrorType<OpenaiError>
+
+    /**
+ * @summary Grade the learner's performance in a conversation
+ */
+export const useGradeOpenaiConversation = <TError = ErrorType<OpenaiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof gradeOpenaiConversation>>, TError,{id: number;data?: BodyType<OpenaiGradeInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof gradeOpenaiConversation>>,
+        TError,
+        {id: number;data?: BodyType<OpenaiGradeInput>},
+        TContext
+      > => {
+      return useMutation(getGradeOpenaiConversationMutationOptions(options));
     }
 

@@ -376,6 +376,48 @@ paths:
           description: SSE stream of assistant text chunks
           content:
             text/event-stream: {}
+  /openai/conversations/{id}/grade:
+    post:
+      operationId: gradeOpenaiConversation
+      tags: [openai]
+      summary: Grade the learner's performance in a conversation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OpenaiGradeInput"
+      responses:
+        "200":
+          description: Grade result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpenaiConversationGrade"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpenaiError"
+        "422":
+          description: Not enough learner messages to grade
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpenaiError"
+        "502":
+          description: Grading failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpenaiError"
 components:
   schemas:
     HealthStatus:
@@ -397,6 +439,9 @@ components:
         nativeLanguage:
           type: string
           description: User's native language (e.g. "English")
+        difficulty:
+          type: string
+          description: Conversation difficulty tier ("Beginner", "Intermediate", "Advanced")
       required:
         - imageBase64
         - targetLanguage
@@ -473,8 +518,63 @@ components:
       properties:
         content:
           type: string
+        targetLanguage:
+          type: string
+          description: Current learning language (re-anchored each turn)
+        difficulty:
+          type: string
+          description: Conversation difficulty tier ("Beginner", "Intermediate", "Advanced")
       required:
         - content
+    OpenaiGradeMistake:
+      type: object
+      properties:
+        error:
+          type: string
+        correction:
+          type: string
+      required:
+        - error
+        - correction
+    OpenaiConversationGrade:
+      type: object
+      properties:
+        score:
+          type: integer
+          description: Overall score from 0 to 100
+        summary:
+          type: string
+        strengths:
+          type: array
+          items:
+            type: string
+        mistakes:
+          type: array
+          items:
+            $ref: "#/components/schemas/OpenaiGradeMistake"
+        suggestions:
+          type: array
+          items:
+            type: string
+        gradedAt:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+        - score
+        - summary
+        - strengths
+        - mistakes
+        - suggestions
+    OpenaiGradeInput:
+      type: object
+      properties:
+        targetLanguage:
+          type: string
+        nativeLanguage:
+          type: string
+        difficulty:
+          type: string
     OpenaiConversationWithMessages:
       type: object
       properties:
@@ -485,6 +585,13 @@ components:
         createdAt:
           type: string
           format: date-time
+        difficulty:
+          type: string
+          nullable: true
+        grade:
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/OpenaiConversationGrade"
         messages:
           type: array
           items:

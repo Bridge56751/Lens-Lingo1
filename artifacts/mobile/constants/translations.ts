@@ -170,6 +170,33 @@ export type TKey =
   | "conv.listening"
   | "conv.micTooLongTitle"
   | "conv.micTooLongBody"
+  | "conv.grade"
+  | "conv.grading"
+  | "conv.gradeTitle"
+  | "conv.gradePromptTitle"
+  | "conv.gradePromptBody"
+  | "conv.gradeNow"
+  | "conv.gradeAgain"
+  | "conv.gradeScore"
+  | "conv.gradeStrengths"
+  | "conv.gradeMistakes"
+  | "conv.gradeNoMistakes"
+  | "conv.gradeSuggestions"
+  | "conv.gradeClose"
+  | "conv.gradedOn"
+  | "conv.gradeTooFewTitle"
+  | "conv.gradeTooFewBody"
+  | "conv.gradeErrorTitle"
+  | "conv.gradeErrorBody"
+  | "settings.difficulty"
+  | "settings.chooseDifficulty"
+  | "difficulty.Beginner"
+  | "difficulty.Intermediate"
+  | "difficulty.Advanced"
+  | "difficulty.BeginnerDesc"
+  | "difficulty.IntermediateDesc"
+  | "difficulty.AdvancedDesc"
+  | "scan.chooseLevel"
   | "history.today"
   | "history.yesterday"
   | "history.daysAgo"
@@ -449,6 +476,33 @@ const en: Record<TKey, string> = {
   "conv.listening": "Listening\u2026",
   "conv.micTooLongTitle": "Recording too long",
   "conv.micTooLongBody": "That recording is too long. Please try a shorter message.",
+  "conv.grade": "Grade chat",
+  "conv.grading": "Grading\u2026",
+  "conv.gradeTitle": "Your score",
+  "conv.gradePromptTitle": "Grade your conversation",
+  "conv.gradePromptBody": "Get a score out of 100 plus tips on what you did well and what to improve.",
+  "conv.gradeNow": "Grade now",
+  "conv.gradeAgain": "Grade again",
+  "conv.gradeScore": "out of 100",
+  "conv.gradeStrengths": "Strengths",
+  "conv.gradeMistakes": "Corrections",
+  "conv.gradeNoMistakes": "No mistakes spotted \u2014 great job!",
+  "conv.gradeSuggestions": "Suggestions",
+  "conv.gradeClose": "Close",
+  "conv.gradedOn": "Graded {date}",
+  "conv.gradeTooFewTitle": "Keep chatting",
+  "conv.gradeTooFewBody": "Chat a bit more before grading \u2014 send a couple of messages first.",
+  "conv.gradeErrorTitle": "Grading failed",
+  "conv.gradeErrorBody": "Sorry, we couldn\u2019t grade this chat. Please try again.",
+  "settings.difficulty": "Difficulty",
+  "settings.chooseDifficulty": "Choose difficulty",
+  "difficulty.Beginner": "Beginner",
+  "difficulty.Intermediate": "Intermediate",
+  "difficulty.Advanced": "Advanced",
+  "difficulty.BeginnerDesc": "Simple words, lots of translations, gentle corrections",
+  "difficulty.IntermediateDesc": "Everyday language with clear corrections",
+  "difficulty.AdvancedDesc": "Native-level, few translations, rigorous corrections",
+  "scan.chooseLevel": "Choose difficulty",
   "history.today": "Today",
   "history.yesterday": "Yesterday",
   "history.daysAgo": "{n} days ago",

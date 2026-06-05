@@ -8,4 +8,8 @@
 
 export interface OpenaiMessageInput {
   content: string;
+  /** Current learning language (re-anchored each turn) */
+  targetLanguage?: string;
+  /** Conversation difficulty tier ("Beginner", "Intermediate", "Advanced") */
+  difficulty?: string;
 }

@@ -3,6 +3,12 @@ import { eq, sql } from "drizzle-orm";
 import { db } from "@workspace/db";
 import { conversations, customers, messages } from "@workspace/db";
 import { openai } from "@workspace/integrations-openai-ai-server";
+import {
+  DEFAULT_DIFFICULTY,
+  difficultyInstructions,
+  normalizeDifficulty,
+} from "../lib/difficulty";
+import { SUPPORTED_LANGUAGES } from "../lib/languages";
 
 const router = Router();
 
@@ -14,16 +20,29 @@ function sanitizeLabel(value: string | undefined | null): string {
 }
 
 router.post("/scan", async (req, res) => {
-  const { imageBase64, targetLanguage, nativeLanguage } = req.body as {
+  const { imageBase64, targetLanguage, nativeLanguage, difficulty: rawDifficulty } = req.body as {
     imageBase64?: string;
     targetLanguage?: string;
     nativeLanguage?: string;
+    difficulty?: string;
   };
 
   if (!imageBase64 || !targetLanguage || !nativeLanguage) {
     res.status(400).json({ error: "imageBase64, targetLanguage, and nativeLanguage are required" });
     return;
   }
+
+  // Languages get interpolated into high-priority prompts here and are persisted
+  // on the conversation (later reused as a grading fallback), so validate them
+  // against the allowlist at the entry point to keep stored values prompt-safe.
+  if (!SUPPORTED_LANGUAGES.has(targetLanguage.trim()) || !SUPPORTED_LANGUAGES.has(nativeLanguage.trim())) {
+    res.status(400).json({ error: "Unsupported targetLanguage or nativeLanguage" });
+    return;
+  }
+
+  // Difficulty is interpolated into a system prompt, so validate against the
+  // allowlist and fall back to the default if missing/invalid.
+  const difficulty = normalizeDifficulty(rawDifficulty) ?? DEFAULT_DIFFICULTY;
 
   if (req.customerId == null) {
     res.status(400).json({ error: "Missing or unresolved x-device-id" });
@@ -87,7 +106,9 @@ Teaching style:
 - Keep replies SHORT (2-4 sentences max).
 - Stay focused on the scanned item and everyday vocabulary related to it.
 - End every reply with one simple question in ${targetLanguage} to keep the conversation going.
-- Be warm and encouraging. Do not use emojis.`;
+- Be warm and encouraging. Do not use emojis.
+
+${difficultyInstructions(difficulty, targetLanguage, nativeLanguage)}`;
 
   const triggerMessage = `I just scanned a ${itemName}. Help me learn the word for it in ${targetLanguage}!`;
 
@@ -117,6 +138,7 @@ Teaching style:
         title: `${itemName} • ${targetLanguage}`,
         targetLanguage,
         nativeLanguage,
+        difficulty,
         customerId,
       })
       .returning();

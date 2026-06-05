@@ -3,27 +3,15 @@ import { and, eq, desc, sql } from "drizzle-orm";
 import { db } from "@workspace/db";
 import { conversations, customers, messages } from "@workspace/db";
 import { openai, toFile } from "@workspace/integrations-openai-ai-server";
+import type { GradeFeedback } from "@workspace/db";
+import {
+  DEFAULT_DIFFICULTY,
+  difficultyReminder,
+  normalizeDifficulty,
+} from "../../lib/difficulty";
+import { SUPPORTED_LANGUAGES, safeLanguage } from "../../lib/languages";
 
 const router = Router();
-
-// Languages the app supports. Used to validate the client-supplied target
-// language before it is interpolated into a high-priority system reminder
-// (an allowlist prevents prompt-injection via an arbitrary language string).
-const SUPPORTED_LANGUAGES = new Set([
-  "English",
-  "Spanish",
-  "French",
-  "German",
-  "Italian",
-  "Portuguese",
-  "Japanese",
-  "Chinese",
-  "Korean",
-  "Arabic",
-  "Russian",
-  "Hindi",
-  "Dutch",
-]);
 
 // POST /openai/transcribe - transcribe spoken audio to text (Whisper)
 router.post("/openai/transcribe", async (req, res) => {
@@ -241,7 +229,26 @@ router.get("/openai/conversations/:id", async (req, res) => {
   // Filter out system messages for the client
   const visibleMessages = msgs.filter((m) => m.role !== "system");
 
-  res.json({ ...conv, messages: visibleMessages });
+  // Surface the saved grade (if any) as a single nested object so the client
+  // can render it on reopen.
+  const grade =
+    conv.gradeScore != null && conv.gradeFeedback
+      ? {
+          score: conv.gradeScore,
+          summary: conv.gradeFeedback.summary,
+          strengths: conv.gradeFeedback.strengths,
+          mistakes: conv.gradeFeedback.mistakes,
+          suggestions: conv.gradeFeedback.suggestions,
+          gradedAt: conv.gradedAt,
+        }
+      : null;
+
+  res.json({
+    ...conv,
+    difficulty: conv.difficulty ?? DEFAULT_DIFFICULTY,
+    grade,
+    messages: visibleMessages,
+  });
 });
 
 // DELETE /openai/conversations/:id
@@ -321,9 +328,10 @@ router.post("/openai/conversations/:id/messages", async (req, res) => {
     return;
   }
 
-  const { content, targetLanguage: requestedLanguage } = req.body as {
+  const { content, targetLanguage: requestedLanguage, difficulty: rawDifficulty } = req.body as {
     content?: string;
     targetLanguage?: string;
+    difficulty?: string;
   };
   if (!content) {
     res.status(400).json({ error: "content is required" });
@@ -408,14 +416,32 @@ router.post("/openai/conversations/:id/messages", async (req, res) => {
       req.log.error({ err }, "failed to persist conversation target language");
     }
   }
+
+  // Re-anchor the difficulty level on every turn the same way as the language:
+  // prefer the request value (current app setting), fall back to the stored
+  // column, then the default. Persist it when it changes so it stays in sync.
+  const requestedDifficulty = normalizeDifficulty(rawDifficulty);
+  if (requestedDifficulty && requestedDifficulty !== owned.difficulty) {
+    try {
+      await db
+        .update(conversations)
+        .set({ difficulty: requestedDifficulty })
+        .where(eq(conversations.id, id));
+    } catch (err) {
+      req.log.error({ err }, "failed to persist conversation difficulty");
+    }
+  }
+  const difficulty =
+    requestedDifficulty ?? normalizeDifficulty(owned.difficulty) ?? DEFAULT_DIFFICULTY;
+
   const targetLanguage =
     settingsLanguage ||
-    owned.targetLanguage?.trim() ||
-    (owned.title ?? "").split(" • ")[1]?.trim();
+    safeLanguage(owned.targetLanguage) ||
+    safeLanguage((owned.title ?? "").split(" • ")[1]);
   if (targetLanguage) {
     chatMessages.push({
       role: "system",
-      content: `Reminder: reply in ${targetLanguage}, not English (unless the learner's language is English). Keep it short (2-4 sentences), add a brief parenthetical translation for any new word, gently correct mistakes, and end with one simple question in ${targetLanguage}.`,
+      content: `Reminder: reply in ${targetLanguage}, not English (unless the learner's language is English). Keep it short (2-4 sentences), add a brief parenthetical translation for any new word, gently correct mistakes, and end with one simple question in ${targetLanguage}. ${difficultyReminder(difficulty, targetLanguage)}`,
     });
   }
 
@@ -456,6 +482,162 @@ router.post("/openai/conversations/:id/messages", async (req, res) => {
 
   res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
   res.end();
+});
+
+// Minimum learner turns required before a conversation can be graded.
+const MIN_USER_MESSAGES_TO_GRADE = 2;
+
+// POST /openai/conversations/:id/grade - grade the learner's performance.
+// Returns a 0-100 score plus structured strengths/mistakes/suggestions and
+// persists the result so it can be shown again on reopen.
+router.post("/openai/conversations/:id/grade", async (req, res) => {
+  const id = parseInt(req.params.id ?? "", 10);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "Invalid conversation id" });
+    return;
+  }
+
+  if (req.customerId == null) {
+    res.status(404).json({ error: "Conversation not found" });
+    return;
+  }
+
+  const { targetLanguage: rawTarget, nativeLanguage: rawNative, difficulty: rawDifficulty } =
+    req.body as {
+      targetLanguage?: string;
+      nativeLanguage?: string;
+      difficulty?: string;
+    };
+
+  const [owned] = await db
+    .select()
+    .from(conversations)
+    .where(and(eq(conversations.id, id), eq(conversations.customerId, req.customerId)));
+
+  if (!owned) {
+    res.status(404).json({ error: "Conversation not found" });
+    return;
+  }
+
+  const allMessages = await db
+    .select()
+    .from(messages)
+    .where(eq(messages.conversationId, id))
+    .orderBy(messages.createdAt);
+
+  const userMessages = allMessages.filter((m) => m.role === "user");
+  if (userMessages.length < MIN_USER_MESSAGES_TO_GRADE) {
+    res.status(422).json({
+      error: "Chat a bit more before grading — you need at least a couple of messages.",
+    });
+    return;
+  }
+
+  // Resolve languages/difficulty from the request, falling back to the stored
+  // columns, then the title/default. All are interpolated into a prompt, so the
+  // language values are validated against the allowlist.
+  const requestedTarget =
+    typeof rawTarget === "string" && SUPPORTED_LANGUAGES.has(rawTarget.trim())
+      ? rawTarget.trim()
+      : undefined;
+  const requestedNative =
+    typeof rawNative === "string" && SUPPORTED_LANGUAGES.has(rawNative.trim())
+      ? rawNative.trim()
+      : undefined;
+  const targetLanguage =
+    requestedTarget ||
+    safeLanguage(owned.targetLanguage) ||
+    safeLanguage((owned.title ?? "").split(" • ")[1]) ||
+    "the target language";
+  const nativeLanguage = requestedNative || safeLanguage(owned.nativeLanguage) || "English";
+  const difficulty =
+    normalizeDifficulty(rawDifficulty) ?? normalizeDifficulty(owned.difficulty) ?? DEFAULT_DIFFICULTY;
+
+  // Only the learner's own turns are evaluated; tutor/system turns are context.
+  const transcript = allMessages
+    .filter((m) => m.role !== "system")
+    .map((m) => `${m.role === "user" ? "Learner" : "Tutor"}: ${m.content}`)
+    .join("\n");
+
+  const gradingPrompt = `You are a strict but encouraging ${targetLanguage} language examiner. A ${nativeLanguage}-speaking learner at the ${difficulty} level just finished a conversation with an AI tutor. Evaluate ONLY the learner's own messages (the lines starting with "Learner:") for their ${targetLanguage} ability: grammar, vocabulary, spelling, and how much they actually attempted in ${targetLanguage} (versus falling back to ${nativeLanguage}). Grade relative to what is expected at the ${difficulty} level.
+
+Respond with ONLY valid JSON in exactly this shape, with all text written in ${nativeLanguage}:
+{
+  "score": <integer 0-100>,
+  "summary": "<one or two sentence overall assessment>",
+  "strengths": ["<short strength>", ...],
+  "mistakes": [{"error": "<what the learner wrote that was wrong>", "correction": "<the corrected ${targetLanguage}>"}, ...],
+  "suggestions": ["<actionable tip to improve>", ...]
+}
+Rules: score is an integer 0-100. Include 1-4 strengths, 0-5 mistakes (empty array if none), and 1-4 suggestions. Keep each item concise. Do not include any text outside the JSON.
+
+Conversation transcript:
+${transcript}`;
+
+  let feedback: GradeFeedback | null = null;
+  let score = 0;
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o",
+      max_completion_tokens: 900,
+      response_format: { type: "json_object" },
+      messages: [{ role: "user", content: gradingPrompt }],
+    });
+    const content = completion.choices[0]?.message?.content ?? "{}";
+    const parsed = JSON.parse(content) as {
+      score?: number;
+      summary?: string;
+      strengths?: unknown;
+      mistakes?: unknown;
+      suggestions?: unknown;
+    };
+
+    const toStringArray = (v: unknown): string[] =>
+      Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
+    const toMistakes = (v: unknown): GradeFeedback["mistakes"] =>
+      Array.isArray(v)
+        ? v
+            .map((m) => {
+              const obj = m as { error?: unknown; correction?: unknown };
+              return {
+                error: typeof obj.error === "string" ? obj.error : "",
+                correction: typeof obj.correction === "string" ? obj.correction : "",
+              };
+            })
+            .filter((m) => m.error || m.correction)
+        : [];
+
+    score = Math.max(0, Math.min(100, Math.round(Number(parsed.score) || 0)));
+    feedback = {
+      summary: typeof parsed.summary === "string" ? parsed.summary : "",
+      strengths: toStringArray(parsed.strengths),
+      mistakes: toMistakes(parsed.mistakes),
+      suggestions: toStringArray(parsed.suggestions),
+    };
+  } catch (err) {
+    req.log.error({ err }, "Conversation grading failed");
+    res.status(502).json({ error: "Grading failed. Please try again." });
+    return;
+  }
+
+  const gradedAt = new Date();
+  try {
+    await db
+      .update(conversations)
+      .set({ gradeScore: score, gradeFeedback: feedback, gradedAt })
+      .where(eq(conversations.id, id));
+  } catch (err) {
+    req.log.error({ err }, "failed to persist conversation grade");
+  }
+
+  res.json({
+    score,
+    summary: feedback.summary,
+    strengths: feedback.strengths,
+    mistakes: feedback.mistakes,
+    suggestions: feedback.suggestions,
+    gradedAt: gradedAt.toISOString(),
+  });
 });
 
 export default router;

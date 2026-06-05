@@ -9,6 +9,9 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
+  Modal,
+  Pressable,
+  ScrollView,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, router, useFocusEffect } from "expo-router";
@@ -22,7 +25,11 @@ import {
 } from "expo-audio";
 import { File } from "expo-file-system";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
-import { useGetOpenaiConversation } from "@workspace/api-client-react";
+import {
+  useGetOpenaiConversation,
+  useGradeOpenaiConversation,
+  type OpenaiConversationGrade,
+} from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { getGetOpenaiConversationQueryKey } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
@@ -195,6 +202,11 @@ export default function ConversationScreen() {
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
 
+  const [gradeModalOpen, setGradeModalOpen] = useState(false);
+  const [grade, setGrade] = useState<OpenaiConversationGrade | null>(null);
+  const { mutateAsync: gradeConversation, isPending: isGrading } =
+    useGradeOpenaiConversation();
+
   useEffect(() => {
     return () => {
       if (audioRecorder.isRecording) {
@@ -233,9 +245,56 @@ export default function ConversationScreen() {
     }
   }, [conversation?.messages?.length, dataUpdatedAt]);
 
+  // Keep local grade in sync with the server. Re-run on conversation id too so a
+  // stale grade from a previously-viewed conversation can't bleed into an
+  // ungraded one. Using `?? null` is race-safe: right after runGrade() sets the
+  // grade locally, neither dep has changed yet, so this effect won't clobber it.
+  useEffect(() => {
+    setGrade(conversation?.grade ?? null);
+  }, [conversation?.grade, conversationId]);
+
   const parts = (conversation?.title ?? "").split(" • ");
   const itemName = parts[0] ?? t("conv.fallbackName");
   const language = prefs.targetLanguage;
+
+  const runGrade = useCallback(async () => {
+    if (isGrading) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    try {
+      const result = await gradeConversation({
+        id: conversationId,
+        data: {
+          targetLanguage: prefs.targetLanguage,
+          nativeLanguage: prefs.nativeLanguage,
+          difficulty: prefs.difficulty,
+        },
+      });
+      setGrade(result);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      queryClient.invalidateQueries({
+        queryKey: getGetOpenaiConversationQueryKey(conversationId),
+      });
+    } catch (err) {
+      const status =
+        err && typeof err === "object" && "status" in err
+          ? (err as { status?: number }).status
+          : undefined;
+      if (status === 422) {
+        Alert.alert(t("conv.gradeTooFewTitle"), t("conv.gradeTooFewBody"));
+      } else {
+        Alert.alert(t("conv.gradeErrorTitle"), t("conv.gradeErrorBody"));
+      }
+    }
+  }, [
+    isGrading,
+    gradeConversation,
+    conversationId,
+    prefs.targetLanguage,
+    prefs.nativeLanguage,
+    prefs.difficulty,
+    queryClient,
+    t,
+  ]);
 
   const startRecording = async () => {
     if (isRecording || isTranscribing || isStreaming) return;
@@ -340,7 +399,11 @@ export default function ConversationScreen() {
             "Content-Type": "application/json",
             ...(getDeviceIdSync() ? { "x-device-id": getDeviceIdSync()! } : {}),
           },
-          body: JSON.stringify({ content: text, targetLanguage: prefs.targetLanguage }),
+          body: JSON.stringify({
+            content: text,
+            targetLanguage: prefs.targetLanguage,
+            difficulty: prefs.difficulty,
+          }),
         },
       );
 
@@ -411,7 +474,7 @@ export default function ConversationScreen() {
         queryKey: getGetOpenaiConversationQueryKey(conversationId),
       });
     }
-  }, [conversationId, queryClient, t, prefs.targetLanguage]);
+  }, [conversationId, queryClient, t, prefs.targetLanguage, prefs.difficulty]);
 
   const sendMessage = useCallback(() => {
     const text = inputText.trim();
@@ -460,8 +523,16 @@ export default function ConversationScreen() {
             {language ? ` • ${language}` : ""}
           </Text>
         </View>
-        <TouchableOpacity style={styles.backButton} activeOpacity={0.7}>
-          <Ionicons name="ellipsis-horizontal" size={22} color={colors.foreground} />
+        <TouchableOpacity
+          style={styles.backButton}
+          activeOpacity={0.7}
+          onPress={() => setGradeModalOpen(true)}
+        >
+          <Ionicons
+            name={grade ? "ribbon" : "ribbon-outline"}
+            size={22}
+            color={grade ? colors.primary : colors.foreground}
+          />
         </TouchableOpacity>
       </View>
 
@@ -568,12 +639,188 @@ export default function ConversationScreen() {
           })()}
         </View>
       </KeyboardAvoidingView>
+
+      <Modal
+        visible={gradeModalOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setGradeModalOpen(false)}
+      >
+        <Pressable style={styles.gradeBackdrop} onPress={() => setGradeModalOpen(false)}>
+          <Pressable
+            style={[styles.gradeCard, { backgroundColor: colors.card }]}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <View style={styles.gradeHeaderRow}>
+              <Text style={[styles.gradeHeading, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
+                {grade ? t("conv.gradeTitle") : t("conv.gradePromptTitle")}
+              </Text>
+              <TouchableOpacity onPress={() => setGradeModalOpen(false)} activeOpacity={0.7}>
+                <Ionicons name="close" size={24} color={colors.mutedForeground} />
+              </TouchableOpacity>
+            </View>
+
+            {isGrading ? (
+              <View style={styles.gradeLoading}>
+                <ActivityIndicator size="large" color={colors.primary} />
+                <Text style={[styles.gradeLoadingText, { color: colors.mutedForeground, fontFamily: "Inter_500Medium" }]}>
+                  {t("conv.grading")}
+                </Text>
+              </View>
+            ) : grade ? (
+              <ScrollView style={{ maxHeight: 460 }} showsVerticalScrollIndicator={false}>
+                <View style={styles.scoreWrap}>
+                  <Text style={[styles.scoreValue, { color: colors.primary, fontFamily: "Inter_700Bold" }]}>
+                    {grade.score}
+                  </Text>
+                  <Text style={[styles.scoreOutOf, { color: colors.mutedForeground, fontFamily: "Inter_500Medium" }]}>
+                    {t("conv.gradeScore")}
+                  </Text>
+                </View>
+                {grade.summary ? (
+                  <Text style={[styles.gradeSummary, { color: colors.foreground, fontFamily: "Inter_400Regular" }]}>
+                    {grade.summary}
+                  </Text>
+                ) : null}
+
+                {grade.strengths.length > 0 ? (
+                  <View style={styles.gradeSection}>
+                    <Text style={[styles.gradeSectionLabel, { color: "#22C55E", fontFamily: "Inter_600SemiBold" }]}>
+                      {t("conv.gradeStrengths")}
+                    </Text>
+                    {grade.strengths.map((s, i) => (
+                      <View key={`st-${i}`} style={styles.gradeItemRow}>
+                        <Ionicons name="checkmark-circle" size={16} color="#22C55E" />
+                        <Text style={[styles.gradeItemText, { color: colors.foreground, fontFamily: "Inter_400Regular" }]}>
+                          {s}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                ) : null}
+
+                <View style={styles.gradeSection}>
+                  <Text style={[styles.gradeSectionLabel, { color: "#F59E0B", fontFamily: "Inter_600SemiBold" }]}>
+                    {t("conv.gradeMistakes")}
+                  </Text>
+                  {grade.mistakes.length > 0 ? (
+                    grade.mistakes.map((m, i) => (
+                      <View key={`mi-${i}`} style={styles.mistakeCard}>
+                        <Text style={[styles.mistakeError, { color: colors.foreground, fontFamily: "Inter_500Medium" }]}>
+                          {m.error}
+                        </Text>
+                        <View style={styles.gradeItemRow}>
+                          <Ionicons name="arrow-forward" size={14} color={colors.primary} />
+                          <Text style={[styles.mistakeCorrection, { color: colors.primary, fontFamily: "Inter_500Medium" }]}>
+                            {m.correction}
+                          </Text>
+                        </View>
+                      </View>
+                    ))
+                  ) : (
+                    <Text style={[styles.gradeItemText, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                      {t("conv.gradeNoMistakes")}
+                    </Text>
+                  )}
+                </View>
+
+                {grade.suggestions.length > 0 ? (
+                  <View style={styles.gradeSection}>
+                    <Text style={[styles.gradeSectionLabel, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
+                      {t("conv.gradeSuggestions")}
+                    </Text>
+                    {grade.suggestions.map((s, i) => (
+                      <View key={`sg-${i}`} style={styles.gradeItemRow}>
+                        <Ionicons name="bulb-outline" size={16} color={colors.primary} />
+                        <Text style={[styles.gradeItemText, { color: colors.foreground, fontFamily: "Inter_400Regular" }]}>
+                          {s}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                ) : null}
+
+                <TouchableOpacity
+                  style={[styles.gradeButton, { backgroundColor: colors.primarySoft }]}
+                  onPress={runGrade}
+                  activeOpacity={0.85}
+                >
+                  <Ionicons name="refresh" size={18} color={colors.primary} />
+                  <Text style={[styles.gradeButtonTextAlt, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
+                    {t("conv.gradeAgain")}
+                  </Text>
+                </TouchableOpacity>
+              </ScrollView>
+            ) : (
+              <View style={{ gap: 16 }}>
+                <Text style={[styles.gradeSummary, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                  {t("conv.gradePromptBody")}
+                </Text>
+                <TouchableOpacity
+                  style={[styles.gradeButton, { backgroundColor: colors.primary }]}
+                  onPress={runGrade}
+                  activeOpacity={0.85}
+                >
+                  <Ionicons name="ribbon" size={18} color="#FFFFFF" />
+                  <Text style={[styles.gradeButtonText, { color: "#FFFFFF", fontFamily: "Inter_600SemiBold" }]}>
+                    {t("conv.gradeNow")}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  gradeBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 24,
+  },
+  gradeCard: {
+    width: "100%",
+    maxWidth: 380,
+    borderRadius: 22,
+    padding: 18,
+    gap: 12,
+  },
+  gradeHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  gradeHeading: { fontSize: 18 },
+  gradeLoading: { alignItems: "center", justifyContent: "center", paddingVertical: 36, gap: 12 },
+  gradeLoadingText: { fontSize: 14 },
+  scoreWrap: { alignItems: "center", paddingVertical: 8 },
+  scoreValue: { fontSize: 52, lineHeight: 58 },
+  scoreOutOf: { fontSize: 13, marginTop: -2 },
+  gradeSummary: { fontSize: 14, lineHeight: 20 },
+  gradeSection: { gap: 8, marginTop: 16 },
+  gradeSectionLabel: { fontSize: 12, letterSpacing: 0.6, textTransform: "uppercase" },
+  gradeItemRow: { flexDirection: "row", alignItems: "flex-start", gap: 8 },
+  gradeItemText: { flex: 1, fontSize: 14, lineHeight: 20 },
+  mistakeCard: { gap: 4, marginBottom: 4 },
+  mistakeError: { fontSize: 14, lineHeight: 20, textDecorationLine: "line-through" },
+  mistakeCorrection: { flex: 1, fontSize: 14, lineHeight: 20 },
+  gradeButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: 14,
+    marginTop: 20,
+  },
+  gradeButtonText: { fontSize: 15 },
+  gradeButtonTextAlt: { fontSize: 15 },
   header: {
     flexDirection: "row",
     alignItems: "center",
