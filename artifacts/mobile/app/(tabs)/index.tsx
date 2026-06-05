@@ -255,24 +255,23 @@ function AlphabetMasteredStrip({
   onHide: () => void;
 }) {
   const t = useT();
-  const colors = useColors();
   return (
     <TouchableOpacity
-      style={[styles.masteredStrip, { backgroundColor: colors.card }]}
+      style={[styles.masteredStrip, { backgroundColor: "#FEF9C3", borderColor: "#FDE68A", borderWidth: 1 }]}
       onPress={() => {
         Haptics.selectionAsync();
         onReview();
       }}
       activeOpacity={0.8}
     >
-      <View style={[styles.masteredIcon, { backgroundColor: "#DCFCE7" }]}>
-        <Ionicons name="checkmark-circle" size={20} color="#22C55E" />
+      <View style={[styles.masteredIcon, { backgroundColor: "#FDE68A" }]}>
+        <Ionicons name="checkmark-circle" size={20} color="#CA8A04" />
       </View>
       <View style={{ flex: 1 }}>
-        <Text style={[styles.masteredTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
+        <Text style={[styles.masteredTitle, { color: "#854D0E", fontFamily: "Inter_700Bold" }]}>
           {t("home.alphabetMastered")}
         </Text>
-        <Text style={[styles.masteredSub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+        <Text style={[styles.masteredSub, { color: "#A16207", fontFamily: "Inter_400Regular" }]}>
           {t("home.alphabetMasteredSub")}
         </Text>
       </View>
@@ -286,7 +285,7 @@ function AlphabetMasteredStrip({
         style={styles.masteredClose}
         activeOpacity={0.6}
       >
-        <Ionicons name="close" size={18} color={colors.mutedForeground} />
+        <Ionicons name="close" size={18} color="#A16207" />
       </TouchableOpacity>
     </TouchableOpacity>
   );
