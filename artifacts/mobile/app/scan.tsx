@@ -11,6 +11,7 @@ import {
   Alert,
   Modal,
   Pressable,
+  useWindowDimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
@@ -207,6 +208,13 @@ export default function ScanScreen() {
   const topPadding = Platform.OS === "web" ? 16 : insets.top;
   const bottomPadding = Platform.OS === "web" ? 34 + 84 : insets.bottom + 90;
 
+  // Big, near-full-height viewfinder. The frame is centered, so we leave room
+  // for the top bar above and the capture/history/gallery controls below.
+  const { width: screenW, height: screenH } = useWindowDimensions();
+  const frameWidth = Math.min(screenW - 36, 480);
+  const frameHeight = Math.max(280, screenH - (topPadding + 70) - (bottomPadding + 80));
+  const hintTop = Math.max(topPadding + 56, (screenH - frameHeight) / 2 - 46);
+
   // RESULT SCREEN
   if (scannedImage && scanResult && !isScanning) {
     return (
@@ -320,9 +328,9 @@ export default function ScanScreen() {
         {/* Dim overlay around frame */}
         <View pointerEvents="none" style={styles.dimOverlay}>
           <View style={styles.dimSide} />
-          <View style={styles.dimMiddle}>
+          <View style={[styles.dimMiddle, { height: frameHeight }]}>
             <View style={styles.dimSide} />
-            <Animated.View style={[styles.scanFrame, pulseStyle]}>
+            <Animated.View style={[styles.scanFrame, { width: frameWidth, height: frameHeight }, pulseStyle]}>
               <CornerBrackets color="#FFFFFF" />
               {isScanning && (
                 <View style={styles.scanningBadge}>
@@ -365,7 +373,7 @@ export default function ScanScreen() {
       </View>
 
       {/* Hint text */}
-      <View pointerEvents="none" style={[styles.hintWrap, { top: "38%" }]}>
+      <View pointerEvents="none" style={[styles.hintWrap, { top: hintTop }]}>
         <View style={styles.hintPill}>
           <Text style={[styles.hintText, { fontFamily: "Inter_500Medium" }]}>
             {t("scan.hint")}
@@ -475,8 +483,6 @@ export default function ScanScreen() {
   );
 }
 
-const FRAME_SIZE = 280;
-
 const styles = StyleSheet.create({
   container: { flex: 1 },
 
@@ -498,10 +504,8 @@ const styles = StyleSheet.create({
 
   dimOverlay: { ...StyleSheet.absoluteFillObject },
   dimSide: { flex: 1, backgroundColor: "rgba(10,10,18,0.55)" },
-  dimMiddle: { flexDirection: "row", height: FRAME_SIZE },
+  dimMiddle: { flexDirection: "row" },
   scanFrame: {
-    width: FRAME_SIZE,
-    height: FRAME_SIZE,
     alignItems: "center",
     justifyContent: "center",
   },
