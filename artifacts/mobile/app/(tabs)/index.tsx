@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import React, { useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -10,18 +10,9 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { router, useFocusEffect } from "expo-router";
+import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSequence,
-  withTiming,
-  withSpring,
-  Easing,
-} from "react-native-reanimated";
 import {
   useListOpenaiConversations,
   useStartOpenaiChat,
@@ -30,10 +21,8 @@ import {
 import { useColors } from "@/hooks/useColors";
 import { usePreferences, type Language } from "@/hooks/usePreferences";
 import { useT } from "@/hooks/useT";
-import { computeStreak, computeBestStreak, todayKey } from "@/lib/streak";
+import { computeStreak, computeBestStreak } from "@/lib/streak";
 import { useAlphabetProgress } from "@/lib/alphabetProgress";
-
-const STREAK_SEEN_KEY = "@linguascan/streak-seen-day/v1";
 
 const HELLOS: Record<Language, string> = {
   English: "hello",
@@ -340,84 +329,6 @@ export default function HomeScreen() {
   const topPadding = Platform.OS === "web" ? 16 : insets.top;
   const bottomPadding = Platform.OS === "web" ? 34 + 84 : insets.bottom + 90;
 
-  // Celebrate the streak with a little bounce the first time the user lands on
-  // Home on a new calendar day ("logs back in"). We persist the last-seen day so
-  // a routine re-focus on the same day doesn't replay it.
-  const flameScale = useSharedValue(1);
-  const flameTranslateY = useSharedValue(0);
-  const flameOpacity = useSharedValue(1);
-  const numScale = useSharedValue(1);
-  const numShakeX = useSharedValue(0);
-  const lastCelebratedDayRef = useRef<string | null>(null);
-
-  const playStreakAnimation = useCallback(() => {
-    // Flame shoots up from the ground: start low, small and faded, then rocket
-    // up past its resting spot and settle back down.
-    flameTranslateY.value = withSequence(
-      withTiming(16, { duration: 0 }),
-      withTiming(-8, { duration: 320, easing: Easing.out(Easing.cubic) }),
-      withSpring(0, { damping: 6, stiffness: 160 }),
-    );
-    flameScale.value = withSequence(
-      withTiming(0.4, { duration: 0 }),
-      withTiming(1.5, { duration: 320, easing: Easing.out(Easing.cubic) }),
-      withSpring(1, { damping: 5, stiffness: 180 }),
-    );
-    flameOpacity.value = withSequence(
-      withTiming(0, { duration: 0 }),
-      withTiming(1, { duration: 180 }),
-    );
-    // Number: subtle side-to-side shake (a few px, never off the page) + tiny pop.
-    numShakeX.value = withSequence(
-      withTiming(-2.5, { duration: 50 }),
-      withTiming(2.5, { duration: 60 }),
-      withTiming(-2, { duration: 55 }),
-      withTiming(1.5, { duration: 50 }),
-      withTiming(0, { duration: 50 }),
-    );
-    numScale.value = withSequence(
-      withTiming(1.25, { duration: 200, easing: Easing.out(Easing.quad) }),
-      withSpring(1, { damping: 7, stiffness: 200 }),
-    );
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-  }, [flameScale, flameTranslateY, flameOpacity, numScale, numShakeX]);
-
-  useFocusEffect(
-    useCallback(() => {
-      const today = todayKey();
-      // Already celebrated for today in this session — nothing to do. (Re-checked
-      // on every focus so a session that crosses midnight still fires next day.)
-      if (lastCelebratedDayRef.current === today) return;
-      let cancelled = false;
-      (async () => {
-        try {
-          const seen = await AsyncStorage.getItem(STREAK_SEEN_KEY);
-          if (!cancelled && seen !== today) {
-            lastCelebratedDayRef.current = today;
-            playStreakAnimation();
-            await AsyncStorage.setItem(STREAK_SEEN_KEY, today);
-          } else if (!cancelled) {
-            // Persisted today already — remember it so we don't re-hit storage.
-            lastCelebratedDayRef.current = today;
-          }
-        } catch {
-          // Non-critical: if storage fails, just skip the celebration.
-        }
-      })();
-      return () => {
-        cancelled = true;
-      };
-    }, [playStreakAnimation]),
-  );
-
-  const flameStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: flameTranslateY.value }, { scale: flameScale.value }],
-    opacity: flameOpacity.value,
-  }));
-  const numStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: numShakeX.value }, { scale: numScale.value }],
-  }));
-
   const goScan = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.push("/scan");
@@ -476,15 +387,13 @@ export default function HomeScreen() {
           {/* Streak pills stacked */}
           <View style={styles.streakPills}>
             <View style={[styles.streakPill, { backgroundColor: "#FEF3C7" }]}>
-              <Animated.Text style={[{ fontSize: 12 }, flameStyle]}>🔥</Animated.Text>
+              <Text style={{ fontSize: 12 }}>🔥</Text>
               <Text style={[styles.streakPillLabel, { color: "#D97706", fontFamily: "Inter_600SemiBold" }]}>
                 {t("home.dailyStreak")}
               </Text>
-              <Animated.Text
-                style={[styles.streakPillNum, { color: "#D97706", fontFamily: "Inter_700Bold" }, numStyle]}
-              >
+              <Text style={[styles.streakPillNum, { color: "#D97706", fontFamily: "Inter_700Bold" }]}>
                 {stats.streak}
-              </Animated.Text>
+              </Text>
             </View>
             <View style={[styles.streakPill, { backgroundColor: "#DCFCE7" }]}>
               <Ionicons name="trophy" size={12} color="#22C55E" />
