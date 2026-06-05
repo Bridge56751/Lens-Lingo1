@@ -166,9 +166,77 @@ export type TKey =
   | "badge.consistent.title"
   | "badge.consistent.desc"
   | "badge.century.title"
-  | "badge.century.desc";
+  | "badge.century.desc"
+  | "vocab.bankTitle"
+  | "vocab.bankSub"
+  | "vocab.beginner"
+  | "vocab.intermediate"
+  | "vocab.advanced"
+  | "vocab.add"
+  | "vocab.added"
+  | "vocab.myWords"
+  | "vocab.bankEmpty"
+  | "vocab.bankError"
+  | "vocab.studyTitle"
+  | "vocab.studySub"
+  | "vocab.studyEmpty"
+  | "vocab.studyEmptySub"
+  | "vocab.openBank"
+  | "vocab.tapHear"
+  | "vocab.example"
+  | "vocab.showExample"
+  | "vocab.loadingExample"
+  | "vocab.yourTurn"
+  | "vocab.inputPlaceholder"
+  | "vocab.check"
+  | "vocab.checking"
+  | "vocab.correct"
+  | "vocab.needsWork"
+  | "vocab.correction"
+  | "vocab.tryAgain"
+  | "vocab.next"
+  | "vocab.progress"
+  | "vocab.remove"
+  | "vocab.done"
+  | "vocab.doneSub"
+  | "vocab.restart"
+  | "vocab.actionError";
 
 const en: Record<TKey, string> = {
+  "vocab.bankTitle": "Word Bank",
+  "vocab.bankSub": "Pick {lang} words you want to learn",
+  "vocab.beginner": "Beginner",
+  "vocab.intermediate": "Intermediate",
+  "vocab.advanced": "Advanced",
+  "vocab.add": "Add",
+  "vocab.added": "Added",
+  "vocab.myWords": "My Words",
+  "vocab.bankEmpty": "No words available yet. Please try again.",
+  "vocab.bankError": "Couldn’t load the word bank. Pull to retry.",
+  "vocab.studyTitle": "Study",
+  "vocab.studySub": "{n} words to learn",
+  "vocab.studyEmpty": "No words picked yet",
+  "vocab.studyEmptySub": "Pick some {lang} words from the Word Bank to start studying.",
+  "vocab.openBank": "Open Word Bank",
+  "vocab.tapHear": "Tap to hear",
+  "vocab.example": "Example",
+  "vocab.showExample": "Show an example sentence",
+  "vocab.loadingExample": "Writing an example…",
+  "vocab.yourTurn": "Now you try — write a sentence using this word",
+  "vocab.inputPlaceholder": "Type a sentence with “{word}”…",
+  "vocab.check": "Check my sentence",
+  "vocab.checking": "Checking…",
+  "vocab.correct": "Great job!",
+  "vocab.needsWork": "Almost there",
+  "vocab.correction": "Better:",
+  "vocab.tryAgain": "Try again",
+  "vocab.next": "Next word",
+  "vocab.progress": "{current} of {total}",
+  "vocab.remove": "Remove",
+  "vocab.done": "All done!",
+  "vocab.doneSub": "You studied all your picked words.",
+  "vocab.restart": "Start over",
+  "vocab.actionError": "Something went wrong. Please try again.",
   "home.greeting": "Hello, {name}!",
   "home.subtitleLine1": "Scan something around you",
   "home.subtitleLine2": "and start a real conversation.",

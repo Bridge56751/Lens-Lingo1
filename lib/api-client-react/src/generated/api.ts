@@ -21,7 +21,9 @@ import type {
 
 import type {
   ApiError,
+  GetVocabBankParams,
   HealthStatus,
+  ListVocabSelectionsParams,
   OpenaiConversation,
   OpenaiConversationInput,
   OpenaiConversationWithMessages,
@@ -30,6 +32,13 @@ import type {
   OpenaiMessageInput,
   ScanRequest,
   ScanResult,
+  VocabBank,
+  VocabCheck,
+  VocabCheckInput,
+  VocabExample,
+  VocabExampleInput,
+  VocabSelection,
+  VocabSelectionInput,
   VocabularyEntry
 } from './api.schemas';
 
@@ -565,6 +574,457 @@ export function useListVocabulary<TData = Awaited<ReturnType<typeof listVocabula
 
 
 
+
+export const getGetVocabBankUrl = (params: GetVocabBankParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/vocab/bank?${stringifiedParams}` : `/api/vocab/bank`
+}
+
+/**
+ * @summary Get the curated word bank for a language, grouped by difficulty
+ */
+export const getVocabBank = async (params: GetVocabBankParams, options?: RequestInit): Promise<VocabBank> => {
+
+  return customFetch<VocabBank>(getGetVocabBankUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetVocabBankQueryKey = (params?: GetVocabBankParams,) => {
+    return [
+    `/api/vocab/bank`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetVocabBankQueryOptions = <TData = Awaited<ReturnType<typeof getVocabBank>>, TError = ErrorType<ApiError>>(params: GetVocabBankParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getVocabBank>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetVocabBankQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getVocabBank>>> = ({ signal }) => getVocabBank(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getVocabBank>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetVocabBankQueryResult = NonNullable<Awaited<ReturnType<typeof getVocabBank>>>
+export type GetVocabBankQueryError = ErrorType<ApiError>
+
+
+/**
+ * @summary Get the curated word bank for a language, grouped by difficulty
+ */
+
+export function useGetVocabBank<TData = Awaited<ReturnType<typeof getVocabBank>>, TError = ErrorType<ApiError>>(
+ params: GetVocabBankParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getVocabBank>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetVocabBankQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getListVocabSelectionsUrl = (params: ListVocabSelectionsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/vocab/selections?${stringifiedParams}` : `/api/vocab/selections`
+}
+
+/**
+ * @summary List the words the customer has picked to learn
+ */
+export const listVocabSelections = async (params: ListVocabSelectionsParams, options?: RequestInit): Promise<VocabSelection[]> => {
+
+  return customFetch<VocabSelection[]>(getListVocabSelectionsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListVocabSelectionsQueryKey = (params?: ListVocabSelectionsParams,) => {
+    return [
+    `/api/vocab/selections`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListVocabSelectionsQueryOptions = <TData = Awaited<ReturnType<typeof listVocabSelections>>, TError = ErrorType<unknown>>(params: ListVocabSelectionsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listVocabSelections>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListVocabSelectionsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listVocabSelections>>> = ({ signal }) => listVocabSelections(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listVocabSelections>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListVocabSelectionsQueryResult = NonNullable<Awaited<ReturnType<typeof listVocabSelections>>>
+export type ListVocabSelectionsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List the words the customer has picked to learn
+ */
+
+export function useListVocabSelections<TData = Awaited<ReturnType<typeof listVocabSelections>>, TError = ErrorType<unknown>>(
+ params: ListVocabSelectionsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listVocabSelections>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListVocabSelectionsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getAddVocabSelectionUrl = () => {
+
+
+
+
+  return `/api/vocab/selections`
+}
+
+/**
+ * @summary Pick a word to learn
+ */
+export const addVocabSelection = async (vocabSelectionInput: VocabSelectionInput, options?: RequestInit): Promise<VocabSelection> => {
+
+  return customFetch<VocabSelection>(getAddVocabSelectionUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      vocabSelectionInput,)
+  }
+);}
+
+
+
+
+export const getAddVocabSelectionMutationOptions = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addVocabSelection>>, TError,{data: BodyType<VocabSelectionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof addVocabSelection>>, TError,{data: BodyType<VocabSelectionInput>}, TContext> => {
+
+const mutationKey = ['addVocabSelection'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof addVocabSelection>>, {data: BodyType<VocabSelectionInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  addVocabSelection(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AddVocabSelectionMutationResult = NonNullable<Awaited<ReturnType<typeof addVocabSelection>>>
+    export type AddVocabSelectionMutationBody = BodyType<VocabSelectionInput>
+    export type AddVocabSelectionMutationError = ErrorType<ApiError>
+
+    /**
+ * @summary Pick a word to learn
+ */
+export const useAddVocabSelection = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addVocabSelection>>, TError,{data: BodyType<VocabSelectionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof addVocabSelection>>,
+        TError,
+        {data: BodyType<VocabSelectionInput>},
+        TContext
+      > => {
+      return useMutation(getAddVocabSelectionMutationOptions(options));
+    }
+
+export const getDeleteVocabSelectionUrl = (id: number,) => {
+
+
+
+
+  return `/api/vocab/selections/${id}`
+}
+
+/**
+ * @summary Remove a picked word
+ */
+export const deleteVocabSelection = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteVocabSelectionUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteVocabSelectionMutationOptions = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteVocabSelection>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteVocabSelection>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteVocabSelection'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteVocabSelection>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteVocabSelection(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteVocabSelectionMutationResult = NonNullable<Awaited<ReturnType<typeof deleteVocabSelection>>>
+
+    export type DeleteVocabSelectionMutationError = ErrorType<ApiError>
+
+    /**
+ * @summary Remove a picked word
+ */
+export const useDeleteVocabSelection = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteVocabSelection>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteVocabSelection>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteVocabSelectionMutationOptions(options));
+    }
+
+export const getGetVocabExampleUrl = () => {
+
+
+
+
+  return `/api/vocab/example`
+}
+
+/**
+ * @summary Generate an example sentence using a word
+ */
+export const getVocabExample = async (vocabExampleInput: VocabExampleInput, options?: RequestInit): Promise<VocabExample> => {
+
+  return customFetch<VocabExample>(getGetVocabExampleUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      vocabExampleInput,)
+  }
+);}
+
+
+
+
+export const getGetVocabExampleMutationOptions = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getVocabExample>>, TError,{data: BodyType<VocabExampleInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof getVocabExample>>, TError,{data: BodyType<VocabExampleInput>}, TContext> => {
+
+const mutationKey = ['getVocabExample'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getVocabExample>>, {data: BodyType<VocabExampleInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  getVocabExample(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type GetVocabExampleMutationResult = NonNullable<Awaited<ReturnType<typeof getVocabExample>>>
+    export type GetVocabExampleMutationBody = BodyType<VocabExampleInput>
+    export type GetVocabExampleMutationError = ErrorType<ApiError>
+
+    /**
+ * @summary Generate an example sentence using a word
+ */
+export const useGetVocabExample = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getVocabExample>>, TError,{data: BodyType<VocabExampleInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof getVocabExample>>,
+        TError,
+        {data: BodyType<VocabExampleInput>},
+        TContext
+      > => {
+      return useMutation(getGetVocabExampleMutationOptions(options));
+    }
+
+export const getCheckVocabSentenceUrl = () => {
+
+
+
+
+  return `/api/vocab/check`
+}
+
+/**
+ * @summary Check a learner's own sentence using a word
+ */
+export const checkVocabSentence = async (vocabCheckInput: VocabCheckInput, options?: RequestInit): Promise<VocabCheck> => {
+
+  return customFetch<VocabCheck>(getCheckVocabSentenceUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      vocabCheckInput,)
+  }
+);}
+
+
+
+
+export const getCheckVocabSentenceMutationOptions = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof checkVocabSentence>>, TError,{data: BodyType<VocabCheckInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof checkVocabSentence>>, TError,{data: BodyType<VocabCheckInput>}, TContext> => {
+
+const mutationKey = ['checkVocabSentence'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof checkVocabSentence>>, {data: BodyType<VocabCheckInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  checkVocabSentence(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CheckVocabSentenceMutationResult = NonNullable<Awaited<ReturnType<typeof checkVocabSentence>>>
+    export type CheckVocabSentenceMutationBody = BodyType<VocabCheckInput>
+    export type CheckVocabSentenceMutationError = ErrorType<ApiError>
+
+    /**
+ * @summary Check a learner's own sentence using a word
+ */
+export const useCheckVocabSentence = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof checkVocabSentence>>, TError,{data: BodyType<VocabCheckInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof checkVocabSentence>>,
+        TError,
+        {data: BodyType<VocabCheckInput>},
+        TContext
+      > => {
+      return useMutation(getCheckVocabSentenceMutationOptions(options));
+    }
 
 export const getListOpenaiMessagesUrl = (id: number,) => {
 

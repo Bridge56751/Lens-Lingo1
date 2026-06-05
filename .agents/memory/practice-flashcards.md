@@ -20,6 +20,17 @@ silently resets `pos`/known-count and the user loses progress.
 a `round` counter) and guard with a ref so it only fires once per key; ignore raw
 data-array identity changes once a deck exists.
 
+## Pitfall: guard async results against card changes
+**Rule:** In any card/flashcard flow where a per-card async call (AI example,
+sentence check, etc.) can resolve after the user advances, capture the card's
+identity at call time and drop the result if the visible card has since changed.
+**Why:** `mutateAsync` results applied unconditionally after `await` leak the
+previous card's example/feedback onto the new card if the user taps Next first.
+**How to apply:** Keep a `currentWordRef` updated in the card-change effect;
+after `await`, `if (currentWordRef.current !== wordAtRequest) return;` before any
+`setState`. Also clamp `pos` when the deck shrinks (language switch / unpick) so
+it can't point past the end and falsely show a "done" state.
+
 ## Shared TTS
 BCP-47 voice locales (per learning `Language`) and a `speakWord(word, language)`
 helper live in `artifacts/mobile/lib/speech.ts` — reuse it (scan speaker + practice

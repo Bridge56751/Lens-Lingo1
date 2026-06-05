@@ -7,7 +7,9 @@
  */
 
 export * from './apiError';
+export * from './getVocabBankParams';
 export * from './healthStatus';
+export * from './listVocabSelectionsParams';
 export * from './openaiConversation';
 export * from './openaiConversationInput';
 export * from './openaiConversationWithMessages';
@@ -16,4 +18,12 @@ export * from './openaiMessage';
 export * from './openaiMessageInput';
 export * from './scanRequest';
 export * from './scanResult';
+export * from './vocabBank';
+export * from './vocabBankWord';
+export * from './vocabCheck';
+export * from './vocabCheckInput';
+export * from './vocabExample';
+export * from './vocabExampleInput';
+export * from './vocabSelection';
+export * from './vocabSelectionInput';
 export * from './vocabularyEntry';

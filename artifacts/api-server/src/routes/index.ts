@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import healthRouter from "./health";
 import scanRouter from "./scan";
 import vocabularyRouter from "./vocabulary";
+import vocabRouter from "./vocab";
 import openaiConversationsRouter from "./openai/conversations";
 import openaiTtsRouter from "./openai/tts";
 
@@ -10,6 +11,7 @@ const router: IRouter = Router();
 router.use(healthRouter);
 router.use(scanRouter);
 router.use(vocabularyRouter);
+router.use(vocabRouter);
 router.use(openaiConversationsRouter);
 router.use(openaiTtsRouter);
 

@@ -74,3 +74,68 @@ export interface OpenaiError {
   error: string;
 }
 
+export interface VocabBankWord {
+  word: string;
+  translation: string;
+  /** beginner | intermediate | advanced */
+  level: string;
+}
+
+export interface VocabBank {
+  words: VocabBankWord[];
+}
+
+export interface VocabSelection {
+  id: number;
+  targetLanguage: string;
+  level: string;
+  word: string;
+  translation: string;
+  createdAt: string;
+}
+
+export interface VocabSelectionInput {
+  targetLanguage: string;
+  level: string;
+  word: string;
+  translation: string;
+}
+
+export interface VocabExampleInput {
+  word: string;
+  targetLanguage: string;
+  nativeLanguage: string;
+}
+
+export interface VocabExample {
+  /** Example sentence in the target language */
+  sentence: string;
+  /** Translation of the sentence in the native language */
+  translation: string;
+}
+
+export interface VocabCheckInput {
+  word: string;
+  /** The learner's own sentence */
+  sentence: string;
+  targetLanguage: string;
+  nativeLanguage: string;
+}
+
+export interface VocabCheck {
+  correct: boolean;
+  /** Encouraging feedback in the native language */
+  feedback: string;
+  /** A corrected version of the sentence, if needed */
+  correction: string;
+}
+
+export type GetVocabBankParams = {
+targetLanguage: string;
+nativeLanguage: string;
+};
+
+export type ListVocabSelectionsParams = {
+targetLanguage: string;
+};
+

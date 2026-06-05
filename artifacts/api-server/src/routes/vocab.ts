@@ -1,0 +1,344 @@
+import { Router } from "express";
+import { and, asc, eq } from "drizzle-orm";
+import { db } from "@workspace/db";
+import { vocabBank, vocabSelections } from "@workspace/db";
+import { openai } from "@workspace/integrations-openai-ai-server";
+
+const router = Router();
+
+// Allowlist for languages interpolated into AI prompts (prevents injection of
+// instruction-like text via an arbitrary language string).
+const SUPPORTED_LANGUAGES = new Set([
+  "English",
+  "Spanish",
+  "French",
+  "German",
+  "Italian",
+  "Portuguese",
+  "Japanese",
+  "Chinese",
+  "Korean",
+  "Arabic",
+  "Russian",
+  "Hindi",
+  "Dutch",
+]);
+
+const LEVELS = ["beginner", "intermediate", "advanced"] as const;
+type Level = (typeof LEVELS)[number];
+
+function validLanguage(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const trimmed = value.trim();
+  return SUPPORTED_LANGUAGES.has(trimmed) ? trimmed : undefined;
+}
+
+// Free-text from the AI / client gets cleaned before it is stored or shown.
+function sanitize(value: unknown, max = 120): string {
+  return String(value ?? "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, max);
+}
+
+type GeneratedWord = { word: string; translation: string };
+
+// Ask the model for a curated word list across the three difficulty levels.
+async function generateBank(
+  targetLanguage: string,
+  nativeLanguage: string,
+): Promise<Record<Level, GeneratedWord[]>> {
+  const prompt = `Create a vocabulary study list for a native ${nativeLanguage} speaker learning ${targetLanguage}.
+Provide common, genuinely useful single words or short phrases at three difficulty levels:
+- beginner: 12 of the most essential everyday words
+- intermediate: 12 useful words a learner meets after the basics
+- advanced: 12 richer, less common words
+
+For each entry give the word written in ${targetLanguage} and its translation in ${nativeLanguage}.
+Respond with ONLY valid JSON in exactly this shape:
+{"beginner":[{"word":"...","translation":"..."}],"intermediate":[{"word":"...","translation":"..."}],"advanced":[{"word":"...","translation":"..."}]}`;
+
+  const response = await openai.chat.completions.create({
+    model: "gpt-4o",
+    max_completion_tokens: 1500,
+    messages: [{ role: "user", content: prompt }],
+  });
+
+  const content = response.choices[0]?.message?.content ?? "{}";
+  const match = content.match(/\{[\s\S]*\}/);
+  const parsed = match ? (JSON.parse(match[0]) as Record<string, unknown>) : {};
+
+  const result: Record<Level, GeneratedWord[]> = {
+    beginner: [],
+    intermediate: [],
+    advanced: [],
+  };
+  for (const level of LEVELS) {
+    const raw = Array.isArray(parsed[level]) ? (parsed[level] as unknown[]) : [];
+    for (const item of raw) {
+      const obj = item as { word?: unknown; translation?: unknown };
+      const word = sanitize(obj.word, 60);
+      const translation = sanitize(obj.translation, 80);
+      if (word && translation) result[level].push({ word, translation });
+    }
+  }
+  return result;
+}
+
+// GET /vocab/bank?targetLanguage=&nativeLanguage= - curated words by difficulty
+router.get("/vocab/bank", async (req, res) => {
+  const targetLanguage = validLanguage(req.query.targetLanguage);
+  const nativeLanguage = validLanguage(req.query.nativeLanguage);
+  if (!targetLanguage || !nativeLanguage) {
+    res
+      .status(400)
+      .json({ error: "Valid targetLanguage and nativeLanguage are required" });
+    return;
+  }
+
+  // Serve from the cached bank when we already generated it for this pair.
+  let rows = await db
+    .select()
+    .from(vocabBank)
+    .where(
+      and(
+        eq(vocabBank.targetLanguage, targetLanguage),
+        eq(vocabBank.nativeLanguage, nativeLanguage),
+      ),
+    )
+    .orderBy(asc(vocabBank.id));
+
+  if (rows.length === 0) {
+    try {
+      const generated = await generateBank(targetLanguage, nativeLanguage);
+      const values = LEVELS.flatMap((level) =>
+        generated[level].map((w) => ({
+          targetLanguage,
+          nativeLanguage,
+          level,
+          word: w.word,
+          translation: w.translation,
+        })),
+      );
+      if (values.length > 0) {
+        await db.insert(vocabBank).values(values).onConflictDoNothing();
+      }
+      rows = await db
+        .select()
+        .from(vocabBank)
+        .where(
+          and(
+            eq(vocabBank.targetLanguage, targetLanguage),
+            eq(vocabBank.nativeLanguage, nativeLanguage),
+          ),
+        )
+        .orderBy(asc(vocabBank.id));
+    } catch (err) {
+      req.log.error({ err }, "Vocab bank generation failed");
+      res.status(502).json({ error: "Could not build the word bank" });
+      return;
+    }
+  }
+
+  const words = rows.map((r) => ({
+    word: r.word,
+    translation: r.translation,
+    level: r.level,
+  }));
+  res.json({ words });
+});
+
+// GET /vocab/selections?targetLanguage= - words this customer picked
+router.get("/vocab/selections", async (req, res) => {
+  const targetLanguage = validLanguage(req.query.targetLanguage);
+  if (!targetLanguage) {
+    res.status(400).json({ error: "Valid targetLanguage is required" });
+    return;
+  }
+  if (req.customerId == null) {
+    res.json([]);
+    return;
+  }
+  const rows = await db
+    .select()
+    .from(vocabSelections)
+    .where(
+      and(
+        eq(vocabSelections.customerId, req.customerId),
+        eq(vocabSelections.targetLanguage, targetLanguage),
+      ),
+    )
+    .orderBy(asc(vocabSelections.id));
+  res.json(rows);
+});
+
+// POST /vocab/selections - pick a word to learn
+router.post("/vocab/selections", async (req, res) => {
+  const { targetLanguage: rawTarget, level: rawLevel, word: rawWord, translation: rawTranslation } =
+    req.body as {
+      targetLanguage?: string;
+      level?: string;
+      word?: string;
+      translation?: string;
+    };
+
+  const targetLanguage = validLanguage(rawTarget);
+  const level = typeof rawLevel === "string" && (LEVELS as readonly string[]).includes(rawLevel.trim())
+    ? (rawLevel.trim() as Level)
+    : undefined;
+  const word = sanitize(rawWord, 60);
+  const translation = sanitize(rawTranslation, 80);
+
+  if (!targetLanguage || !level || !word || !translation) {
+    res.status(400).json({ error: "targetLanguage, level, word and translation are required" });
+    return;
+  }
+  if (req.customerId == null) {
+    res.status(400).json({ error: "Missing or unresolved x-device-id" });
+    return;
+  }
+
+  const [created] = await db
+    .insert(vocabSelections)
+    .values({
+      customerId: req.customerId,
+      targetLanguage,
+      level,
+      word,
+      translation,
+    })
+    .onConflictDoUpdate({
+      target: [
+        vocabSelections.customerId,
+        vocabSelections.targetLanguage,
+        vocabSelections.word,
+      ],
+      set: { translation, level },
+    })
+    .returning();
+
+  res.status(201).json(created);
+});
+
+// DELETE /vocab/selections/:id - remove a picked word
+router.delete("/vocab/selections/:id", async (req, res) => {
+  const id = parseInt(req.params.id ?? "", 10);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "Invalid selection id" });
+    return;
+  }
+  if (req.customerId == null) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+  const [deleted] = await db
+    .delete(vocabSelections)
+    .where(
+      and(
+        eq(vocabSelections.id, id),
+        eq(vocabSelections.customerId, req.customerId),
+      ),
+    )
+    .returning();
+  if (!deleted) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+  res.status(204).send();
+});
+
+// POST /vocab/example - generate an example sentence using a word
+router.post("/vocab/example", async (req, res) => {
+  const { word: rawWord, targetLanguage: rawTarget, nativeLanguage: rawNative } =
+    req.body as { word?: string; targetLanguage?: string; nativeLanguage?: string };
+
+  const targetLanguage = validLanguage(rawTarget);
+  const nativeLanguage = validLanguage(rawNative);
+  const word = sanitize(rawWord, 60);
+  if (!word || !targetLanguage || !nativeLanguage) {
+    res.status(400).json({ error: "word, targetLanguage and nativeLanguage are required" });
+    return;
+  }
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      max_completion_tokens: 200,
+      messages: [
+        {
+          role: "user",
+          content: `Write one short, natural example sentence in ${targetLanguage} that uses the word "${word}". Keep it simple enough for a learner. Respond with ONLY valid JSON: {"sentence":"the sentence in ${targetLanguage}","translation":"its translation in ${nativeLanguage}"}`,
+        },
+      ],
+    });
+    const content = response.choices[0]?.message?.content ?? "{}";
+    const match = content.match(/\{[\s\S]*\}/);
+    const parsed = match ? (JSON.parse(match[0]) as { sentence?: unknown; translation?: unknown }) : {};
+    const sentence = sanitize(parsed.sentence, 240);
+    const translation = sanitize(parsed.translation, 240);
+    if (!sentence) {
+      res.status(502).json({ error: "Could not generate an example" });
+      return;
+    }
+    res.json({ sentence, translation });
+  } catch (err) {
+    req.log.error({ err }, "Vocab example generation failed");
+    res.status(502).json({ error: "Could not generate an example" });
+  }
+});
+
+// POST /vocab/check - give feedback on the learner's own sentence
+router.post("/vocab/check", async (req, res) => {
+  const {
+    word: rawWord,
+    sentence: rawSentence,
+    targetLanguage: rawTarget,
+    nativeLanguage: rawNative,
+  } = req.body as {
+    word?: string;
+    sentence?: string;
+    targetLanguage?: string;
+    nativeLanguage?: string;
+  };
+
+  const targetLanguage = validLanguage(rawTarget);
+  const nativeLanguage = validLanguage(rawNative);
+  const word = sanitize(rawWord, 60);
+  const sentence = sanitize(rawSentence, 400);
+  if (!word || !sentence || !targetLanguage || !nativeLanguage) {
+    res.status(400).json({ error: "word, sentence, targetLanguage and nativeLanguage are required" });
+    return;
+  }
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      max_completion_tokens: 400,
+      messages: [
+        {
+          role: "system",
+          content: `You are a warm, encouraging ${targetLanguage} tutor for a native ${nativeLanguage} speaker. The learner is practicing the word "${word}". Judge whether their sentence is correct and natural ${targetLanguage} that meaningfully uses "${word}". Be lenient about minor accents/capitalization. Give short, kind feedback written in ${nativeLanguage}. Always provide a corrected/improved version of their sentence in ${targetLanguage} (if it is already perfect, repeat it). Respond with ONLY valid JSON: {"correct": true or false, "feedback":"short feedback in ${nativeLanguage}","correction":"the corrected sentence in ${targetLanguage}"}`,
+        },
+        {
+          role: "user",
+          content: sentence,
+        },
+      ],
+    });
+    const content = response.choices[0]?.message?.content ?? "{}";
+    const match = content.match(/\{[\s\S]*\}/);
+    const parsed = match
+      ? (JSON.parse(match[0]) as { correct?: unknown; feedback?: unknown; correction?: unknown })
+      : {};
+    res.json({
+      correct: parsed.correct === true,
+      feedback: sanitize(parsed.feedback, 300) || "Nice try!",
+      correction: sanitize(parsed.correction, 300),
+    });
+  } catch (err) {
+    req.log.error({ err }, "Vocab sentence check failed");
+    res.status(502).json({ error: "Could not check the sentence" });
+  }
+});
+
+export default router;

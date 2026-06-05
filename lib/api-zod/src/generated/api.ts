@@ -90,6 +90,92 @@ export const ListVocabularyResponse = zod.array(ListVocabularyResponseItem)
 
 
 /**
+ * @summary Get the curated word bank for a language, grouped by difficulty
+ */
+export const GetVocabBankQueryParams = zod.object({
+  "targetLanguage": zod.coerce.string(),
+  "nativeLanguage": zod.coerce.string()
+})
+
+export const GetVocabBankResponse = zod.object({
+  "words": zod.array(zod.object({
+  "word": zod.string(),
+  "translation": zod.string(),
+  "level": zod.string().describe('beginner | intermediate | advanced')
+}))
+})
+
+
+/**
+ * @summary List the words the customer has picked to learn
+ */
+export const ListVocabSelectionsQueryParams = zod.object({
+  "targetLanguage": zod.coerce.string()
+})
+
+export const ListVocabSelectionsResponseItem = zod.object({
+  "id": zod.number(),
+  "targetLanguage": zod.string(),
+  "level": zod.string(),
+  "word": zod.string(),
+  "translation": zod.string(),
+  "createdAt": zod.coerce.date()
+})
+export const ListVocabSelectionsResponse = zod.array(ListVocabSelectionsResponseItem)
+
+
+/**
+ * @summary Pick a word to learn
+ */
+export const AddVocabSelectionBody = zod.object({
+  "targetLanguage": zod.string(),
+  "level": zod.string(),
+  "word": zod.string(),
+  "translation": zod.string()
+})
+
+
+/**
+ * @summary Remove a picked word
+ */
+export const DeleteVocabSelectionParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary Generate an example sentence using a word
+ */
+export const GetVocabExampleBody = zod.object({
+  "word": zod.string(),
+  "targetLanguage": zod.string(),
+  "nativeLanguage": zod.string()
+})
+
+export const GetVocabExampleResponse = zod.object({
+  "sentence": zod.string().describe('Example sentence in the target language'),
+  "translation": zod.string().describe('Translation of the sentence in the native language')
+})
+
+
+/**
+ * @summary Check a learner's own sentence using a word
+ */
+export const CheckVocabSentenceBody = zod.object({
+  "word": zod.string(),
+  "sentence": zod.string().describe('The learner\'s own sentence'),
+  "targetLanguage": zod.string(),
+  "nativeLanguage": zod.string()
+})
+
+export const CheckVocabSentenceResponse = zod.object({
+  "correct": zod.boolean(),
+  "feedback": zod.string().describe('Encouraging feedback in the native language'),
+  "correction": zod.string().describe('A corrected version of the sentence, if needed')
+})
+
+
+/**
  * @summary List messages in a conversation
  */
 export const ListOpenaiMessagesParams = zod.object({
