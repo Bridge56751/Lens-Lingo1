@@ -487,43 +487,31 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        <View style={[styles.headerDivider, { backgroundColor: colors.border }]} />
-
-        {/* Streak card */}
-        <View style={styles.streakCard}>
-          <View style={[styles.streakRow, { backgroundColor: "#FEF3C7" }]}>
-            <View style={styles.streakRowLeft}>
-              <View style={styles.streakIconCircle}>
-                <Animated.Text style={[{ fontSize: 16 }, flameStyle]}>🔥</Animated.Text>
-              </View>
-              <Text style={[styles.streakRowLabel, { color: "#D97706", fontFamily: "Inter_700Bold" }]}>
-                {t("home.dailyStreak")}
-              </Text>
-            </View>
-            <View style={styles.streakCountPill}>
-              <Animated.Text
-                style={[styles.streakCountText, { color: "#D97706", fontFamily: "Inter_700Bold" }, numStyle]}
-              >
-                {stats.streak}
-              </Animated.Text>
-            </View>
+        {/* Streak pills */}
+        <View style={styles.streakPills}>
+          <View style={[styles.streakPill, { backgroundColor: "#FEF3C7" }]}>
+            <Animated.Text style={[{ fontSize: 13 }, flameStyle]}>🔥</Animated.Text>
+            <Text style={[styles.streakPillLabel, { color: "#D97706", fontFamily: "Inter_600SemiBold" }]}>
+              {t("home.dailyStreak")}
+            </Text>
+            <Animated.Text
+              style={[styles.streakPillNum, { color: "#D97706", fontFamily: "Inter_700Bold" }, numStyle]}
+            >
+              {stats.streak}
+            </Animated.Text>
           </View>
-          <View style={[styles.streakRow, { backgroundColor: "#DCFCE7" }]}>
-            <View style={styles.streakRowLeft}>
-              <View style={styles.streakIconCircle}>
-                <Ionicons name="trophy" size={16} color="#22C55E" />
-              </View>
-              <Text style={[styles.streakRowLabel, { color: "#16A34A", fontFamily: "Inter_700Bold" }]}>
-                {t("home.bestStreak")}
-              </Text>
-            </View>
-            <View style={styles.streakCountPill}>
-              <Text style={[styles.streakCountText, { color: "#16A34A", fontFamily: "Inter_700Bold" }]}>
-                {bestStreak}
-              </Text>
-            </View>
+          <View style={[styles.streakPill, { backgroundColor: "#DCFCE7" }]}>
+            <Ionicons name="trophy" size={13} color="#22C55E" />
+            <Text style={[styles.streakPillLabel, { color: "#16A34A", fontFamily: "Inter_600SemiBold" }]}>
+              {t("home.bestStreak")}
+            </Text>
+            <Text style={[styles.streakPillNum, { color: "#16A34A", fontFamily: "Inter_700Bold" }]}>
+              {bestStreak}
+            </Text>
           </View>
         </View>
+
+        <View style={[styles.headerDivider, { backgroundColor: colors.border }]} />
 
         {/* Hero card */}
         <View style={[styles.hero, { backgroundColor: "#5B3FD9" }]}>
@@ -734,40 +722,25 @@ const styles = StyleSheet.create({
   greetingRight: { flexDirection: "row", alignItems: "center", gap: 10 },
   headerDivider: {
     height: 1,
+    marginTop: -2,
+    marginBottom: -2,
+  },
+  streakPills: {
+    flexDirection: "row",
+    gap: 8,
     marginTop: -4,
-    marginBottom: -4,
   },
-  streakCard: {
-    gap: 6,
-  },
-  streakRow: {
+  streakPill: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 5,
-    paddingLeft: 5,
-    paddingRight: 8,
-    borderRadius: 14,
+    gap: 6,
+    paddingLeft: 9,
+    paddingRight: 11,
+    paddingVertical: 6,
+    borderRadius: 12,
   },
-  streakRowLeft: { flexDirection: "row", alignItems: "center", gap: 10 },
-  streakIconCircle: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#FFFFFF",
-  },
-  streakRowLabel: { fontSize: 14 },
-  streakCountPill: {
-    minWidth: 40,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 11,
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
-  },
-  streakCountText: { fontSize: 15, lineHeight: 18 },
+  streakPillLabel: { fontSize: 12 },
+  streakPillNum: { fontSize: 13, lineHeight: 16 },
   avatar: {
     width: 52,
     height: 52,
