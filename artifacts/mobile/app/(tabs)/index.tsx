@@ -318,16 +318,10 @@ export default function HomeScreen() {
   const list = (conversations ?? []) as Conversation[];
 
   const stats = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const todayCount = list.filter((c) => new Date(c.createdAt) >= today).length;
-
     return {
       streak: computeStreak(list.map((c) => c.createdAt)),
       totalConvos: list.length,
       vocab: vocabSelections?.length ?? 0,
-      dailyDone: todayCount,
-      dailyGoal: 10,
     };
   }, [list, vocabSelections]);
 
@@ -531,47 +525,37 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* Stats grid */}
-        <View style={styles.statsRow}>
-          <StatTile
-            icon="chatbubbles"
-            iconColor={colors.primary}
-            iconBg={colors.primarySoft}
-            title={t("home.aiChats")}
-            subtitle={t("home.sessions", { n: stats.totalConvos })}
-            onPress={() => router.navigate("/(tabs)/history")}
-          />
-          <StatTile
-            icon="book"
-            iconColor="#F59E0B"
-            iconBg="#FEF3C7"
-            title={t("home.vocabulary")}
-            subtitle={t("home.words", { n: stats.vocab })}
-            onPress={() => router.push("/vocabulary")}
-          />
-        </View>
-        <View style={styles.statsRow}>
-          <StatTile
-            icon="checkmark-circle"
-            iconColor="#22C55E"
-            iconBg="#DCFCE7"
-            title={t("home.dailyGoal")}
-            subtitle={t("home.dailyProgress", { done: stats.dailyDone, goal: stats.dailyGoal })}
-            progress={stats.dailyDone / stats.dailyGoal}
-            onPress={() => router.push("/progress")}
-          />
-          <StatTile
-            icon="trophy"
-            iconColor="#3B82F6"
-            iconBg="#DBEAFE"
-            title={t("home.challenges")}
-            subtitle={t("home.earnBadges")}
-            onPress={() => router.push("/challenges")}
-          />
-        </View>
-
         {/* Learning paths */}
         <View style={{ gap: 14 }}>
+          <PathCard
+            tag={t("home.pathSentencesTag")}
+            title={t("home.pathSentencesTitle")}
+            subtitle={t("home.pathSentencesSub")}
+            cta={t("home.pathSentencesCta")}
+            bg="#2563EB"
+            fg="#FFFFFF"
+            tagBg="#FFFFFF"
+            tagFg="#1D4ED8"
+            ctaBg="#FFFFFF"
+            ctaFg="#1D4ED8"
+            watermark="Hi"
+            onPress={() => router.push("/sentences")}
+          />
+          <PathCard
+            tag={t("home.pathChatTag")}
+            title={t("home.pathChatTitle")}
+            subtitle={t("home.pathChatSub")}
+            cta={t("home.pathChatCta")}
+            bg="#EA580C"
+            fg="#FFFFFF"
+            tagBg="#FFFFFF"
+            tagFg="#C2410C"
+            ctaBg="#FFFFFF"
+            ctaFg="#C2410C"
+            watermark="AI"
+            onPress={goFreeChat}
+            loading={startChat.isPending}
+          />
           {!prefs.alphabetCardHidden[prefs.targetLanguage] &&
             (alphabet.mastered ? (
               <AlphabetMasteredStrip
@@ -608,34 +592,25 @@ export default function HomeScreen() {
                 onPress={() => router.push("/alphabet")}
               />
             ))}
-          <PathCard
-            tag={t("home.pathSentencesTag")}
-            title={t("home.pathSentencesTitle")}
-            subtitle={t("home.pathSentencesSub")}
-            cta={t("home.pathSentencesCta")}
-            bg="#2563EB"
-            fg="#FFFFFF"
-            tagBg="#FFFFFF"
-            tagFg="#1D4ED8"
-            ctaBg="#FFFFFF"
-            ctaFg="#1D4ED8"
-            watermark="Hi"
-            onPress={() => router.push("/sentences")}
+        </View>
+
+        {/* Stats grid */}
+        <View style={styles.statsRow}>
+          <StatTile
+            icon="chatbubbles"
+            iconColor={colors.primary}
+            iconBg={colors.primarySoft}
+            title={t("home.aiChats")}
+            subtitle={t("home.sessions", { n: stats.totalConvos })}
+            onPress={() => router.navigate("/(tabs)/history")}
           />
-          <PathCard
-            tag={t("home.pathChatTag")}
-            title={t("home.pathChatTitle")}
-            subtitle={t("home.pathChatSub")}
-            cta={t("home.pathChatCta")}
-            bg="#EA580C"
-            fg="#FFFFFF"
-            tagBg="#FFFFFF"
-            tagFg="#C2410C"
-            ctaBg="#FFFFFF"
-            ctaFg="#C2410C"
-            watermark="AI"
-            onPress={goFreeChat}
-            loading={startChat.isPending}
+          <StatTile
+            icon="book"
+            iconColor="#F59E0B"
+            iconBg="#FEF3C7"
+            title={t("home.vocabulary")}
+            subtitle={t("home.words", { n: stats.vocab })}
+            onPress={() => router.push("/vocabulary")}
           />
         </View>
 

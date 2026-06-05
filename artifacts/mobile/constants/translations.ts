@@ -98,6 +98,9 @@ export type TKey =
   | "settings.continueAnyway"
   | "settings.nativeComingSoonTitle"
   | "settings.nativeComingSoonBody"
+  | "settings.activity"
+  | "settings.dailyGoalSub"
+  | "settings.challengesSub"
   | "vocab.title"
   | "vocab.all"
   | "vocab.empty"
@@ -409,6 +412,9 @@ const en: Record<TKey, string> = {
   "settings.continueAnyway": "Use it anyway",
   "settings.nativeComingSoonTitle": "Coming soon",
   "settings.nativeComingSoonBody": "More native languages are coming soon. For now, LinguaScan is set up for English speakers.",
+  "settings.activity": "ACTIVITY",
+  "settings.dailyGoalSub": "Track your daily learning goal",
+  "settings.challengesSub": "Earn badges as you learn",
   "vocab.title": "Vocabulary",
   "vocab.all": "All",
   "vocab.empty": "No words yet",

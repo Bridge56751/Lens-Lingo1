@@ -252,6 +252,37 @@ export default function SettingsScreen() {
           />
         </View>
 
+        {/* Activity */}
+        <View style={{ gap: 8 }}>
+          <Text style={[styles.sectionLabel, { color: colors.mutedForeground, fontFamily: "Inter_600SemiBold" }]}>
+            {t("settings.activity")}
+          </Text>
+          <Row
+            icon="checkmark-circle"
+            iconBg="#DCFCE7"
+            iconColor="#22C55E"
+            title={t("home.dailyGoal")}
+            subtitle={t("settings.dailyGoalSub")}
+            right={<Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />}
+            onPress={() => {
+              Haptics.selectionAsync();
+              router.push("/progress");
+            }}
+          />
+          <Row
+            icon="trophy"
+            iconBg="#DBEAFE"
+            iconColor="#3B82F6"
+            title={t("home.challenges")}
+            subtitle={t("settings.challengesSub")}
+            right={<Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />}
+            onPress={() => {
+              Haptics.selectionAsync();
+              router.push("/challenges");
+            }}
+          />
+        </View>
+
         {/* About */}
         <View style={{ gap: 8 }}>
           <Text style={[styles.sectionLabel, { color: colors.mutedForeground, fontFamily: "Inter_600SemiBold" }]}>
