@@ -27,6 +27,7 @@ import Animated, {
   Easing,
 } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
+import { useStartOpenaiChat } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { usePreferences, DIFFICULTIES, type Difficulty } from "@/hooks/usePreferences";
 import { useT } from "@/hooks/useT";
@@ -190,6 +191,29 @@ export default function ScanScreen() {
     isOpeningRef.current = true;
     setIsOpening(true);
     router.push(`/conversation/${scanResult.conversationId}`);
+  };
+
+  // Skip the camera entirely and open a free conversation with the tutor.
+  const startChat = useStartOpenaiChat();
+  const goFreeChat = () => {
+    if (startChat.isPending || isScanning) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    startChat.mutate(
+      {
+        data: {
+          targetLanguage: selectedLanguage,
+          nativeLanguage: prefs.nativeLanguage,
+        },
+      },
+      {
+        onSuccess: (res) => {
+          router.push(`/conversation/${res.conversationId}`);
+        },
+        onError: () => {
+          Alert.alert(t("home.chatErrorTitle"), t("home.chatErrorBody"));
+        },
+      },
+    );
   };
 
   const reset = () => {
@@ -455,6 +479,28 @@ export default function ScanScreen() {
         </View>
       </View>
 
+      {/* Skip the camera — start a free chat with the tutor */}
+      <View
+        pointerEvents="box-none"
+        style={[styles.justChatWrap, { bottom: bottomPadding + 116 }]}
+      >
+        <TouchableOpacity
+          style={styles.justChatPill}
+          onPress={goFreeChat}
+          disabled={startChat.isPending || isScanning}
+          activeOpacity={0.85}
+        >
+          {startChat.isPending ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <Ionicons name="chatbubbles-outline" size={16} color="#FFFFFF" />
+          )}
+          <Text style={[styles.justChatText, { fontFamily: "Inter_600SemiBold" }]}>
+            {t("scan.justChat")}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
       {/* Bottom controls */}
       <View
         style={[
@@ -610,6 +656,23 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+
+  justChatWrap: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    alignItems: "center",
+  },
+  justChatPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "rgba(124,92,255,0.95)",
+    paddingHorizontal: 18,
+    paddingVertical: 11,
+    borderRadius: 24,
+  },
+  justChatText: { color: "#FFFFFF", fontSize: 14 },
 
   hintWrap: { position: "absolute", left: 0, right: 0, alignItems: "center" },
   hintPill: {
