@@ -489,23 +489,24 @@ export default function HomeScreen() {
         </View>
 
         {/* Hero card */}
-        <View style={[styles.hero, { backgroundColor: colors.primarySoft }]}>
+        <View style={[styles.hero, { backgroundColor: "#5B3FD9" }]}>
           <View style={styles.heroLeft}>
-            <Text style={[styles.heroTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
+            <Text style={[styles.heroTitle, { color: "#FFFFFF", fontFamily: "Inter_700Bold" }]}>
               {t("home.scanLearnSpeak")}
             </Text>
-            <Text style={[styles.heroBody, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+            <Text style={[styles.heroBody, { color: "rgba(255,255,255,0.82)", fontFamily: "Inter_400Regular" }]}>
               {t("home.heroDesc")}
             </Text>
             <TouchableOpacity
-              style={[styles.heroButton, { backgroundColor: colors.primary }]}
+              style={[styles.heroButton, { backgroundColor: "#FFFFFF" }]}
               onPress={goScan}
               activeOpacity={0.85}
             >
-              <Ionicons name="scan" size={16} color="#FFFFFF" />
-              <Text style={[styles.heroButtonText, { fontFamily: "Inter_600SemiBold" }]}>
+              <Ionicons name="scan" size={16} color={colors.primary} />
+              <Text style={[styles.heroButtonText, { color: colors.primary, fontFamily: "Inter_700Bold" }]}>
                 {t("home.scanCta")}
               </Text>
+              <Ionicons name="arrow-forward" size={16} color={colors.primary} />
             </TouchableOpacity>
           </View>
 
@@ -728,9 +729,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 11,
-    borderRadius: 14,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    borderRadius: 999,
     alignSelf: "flex-start",
     marginTop: 4,
   },

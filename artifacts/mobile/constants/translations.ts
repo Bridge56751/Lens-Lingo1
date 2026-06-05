@@ -379,7 +379,7 @@ const en: Record<TKey, string> = {
   "home.continueConvos": "Continue your conversations",
   "home.newHere": "New here?",
   "home.newHereDesc": "Take your first photo to begin",
-  "home.scanCta": "Scan",
+  "home.scanCta": "Scan Object",
   "home.practicing": "Practicing {lang}",
   "home.continueBtn": "Continue",
   "home.tapToContinue": "Tap to continue",
