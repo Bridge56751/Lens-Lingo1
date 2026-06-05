@@ -6,15 +6,3 @@ id = "lbNcYXRpz896I2OnA2QN1"
 uri = "file://artifacts/mobile/assets/images/icon.png"
 type = "image"
 title = "generated_image"
-
-[[generated]]
-id = "UiSUl9y2I4cgYwV4jwATN"
-uri = "file://artifacts/mobile/assets/images/path-speech-bubble.png"
-type = "image"
-title = "vivid azure blue speech bubble"
-
-[[generated]]
-id = "iZp7cGKrBSzAhO2f93Ot5"
-uri = "file://artifacts/mobile/assets/images/path-ai-robot.png"
-type = "image"
-title = "cute marshmallow robot head"

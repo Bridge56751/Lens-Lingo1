@@ -8,8 +8,6 @@ import {
   Platform,
   Alert,
   ActivityIndicator,
-  Image,
-  type ImageSourcePropType,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
@@ -172,7 +170,6 @@ function PathCard({
   ctaFg,
   ctaBorder,
   watermark,
-  illustration,
   progress,
   progressLabel,
   onPress,
@@ -190,7 +187,6 @@ function PathCard({
   ctaFg: string;
   ctaBorder?: string;
   watermark: string;
-  illustration?: ImageSourcePropType;
   progress?: number;
   progressLabel?: string;
   onPress: () => void;
@@ -212,13 +208,6 @@ function PathCard({
           {watermark}
         </Text>
       </View>
-      {illustration ? (
-        <Image
-          source={illustration}
-          style={styles.pathIllustration}
-          resizeMode="contain"
-        />
-      ) : null}
       <View style={[styles.pathTag, { backgroundColor: tagBg }]}>
         <Text style={[styles.pathTagText, { color: tagFg, fontFamily: "Inter_700Bold" }]}>
           {tag}
@@ -551,7 +540,6 @@ export default function HomeScreen() {
             ctaBg="#FFFFFF"
             ctaFg="#1D4ED8"
             watermark="Hi"
-            illustration={require("@/assets/images/path-speech-bubble.png")}
             onPress={() => router.push("/sentences")}
           />
           <PathCard
@@ -566,7 +554,6 @@ export default function HomeScreen() {
             ctaBg="#FFFFFF"
             ctaFg="#C2410C"
             watermark="AI"
-            illustration={require("@/assets/images/path-ai-robot.png")}
             onPress={goFreeChat}
             loading={startChat.isPending}
           />
@@ -799,15 +786,6 @@ const styles = StyleSheet.create({
     opacity: 0.16,
   },
   pathWatermarkText: { fontSize: 110, fontFamily: "Inter_700Bold", letterSpacing: -4 },
-  pathIllustration: {
-    position: "absolute",
-    right: 8,
-    top: "50%",
-    marginTop: -55,
-    width: 110,
-    height: 110,
-    pointerEvents: "none",
-  },
   pathTag: {
     alignSelf: "flex-start",
     paddingHorizontal: 10,
