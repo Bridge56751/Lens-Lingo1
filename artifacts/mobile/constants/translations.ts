@@ -189,6 +189,10 @@ export type TKey =
   | "conv.gradeTooFewBody"
   | "conv.gradeErrorTitle"
   | "conv.gradeErrorBody"
+  | "conv.translate"
+  | "conv.translating"
+  | "conv.hideTranslation"
+  | "conv.translateError"
   | "settings.difficulty"
   | "settings.chooseDifficulty"
   | "difficulty.Beginner"
@@ -496,6 +500,10 @@ const en: Record<TKey, string> = {
   "conv.gradeTooFewBody": "Chat a bit more before grading \u2014 send a couple of messages first.",
   "conv.gradeErrorTitle": "Grading failed",
   "conv.gradeErrorBody": "Sorry, we couldn\u2019t grade this chat. Please try again.",
+  "conv.translate": "Translate",
+  "conv.translating": "Translating\u2026",
+  "conv.hideTranslation": "Hide translation",
+  "conv.translateError": "Couldn\u2019t translate that. Please try again.",
   "settings.difficulty": "Difficulty",
   "settings.chooseDifficulty": "Choose difficulty",
   "difficulty.Beginner": "Beginner",

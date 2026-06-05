@@ -97,13 +97,48 @@ function MessageBubble({
   message,
   colors,
   language,
+  nativeLanguage,
 }: {
   message: Message;
   colors: ReturnType<typeof useColors>;
   language: Language;
+  nativeLanguage: string;
 }) {
   const t = useT();
   const isUser = message.role === "user";
+  const [translation, setTranslation] = useState<string | null>(null);
+  const [isTranslating, setIsTranslating] = useState(false);
+
+  const toggleTranslation = useCallback(async () => {
+    Haptics.selectionAsync();
+    if (translation !== null) {
+      setTranslation(null);
+      return;
+    }
+    if (isTranslating) return;
+    setIsTranslating(true);
+    try {
+      const baseUrl = process.env.EXPO_PUBLIC_DOMAIN
+        ? `https://${process.env.EXPO_PUBLIC_DOMAIN}`
+        : "";
+      const response = await expoFetch(`${baseUrl}/api/openai/translate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(getDeviceIdSync() ? { "x-device-id": getDeviceIdSync()! } : {}),
+        },
+        body: JSON.stringify({ text: message.content, to: nativeLanguage }),
+      });
+      if (!response.ok) throw new Error("translate failed");
+      const data = (await response.json()) as { translation?: string };
+      if (!data.translation) throw new Error("empty translation");
+      setTranslation(data.translation);
+    } catch {
+      Alert.alert(t("conv.translateError"));
+    } finally {
+      setIsTranslating(false);
+    }
+  }, [translation, isTranslating, message.content, nativeLanguage, t]);
 
   if (isUser) {
     return (
@@ -145,20 +180,55 @@ function MessageBubble({
         >
           {message.content}
         </Text>
-        <TouchableOpacity
-          style={styles.speakButton}
-          onPress={() => {
-            Haptics.selectionAsync();
-            speakWord(message.content, language);
-          }}
-          hitSlop={8}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="volume-medium" size={16} color={colors.primary} />
-          <Text style={[styles.speakLabel, { color: colors.primary, fontFamily: "Inter_500Medium" }]}>
-            {t("alphabet.tapToHear")}
-          </Text>
-        </TouchableOpacity>
+        {translation !== null ? (
+          <View style={[styles.translationBox, { borderTopColor: colors.border }]}>
+            <Text
+              style={[
+                styles.bubbleText,
+                styles.translationText,
+                { color: colors.mutedForeground, fontFamily: "Inter_400Regular" },
+              ]}
+            >
+              {translation}
+            </Text>
+          </View>
+        ) : null}
+        <View style={styles.bubbleActions}>
+          <TouchableOpacity
+            style={styles.speakButton}
+            onPress={() => {
+              Haptics.selectionAsync();
+              speakWord(message.content, language);
+            }}
+            hitSlop={8}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="volume-medium" size={16} color={colors.primary} />
+            <Text style={[styles.speakLabel, { color: colors.primary, fontFamily: "Inter_500Medium" }]}>
+              {t("alphabet.tapToHear")}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.speakButton}
+            onPress={toggleTranslation}
+            disabled={isTranslating}
+            hitSlop={8}
+            activeOpacity={0.7}
+          >
+            {isTranslating ? (
+              <ActivityIndicator size="small" color={colors.primary} />
+            ) : (
+              <Ionicons name="language" size={16} color={colors.primary} />
+            )}
+            <Text style={[styles.speakLabel, { color: colors.primary, fontFamily: "Inter_500Medium" }]}>
+              {isTranslating
+                ? t("conv.translating")
+                : translation !== null
+                  ? t("conv.hideTranslation")
+                  : t("conv.translate")}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
       <SparkleIcon color={colors.primary} />
     </View>
@@ -551,7 +621,12 @@ export default function ConversationScreen() {
             data={displayMessages}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
-              <MessageBubble message={item} colors={colors} language={language} />
+              <MessageBubble
+                message={item}
+                colors={colors}
+                language={language}
+                nativeLanguage={prefs.nativeLanguage}
+              />
             )}
             contentContainerStyle={[styles.messageList, { paddingBottom: 16 }]}
             keyboardDismissMode="interactive"
@@ -866,6 +941,11 @@ const styles = StyleSheet.create({
   userBubble: { borderBottomRightRadius: 6 },
   aiBubble: { borderBottomLeftRadius: 6 },
   bubbleText: { fontSize: 15, lineHeight: 22 },
+  bubbleActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+  },
   speakButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -873,6 +953,12 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   speakLabel: { fontSize: 12 },
+  translationBox: {
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  translationText: { fontStyle: "italic" },
 
   recordingBanner: {
     flexDirection: "row",

@@ -60,6 +60,50 @@ router.post("/openai/transcribe", async (req, res) => {
   }
 });
 
+// POST /openai/translate - translate a tutor message into the user's language
+router.post("/openai/translate", async (req, res) => {
+  const { text, to } = req.body as { text?: string; to?: string };
+
+  const input = typeof text === "string" ? text.trim() : "";
+  if (!input) {
+    res.status(400).json({ error: "text is required" });
+    return;
+  }
+  if (input.length > 2000) {
+    res.status(413).json({ error: "Text is too long" });
+    return;
+  }
+
+  const targetLanguage = safeLanguage(to) ?? "English";
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      temperature: 0,
+      messages: [
+        {
+          role: "system",
+          content:
+            `You are a translation engine. Translate the user's text into ${targetLanguage}. ` +
+            `Respond with ONLY the translation — no quotes, no notes, no transliteration, ` +
+            `no explanations. Preserve meaning and tone faithfully.`,
+        },
+        { role: "user", content: input },
+      ],
+    });
+
+    const translation = completion.choices[0]?.message?.content?.trim() ?? "";
+    if (!translation) {
+      res.status(502).json({ error: "Translation failed" });
+      return;
+    }
+    res.json({ translation });
+  } catch (err) {
+    req.log.error({ err }, "Translation failed");
+    res.status(502).json({ error: "Translation failed" });
+  }
+});
+
 // GET /openai/conversations - list conversations for the current customer
 router.get("/openai/conversations", async (req, res) => {
   if (req.customerId == null) {
