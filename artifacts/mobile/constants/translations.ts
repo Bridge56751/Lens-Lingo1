@@ -218,6 +218,9 @@ export type TKey =
   | "vocab.inputPlaceholder"
   | "vocab.check"
   | "vocab.checking"
+  | "vocab.speak"
+  | "vocab.recording"
+  | "vocab.transcribing"
   | "vocab.correct"
   | "vocab.needsWork"
   | "vocab.correction"
@@ -269,6 +272,9 @@ const en: Record<TKey, string> = {
   "vocab.inputPlaceholder": "Type a sentence with “{word}”…",
   "vocab.check": "Check my sentence",
   "vocab.checking": "Checking…",
+  "vocab.speak": "Speak your sentence",
+  "vocab.recording": "Tap to stop",
+  "vocab.transcribing": "Transcribing…",
   "vocab.correct": "Great job!",
   "vocab.needsWork": "Almost there",
   "vocab.correction": "Better:",

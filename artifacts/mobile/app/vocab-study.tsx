@@ -9,11 +9,18 @@ import {
   ScrollView,
   TextInput,
   KeyboardAvoidingView,
+  Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import {
+  useAudioRecorder,
+  RecordingPresets,
+  setAudioModeAsync,
+  requestRecordingPermissionsAsync,
+} from "expo-audio";
 import {
   useListVocabSelections,
   useGetVocabExample,
@@ -26,6 +33,11 @@ import { useColors } from "@/hooks/useColors";
 import { usePreferences } from "@/hooks/usePreferences";
 import { useT } from "@/hooks/useT";
 import { speakWord, prefetchSpeech, stopSpeaking } from "@/lib/speech";
+import {
+  transcribeAudio,
+  AudioTooLongError,
+  EmptyTranscriptError,
+} from "@/lib/audio";
 
 export default function VocabStudyScreen() {
   const t = useT();
@@ -58,6 +70,11 @@ export default function VocabStudyScreen() {
   const [example, setExample] = useState<VocabExample | null>(null);
   const [sentence, setSentence] = useState("");
   const [feedback, setFeedback] = useState<VocabCheck | null>(null);
+
+  // Voice input for the learner's own sentence.
+  const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
 
   // Cache generated examples by word so navigating back doesn't refetch.
   const exampleCache = useRef<Map<string, VocabExample>>(new Map());
@@ -100,6 +117,15 @@ export default function VocabStudyScreen() {
       return () => stopSpeaking();
     }, []),
   );
+
+  useEffect(() => {
+    return () => {
+      if (audioRecorder.isRecording) {
+        audioRecorder.stop().catch(() => {});
+      }
+      setAudioModeAsync({ allowsRecording: false }).catch(() => {});
+    };
+  }, [audioRecorder]);
 
   const topPadding = Platform.OS === "web" ? 16 : insets.top;
   const bottomPadding = Platform.OS === "web" ? 40 : insets.bottom + 24;
@@ -150,6 +176,57 @@ export default function VocabStudyScreen() {
       );
     } catch {
       // surfaced via checkMutation.isError in the UI
+    }
+  };
+
+  const startRecording = async () => {
+    if (isRecording || isTranscribing || checkMutation.isPending) return;
+    try {
+      const perm = await requestRecordingPermissionsAsync();
+      if (!perm.granted) {
+        Alert.alert(t("conv.micDeniedTitle"), t("conv.micDeniedBody"));
+        return;
+      }
+      stopSpeaking();
+      await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
+      await audioRecorder.prepareToRecordAsync();
+      audioRecorder.record();
+      setIsRecording(true);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    } catch {
+      setIsRecording(false);
+      Alert.alert(t("conv.micErrorTitle"), t("conv.micErrorBody"));
+    }
+  };
+
+  const stopAndTranscribe = async () => {
+    if (!isRecording) return;
+    const wordAtRequest = currentWordRef.current;
+    setIsRecording(false);
+    setIsTranscribing(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    try {
+      await audioRecorder.stop();
+      const uri = audioRecorder.uri;
+      if (!uri) throw new Error("No recording uri");
+
+      const transcript = await transcribeAudio(uri, target);
+      // Ignore a transcript that arrives after the user moved to another card.
+      if (currentWordRef.current !== wordAtRequest) return;
+      // Drop the transcription into the input so the learner can review and
+      // edit before submitting it for the (strict) grade.
+      setSentence((prev) => (prev.trim() ? `${prev.trim()} ${transcript}` : transcript));
+    } catch (err) {
+      if (err instanceof AudioTooLongError) {
+        Alert.alert(t("conv.micTooLongTitle"), t("conv.micTooLongBody"));
+      } else if (err instanceof EmptyTranscriptError) {
+        Alert.alert(t("conv.transcribeEmptyTitle"), t("conv.transcribeEmptyBody"));
+      } else {
+        Alert.alert(t("conv.transcribeErrorTitle"), t("conv.transcribeErrorBody"));
+      }
+    } finally {
+      await setAudioModeAsync({ allowsRecording: false }).catch(() => {});
+      setIsTranscribing(false);
     }
   };
 
@@ -371,6 +448,40 @@ export default function VocabStudyScreen() {
           />
           <TouchableOpacity
             style={[
+              styles.micBtn,
+              isRecording
+                ? { backgroundColor: "#FEE2E2", borderColor: "#FCA5A5" }
+                : { backgroundColor: colors.background, borderColor: colors.border },
+            ]}
+            onPress={isRecording ? stopAndTranscribe : startRecording}
+            activeOpacity={0.85}
+            disabled={isTranscribing || checkMutation.isPending}
+          >
+            {isTranscribing ? (
+              <>
+                <ActivityIndicator size="small" color={colors.primary} />
+                <Text style={[styles.micBtnText, { color: colors.mutedForeground, fontFamily: "Inter_500Medium" }]}>
+                  {t("vocab.transcribing")}
+                </Text>
+              </>
+            ) : isRecording ? (
+              <>
+                <View style={styles.recDot} />
+                <Text style={[styles.micBtnText, { color: "#DC2626", fontFamily: "Inter_600SemiBold" }]}>
+                  {t("vocab.recording")}
+                </Text>
+              </>
+            ) : (
+              <>
+                <Ionicons name="mic" size={18} color={colors.primary} />
+                <Text style={[styles.micBtnText, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
+                  {t("vocab.speak")}
+                </Text>
+              </>
+            )}
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
               styles.primaryBtn,
               { backgroundColor: colors.primary, opacity: sentence.trim() && !checkMutation.isPending ? 1 : 0.5 },
             ]}
@@ -442,9 +553,10 @@ export default function VocabStudyScreen() {
         </View>
 
         <TouchableOpacity
-          style={[styles.nextBtn, { backgroundColor: colors.primarySoft }]}
+          style={[styles.nextBtn, { backgroundColor: colors.primarySoft, opacity: isRecording || isTranscribing ? 0.5 : 1 }]}
           onPress={next}
           activeOpacity={0.85}
+          disabled={isRecording || isTranscribing}
         >
           <Text style={[styles.nextBtnText, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
             {t("vocab.next")}
@@ -519,6 +631,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlignVertical: "top",
   },
+
+  micBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  micBtnText: { fontSize: 14 },
+  recDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: "#DC2626" },
 
   feedback: { borderRadius: 14, padding: 14, gap: 8 },
   feedbackHead: { flexDirection: "row", alignItems: "center", gap: 6 },
