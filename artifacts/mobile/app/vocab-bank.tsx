@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -125,6 +125,8 @@ export default function VocabBankScreen() {
 
   const selectedCount = selectedByWord.size;
   const isEmptyBank = LEVELS.every((level) => grouped[level].length === 0);
+  const [selectedLevel, setSelectedLevel] = useState<Level>("beginner");
+  const visibleWords = grouped[selectedLevel];
 
   const Header = (
     <View style={[styles.header, { paddingTop: topPadding + 8 }]}>
@@ -192,87 +194,106 @@ export default function VocabBankScreen() {
       <Text style={[styles.subtitle, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
         {t("vocab.bankSub", { lang: target })}
       </Text>
+
+      <View style={styles.tabsRow}>
+        {LEVELS.map((level) => {
+          const active = level === selectedLevel;
+          const lc = LEVEL_COLORS[level];
+          return (
+            <TouchableOpacity
+              key={level}
+              style={[
+                styles.tab,
+                { backgroundColor: active ? lc.bg : colors.card },
+              ]}
+              onPress={() => {
+                Haptics.selectionAsync();
+                setSelectedLevel(level);
+              }}
+              activeOpacity={0.85}
+            >
+              <Text
+                style={[
+                  styles.tabText,
+                  {
+                    color: active ? lc.fg : colors.mutedForeground,
+                    fontFamily: active ? "Inter_700Bold" : "Inter_600SemiBold",
+                  },
+                ]}
+              >
+                {t(`vocab.${level}` as "vocab.beginner")}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
       <ScrollView
         contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: bottomPadding }}
         showsVerticalScrollIndicator={false}
       >
-        {isEmptyBank && (
+        {isEmptyBank || visibleWords.length === 0 ? (
           <Text style={[styles.bigSub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular", marginTop: 40 }]}>
             {t("vocab.bankEmpty")}
           </Text>
-        )}
-        {LEVELS.map((level) => {
-          const words = grouped[level];
-          if (words.length === 0) return null;
-          const lc = LEVEL_COLORS[level];
-          return (
-            <View key={level} style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <View style={[styles.levelTag, { backgroundColor: lc.bg }]}>
-                  <Text style={[styles.levelTagText, { color: lc.fg, fontFamily: "Inter_700Bold" }]}>
-                    {t(`vocab.${level}` as "vocab.beginner")}
+        ) : (
+          visibleWords.map((w) => {
+            const added = selectedByWord.has(w.word);
+            return (
+              <View
+                key={`${selectedLevel}:${w.word}`}
+                style={[styles.wordCard, { backgroundColor: colors.card }]}
+              >
+                <TouchableOpacity
+                  style={[styles.speakerSmall, { backgroundColor: colors.primarySoft }]}
+                  onPress={() => hear(w.word)}
+                  activeOpacity={0.8}
+                  hitSlop={8}
+                >
+                  <Ionicons name="volume-high" size={20} color={colors.primary} />
+                </TouchableOpacity>
+                <View style={styles.wordTextWrap}>
+                  <Text
+                    style={[styles.word, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}
+                    numberOfLines={1}
+                  >
+                    {w.word}
+                  </Text>
+                  <Text
+                    style={[styles.translation, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}
+                    numberOfLines={1}
+                  >
+                    {w.translation}
                   </Text>
                 </View>
-              </View>
-              {words.map((w) => {
-                const added = selectedByWord.has(w.word);
-                return (
-                  <View
-                    key={`${level}:${w.word}`}
-                    style={[styles.wordCard, { backgroundColor: colors.card }]}
+                <TouchableOpacity
+                  style={[
+                    styles.addBtn,
+                    added
+                      ? { backgroundColor: "#DCFCE7" }
+                      : { backgroundColor: colors.primary },
+                  ]}
+                  onPress={() => toggle(w)}
+                  activeOpacity={0.85}
+                >
+                  <Ionicons
+                    name={added ? "checkmark" : "add"}
+                    size={16}
+                    color={added ? "#16A34A" : "#FFFFFF"}
+                  />
+                  <Text
+                    style={[
+                      styles.addBtnText,
+                      { color: added ? "#16A34A" : "#FFFFFF", fontFamily: "Inter_600SemiBold" },
+                    ]}
                   >
-                    <TouchableOpacity
-                      style={[styles.speakerSmall, { backgroundColor: colors.primarySoft }]}
-                      onPress={() => hear(w.word)}
-                      activeOpacity={0.8}
-                      hitSlop={8}
-                    >
-                      <Ionicons name="volume-high" size={20} color={colors.primary} />
-                    </TouchableOpacity>
-                    <View style={styles.wordTextWrap}>
-                      <Text
-                        style={[styles.word, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}
-                        numberOfLines={1}
-                      >
-                        {w.word}
-                      </Text>
-                      <Text
-                        style={[styles.translation, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}
-                        numberOfLines={1}
-                      >
-                        {w.translation}
-                      </Text>
-                    </View>
-                    <TouchableOpacity
-                      style={[
-                        styles.addBtn,
-                        added
-                          ? { backgroundColor: "#DCFCE7" }
-                          : { backgroundColor: colors.primary },
-                      ]}
-                      onPress={() => toggle(w)}
-                      activeOpacity={0.85}
-                    >
-                      <Ionicons
-                        name={added ? "checkmark" : "add"}
-                        size={16}
-                        color={added ? "#16A34A" : "#FFFFFF"}
-                      />
-                      <Text
-                        style={[
-                          styles.addBtnText,
-                          { color: added ? "#16A34A" : "#FFFFFF", fontFamily: "Inter_600SemiBold" },
-                        ]}
-                      >
-                        {added ? t("vocab.added") : t("vocab.add")}
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                );
-              })}
-            </View>
-          );
-        })}
+                    {added ? t("vocab.added") : t("vocab.add")}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            );
+          })
+        )}
       </ScrollView>
     </View>
   );
@@ -308,19 +329,19 @@ const styles = StyleSheet.create({
   countBadgeText: { color: "#FFFFFF", fontSize: 11, fontFamily: "Inter_700Bold" },
   subtitle: { paddingHorizontal: 20, paddingBottom: 12, fontSize: 14 },
 
+  tabsRow: { flexDirection: "row", gap: 8, paddingHorizontal: 20, paddingBottom: 14 },
+  tab: {
+    flex: 1,
+    paddingVertical: 8,
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  tabText: { fontSize: 12 },
+
   center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 32, gap: 14 },
   loadingText: { fontSize: 14, textAlign: "center" },
   bigSub: { fontSize: 14, textAlign: "center", maxWidth: 300, lineHeight: 20 },
-
-  section: { marginBottom: 18 },
-  sectionHeader: { marginBottom: 10 },
-  levelTag: {
-    alignSelf: "flex-start",
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 999,
-  },
-  levelTagText: { fontSize: 13 },
 
   wordCard: {
     flexDirection: "row",
