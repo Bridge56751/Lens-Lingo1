@@ -30,7 +30,7 @@ import { useColors } from "@/hooks/useColors";
 import { usePreferences, LANGUAGES, type Language } from "@/hooks/usePreferences";
 import { useT } from "@/hooks/useT";
 import { getDeviceIdSync } from "@/lib/device";
-import { speakWord, stopSpeaking } from "@/lib/speech";
+import { speakWord, stopSpeaking, prefetchSpeech } from "@/lib/speech";
 
 function CornerBrackets({ color }: { color: string }) {
   return (
@@ -156,6 +156,8 @@ export default function ScanScreen() {
       };
 
       setScanResult(data);
+      // Warm the TTS cache so the "tap to hear" button plays instantly.
+      prefetchSpeech(data.itemNameTranslated, selectedLanguage);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (err) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);

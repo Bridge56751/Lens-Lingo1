@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -16,7 +16,7 @@ import * as Haptics from "expo-haptics";
 import { useColors } from "@/hooks/useColors";
 import { usePreferences } from "@/hooks/usePreferences";
 import { useT } from "@/hooks/useT";
-import { speakWord } from "@/lib/speech";
+import { speakWord, prefetchSpeech } from "@/lib/speech";
 import { ALPHABETS, RTL_LANGUAGES } from "@/constants/alphabets";
 
 const NON_LATIN_LANGS = new Set(["Japanese", "Chinese", "Korean", "Arabic", "Russian", "Hindi"]);
@@ -45,6 +45,17 @@ export default function AlphabetScreen() {
   const current = letters[index];
   const isLast = index === letters.length - 1;
   const isDone = scriptCompleted.size === letters.length && letters.length > 0;
+
+  // Warm the TTS cache for the visible letter + example so taps play instantly.
+  useEffect(() => {
+    if (!current) return;
+    const useChar = NON_LATIN_LANGS.has(prefs.targetLanguage);
+    const letterText = useChar
+      ? current.char.split(/\s+/)[0]
+      : (current.name ?? current.char).replace(/\s*\(.*\)\s*/g, "").trim();
+    prefetchSpeech(letterText, prefs.targetLanguage);
+    prefetchSpeech(current.example.replace(/\s*\(.*\)/, ""), prefs.targetLanguage);
+  }, [current, prefs.targetLanguage]);
 
   const markCompleted = (idx: number) => {
     setCompleted((prev) => {

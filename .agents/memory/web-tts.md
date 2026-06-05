@@ -28,3 +28,19 @@ robotic and (earlier) silent on web. All speech must go through the shared
   object URL on rejection or it leaks.
 - Audio is unreliable in the Replit web-preview iframe regardless — verify on a
   device via Expo Go.
+
+## Latency: cache + prefetch, not server-side
+
+**Symptom:** "tap to hear" felt like a 3-5s delay. Server synthesis is actually
+sub-second; the lag is the round-trip to the phone over the Replit dev tunnel plus
+generation. Switching TTS models does NOT fix this — the tunnel dominates.
+
+**Fix:** `lib/speech.ts` keeps an in-memory LRU (web caches the Blob, native caches
+the written MP3 path) so repeat taps are instant, plus a `prefetchSpeech(text)` that
+warms the cache. Screens call it the moment the text is known (scan result arrives,
+alphabet letter changes) so the first tap is already ready. Cached native files are
+deliberately NOT deleted on playback teardown — only on LRU eviction.
+
+**Gotcha that bit us:** when `playCached` swallows a web `audio.play()` rejection it
+must return `false` so `speakWord` can still fall back to the device voice; returning
+`true` unconditionally silently breaks the fallback on web autoplay/decoder failures.
