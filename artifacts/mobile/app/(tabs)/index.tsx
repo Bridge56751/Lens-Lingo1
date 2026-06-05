@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useMemo } from "react";
 import {
   View,
   Text,
@@ -21,7 +21,6 @@ import {
 import { useColors } from "@/hooks/useColors";
 import { usePreferences, type Language } from "@/hooks/usePreferences";
 import { useT } from "@/hooks/useT";
-import { computeStreak, computeBestStreak } from "@/lib/streak";
 import { useAlphabetProgress } from "@/lib/alphabetProgress";
 
 const HELLOS: Record<Language, string> = {
@@ -270,24 +269,11 @@ export default function HomeScreen() {
   const list = (conversations ?? []) as Conversation[];
 
   const stats = useMemo(() => {
-    const dates = list.map((c) => c.createdAt);
     return {
-      streak: computeStreak(dates),
-      bestStreak: computeBestStreak(dates),
       totalConvos: list.length,
       vocab: vocabSelections?.length ?? 0,
     };
   }, [list, vocabSelections]);
-
-  // Best streak is the longest run ever — never let it drop, even if the
-  // conversations it was derived from are deleted, by persisting the high-water
-  // mark in preferences.
-  const bestStreak = Math.max(stats.bestStreak, stats.streak, prefs.bestStreak ?? 0);
-  useEffect(() => {
-    if (bestStreak > (prefs.bestStreak ?? 0)) {
-      update("bestStreak", bestStreak);
-    }
-  }, [bestStreak, prefs.bestStreak, update]);
 
   const topPadding = Platform.OS === "web" ? 16 : insets.top;
   const bottomPadding = Platform.OS === "web" ? 34 + 84 : insets.bottom + 90;
@@ -349,33 +335,6 @@ export default function HomeScreen() {
                 {t("settings.learningSub", { lang: prefs.targetLanguage })}
               </Text>
             </TouchableOpacity>
-          </View>
-          {/* Streak pills stacked */}
-          <View style={styles.streakPills}>
-            <View style={[styles.streakPill, { backgroundColor: "#FEF3C7" }]}>
-              <Text style={{ fontSize: 12 }}>🔥</Text>
-              <Text
-                numberOfLines={1}
-                style={[styles.streakPillLabel, { color: "#D97706", fontFamily: "Inter_600SemiBold" }]}
-              >
-                {t("home.dailyStreak")}
-              </Text>
-              <Text style={[styles.streakPillNum, { color: "#D97706", fontFamily: "Inter_700Bold" }]}>
-                {stats.streak}
-              </Text>
-            </View>
-            <View style={[styles.streakPill, { backgroundColor: "#DCFCE7" }]}>
-              <Ionicons name="trophy" size={12} color="#22C55E" />
-              <Text
-                numberOfLines={1}
-                style={[styles.streakPillLabel, { color: "#16A34A", fontFamily: "Inter_600SemiBold" }]}
-              >
-                {t("home.bestStreak")}
-              </Text>
-              <Text style={[styles.streakPillNum, { color: "#16A34A", fontFamily: "Inter_700Bold" }]}>
-                {bestStreak}
-              </Text>
-            </View>
           </View>
           <View style={styles.greetingRight}>
             <TouchableOpacity
@@ -554,7 +513,7 @@ const styles = StyleSheet.create({
   scroll: { paddingHorizontal: 18, gap: 16 },
 
   greetingRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  greeting: { fontSize: 20, letterSpacing: -0.4 },
+  greeting: { fontSize: 30, letterSpacing: -0.6 },
   learningChip: {
     flexDirection: "row",
     alignItems: "center",
@@ -569,21 +528,6 @@ const styles = StyleSheet.create({
     marginTop: -2,
     marginBottom: -2,
   },
-  streakPills: {
-    width: 132,
-    gap: 6,
-  },
-  streakPill: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingLeft: 9,
-    paddingRight: 10,
-    paddingVertical: 5,
-    borderRadius: 11,
-  },
-  streakPillLabel: { fontSize: 11, flex: 1 },
-  streakPillNum: { fontSize: 12, lineHeight: 15 },
   avatar: {
     width: 52,
     height: 52,

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -26,6 +26,8 @@ import {
 } from "@/hooks/usePreferences";
 import { useT } from "@/hooks/useT";
 import { LOCALE_NATIVE_NAMES, LOCALES, type Locale } from "@/constants/translations";
+import { useListOpenaiConversations } from "@workspace/api-client-react";
+import { computeStreak, computeBestStreak } from "@/lib/streak";
 
 function Row({
   icon,
@@ -77,6 +79,24 @@ export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const t = useT();
   const { prefs, update } = usePreferences();
+  const { data: conversations } = useListOpenaiConversations();
+
+  // Streaks are derived from conversation activity. Best streak is a high-water
+  // mark that must never drop even if conversations are deleted, so persist it
+  // in preferences (this used to live on the home screen).
+  const { streak, bestStreak } = useMemo(() => {
+    const dates = (conversations ?? []).map((c) => c.createdAt);
+    const current = computeStreak(dates);
+    const best = Math.max(computeBestStreak(dates), current, prefs.bestStreak ?? 0);
+    return { streak: current, bestStreak: best };
+  }, [conversations, prefs.bestStreak]);
+
+  useEffect(() => {
+    if (bestStreak > (prefs.bestStreak ?? 0)) {
+      update("bestStreak", bestStreak);
+    }
+  }, [bestStreak, prefs.bestStreak, update]);
+
   const [picker, setPicker] = useState<PickerKind>(null);
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState(prefs.displayName);
@@ -257,6 +277,26 @@ export default function SettingsScreen() {
           <Text style={[styles.sectionLabel, { color: colors.mutedForeground, fontFamily: "Inter_600SemiBold" }]}>
             {t("settings.activity")}
           </Text>
+          <View style={styles.streakRow}>
+            <View style={[styles.streakCard, { backgroundColor: "#FEF3C7" }]}>
+              <Text style={{ fontSize: 22 }}>🔥</Text>
+              <Text style={[styles.streakNum, { color: "#D97706", fontFamily: "Inter_700Bold" }]}>
+                {streak}
+              </Text>
+              <Text style={[styles.streakLabel, { color: "#B45309", fontFamily: "Inter_600SemiBold" }]}>
+                {t("home.dailyStreak")}
+              </Text>
+            </View>
+            <View style={[styles.streakCard, { backgroundColor: "#DCFCE7" }]}>
+              <Ionicons name="trophy" size={20} color="#22C55E" />
+              <Text style={[styles.streakNum, { color: "#16A34A", fontFamily: "Inter_700Bold" }]}>
+                {bestStreak}
+              </Text>
+              <Text style={[styles.streakLabel, { color: "#15803D", fontFamily: "Inter_600SemiBold" }]}>
+                {t("home.bestStreak")}
+              </Text>
+            </View>
+          </View>
           <Row
             icon="checkmark-circle"
             iconBg="#DCFCE7"
@@ -518,6 +558,16 @@ const styles = StyleSheet.create({
   },
 
   sectionLabel: { fontSize: 11, letterSpacing: 1, paddingHorizontal: 4 },
+  streakRow: { flexDirection: "row", gap: 10 },
+  streakCard: {
+    flex: 1,
+    alignItems: "center",
+    paddingVertical: 16,
+    borderRadius: 16,
+    gap: 4,
+  },
+  streakNum: { fontSize: 26 },
+  streakLabel: { fontSize: 12 },
   row: {
     flexDirection: "row",
     alignItems: "center",
