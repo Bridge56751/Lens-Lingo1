@@ -273,7 +273,6 @@ export default function HomeScreen() {
               <Text style={[styles.greeting, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
                 {t("home.greeting", { name: prefs.displayName })}
               </Text>
-              <Text style={styles.wave}>👋</Text>
             </View>
             <Text style={[styles.greetingSub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
               {t("home.subtitleLine1")}{"\n"}{t("home.subtitleLine2")}
@@ -281,7 +280,7 @@ export default function HomeScreen() {
           </View>
           <View style={styles.greetingRight}>
             <View style={[styles.streakPill, { backgroundColor: "#FFF1E6" }]}>
-              <Animated.Text style={[{ fontSize: 14 }, flameStyle]}>🔥</Animated.Text>
+              <Animated.Text style={[{ fontSize: 20 }, flameStyle]}>🔥</Animated.Text>
               <View>
                 <Animated.Text
                   style={[styles.streakNum, { color: "#1A1B2E", fontFamily: "Inter_700Bold" }, numStyle]}
@@ -301,7 +300,7 @@ export default function HomeScreen() {
               }}
               activeOpacity={0.7}
             >
-              <Ionicons name="person" size={20} color={colors.primary} />
+              <Ionicons name="person" size={26} color={colors.primary} />
             </TouchableOpacity>
           </View>
         </View>
@@ -476,23 +475,22 @@ const styles = StyleSheet.create({
 
   greetingRow: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
   greeting: { fontSize: 24, letterSpacing: -0.4 },
-  wave: { fontSize: 22 },
   greetingSub: { fontSize: 13, marginTop: 4, lineHeight: 18 },
-  greetingRight: { flexDirection: "row", alignItems: "center", gap: 8 },
+  greetingRight: { flexDirection: "row", alignItems: "center", gap: 10 },
   streakPill: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 14,
+    gap: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 18,
   },
-  streakNum: { fontSize: 14, lineHeight: 16 },
-  streakLabel: { fontSize: 9, lineHeight: 11 },
+  streakNum: { fontSize: 20, lineHeight: 22 },
+  streakLabel: { fontSize: 11, lineHeight: 13 },
   avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     borderWidth: 2,
     alignItems: "center",
     justifyContent: "center",
