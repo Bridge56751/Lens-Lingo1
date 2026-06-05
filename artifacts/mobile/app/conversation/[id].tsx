@@ -11,7 +11,7 @@ import {
   Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useLocalSearchParams, router } from "expo-router";
+import { useLocalSearchParams, router, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import {
@@ -29,7 +29,7 @@ import { useColors } from "@/hooks/useColors";
 import { useT } from "@/hooks/useT";
 import { usePreferences, type Language } from "@/hooks/usePreferences";
 import { getDeviceIdSync } from "@/lib/device";
-import { speakWord } from "@/lib/speech";
+import { speakWord, stopSpeaking } from "@/lib/speech";
 import { fetch as expoFetch } from "expo/fetch";
 
 type Message = {
@@ -203,6 +203,14 @@ export default function ConversationScreen() {
       setAudioModeAsync({ allowsRecording: false }).catch(() => {});
     };
   }, [audioRecorder]);
+
+  // Stop tutor playback when the screen loses focus (blur) or unmounts — a
+  // stack screen can blur without unmounting, so this covers both.
+  useFocusEffect(
+    useCallback(() => {
+      return () => stopSpeaking();
+    }, []),
+  );
 
   const { data: conversation, isLoading, dataUpdatedAt } = useGetOpenaiConversation(conversationId, {
     query: {

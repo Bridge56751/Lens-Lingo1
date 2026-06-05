@@ -35,8 +35,50 @@ function apiBaseUrl(): string {
 // we cache the path of the written MP3.
 const MAX_CACHE = 60;
 type CacheValue = Blob | string;
+type Priority = "tap" | "prefetch";
+interface Pending {
+  promise: Promise<CacheValue | null>;
+  controller: AbortController;
+  priority: Priority;
+}
 const audioCache = new Map<string, CacheValue>();
-const inflight = new Map<string, Promise<CacheValue | null>>();
+const inflight = new Map<string, Pending>();
+
+/**
+ * Abort any in-flight prefetch requests (optionally keeping one for `keep`).
+ * A real tap calls this so its own request isn't stuck behind a queue of
+ * lower-priority prefetches saturating the server.
+ */
+function cancelPrefetches(keep?: string): void {
+  for (const [text, p] of inflight) {
+    if (p.priority === "prefetch" && text !== keep) {
+      try {
+        p.controller.abort();
+      } catch {
+        // ignore
+      }
+      inflight.delete(text);
+    }
+  }
+}
+
+/** Abort superseded in-flight tap requests so they stop burning server capacity. */
+function cancelTaps(keep?: string): void {
+  for (const [text, p] of inflight) {
+    if (p.priority === "tap" && text !== keep) {
+      try {
+        p.controller.abort();
+      } catch {
+        // ignore
+      }
+      inflight.delete(text);
+    }
+  }
+}
+
+// Number of taps currently fetching/starting playback. While > 0 the prefetch
+// queue is paused so a tap always has a clear lane to the server.
+let activeTaps = 0;
 
 function hashKey(s: string): string {
   let h = 5381;
@@ -69,7 +111,7 @@ function store(key: string, val: CacheValue): void {
 }
 
 /** Fetch (or reuse cached) synthesized audio for `text`. Never throws. */
-async function fetchAudio(text: string): Promise<CacheValue | null> {
+async function fetchAudio(text: string, priority: Priority): Promise<CacheValue | null> {
   const cached = audioCache.get(text);
   if (cached !== undefined) {
     if (typeof cached === "string") {
@@ -89,9 +131,19 @@ async function fetchAudio(text: string): Promise<CacheValue | null> {
     }
   }
 
-  const pending = inflight.get(text);
-  if (pending) return pending;
+  // A real tap should never queue behind prefetch traffic or stale taps.
+  if (priority === "tap") {
+    cancelPrefetches(text);
+    cancelTaps(text);
+  }
 
+  const pending = inflight.get(text);
+  if (pending) {
+    if (priority === "tap") pending.priority = "tap";
+    return pending.promise;
+  }
+
+  const controller = new AbortController();
   const job = (async (): Promise<CacheValue | null> => {
     try {
       const deviceId = getDeviceIdSync();
@@ -102,6 +154,7 @@ async function fetchAudio(text: string): Promise<CacheValue | null> {
           ...(deviceId ? { "x-device-id": deviceId } : {}),
         },
         body: JSON.stringify({ text }),
+        signal: controller.signal,
       });
       if (!res.ok) return null;
 
@@ -126,13 +179,14 @@ async function fetchAudio(text: string): Promise<CacheValue | null> {
       store(text, file.uri);
       return file.uri;
     } catch {
+      // Includes AbortError when a tap cancels a prefetch.
       return null;
     } finally {
       inflight.delete(text);
     }
   })();
 
-  inflight.set(text, job);
+  inflight.set(text, { promise: job, controller, priority });
   return job;
 }
 
@@ -284,40 +338,86 @@ export function speakWord(word: string, language: Language): void {
   if (!text) return;
 
   const token = ++playToken;
+  activeTaps++;
   teardownPlayback();
   cancelSynth();
 
   void (async () => {
-    const audio = await fetchAudio(text);
-    if (token !== playToken) return; // superseded by a newer tap
-    if (!audio) {
-      speakDevice(text, language);
-      return;
-    }
-    await ensureAudioMode();
-    if (token !== playToken) return;
     try {
+      const audio = await fetchAudio(text, "tap");
+      if (token !== playToken) return; // superseded by a newer tap
+      if (!audio) {
+        speakDevice(text, language);
+        return;
+      }
+      await ensureAudioMode();
+      if (token !== playToken) return;
       const ok = await playCached(audio, token);
       if (!ok && token === playToken) speakDevice(text, language);
     } catch {
       if (token === playToken) speakDevice(text, language);
+    } finally {
+      activeTaps = Math.max(0, activeTaps - 1);
+      // Resume any prefetch work that was paused while this tap ran.
+      if (activeTaps === 0 && prefetchQueue.length > 0) scheduleDrain();
     }
   })();
 }
 
+// --- prefetch queue --------------------------------------------------------
+// Prefetch is best-effort and must never flood the server: requests are
+// debounced (so rapid letter/page switches collapse) and run one at a time, so
+// a real tap always has a clear lane.
+const PREFETCH_DEBOUNCE_MS = 350;
+let prefetchQueue: string[] = [];
+let prefetchTimer: ReturnType<typeof setTimeout> | null = null;
+let prefetchRunning = false;
+
+async function drainPrefetchQueue(): Promise<void> {
+  if (prefetchRunning) return;
+  prefetchRunning = true;
+  try {
+    // Pause while a tap is running so prefetch never contends for the server.
+    while (prefetchQueue.length > 0 && activeTaps === 0) {
+      const text = prefetchQueue.shift();
+      if (!text || audioCache.has(text)) continue;
+      await fetchAudio(text, "prefetch");
+    }
+  } finally {
+    prefetchRunning = false;
+  }
+}
+
+function scheduleDrain(): void {
+  if (prefetchTimer) clearTimeout(prefetchTimer);
+  prefetchTimer = setTimeout(() => {
+    prefetchTimer = null;
+    void drainPrefetchQueue();
+  }, PREFETCH_DEBOUNCE_MS);
+}
+
 /**
  * Warm the cache for `text` without playing it, so a later tap is instant.
- * Safe to call repeatedly; concurrent calls for the same text are de-duped.
+ * Debounced and serialized so rapid navigation never floods the server.
  */
 export function prefetchSpeech(word: string, _language?: Language): void {
   const text = word?.trim();
-  if (!text) return;
-  void fetchAudio(text).catch(() => {});
+  if (!text || audioCache.has(text)) return;
+  if (!prefetchQueue.includes(text)) prefetchQueue.push(text);
+  scheduleDrain();
 }
 
-/** Stop any in-progress speech (remote audio + on-device synth). */
+/** Stop any in-progress speech (remote audio + on-device synth) and prefetch. */
 export function stopSpeaking(): void {
   playToken++;
+  activeTaps = 0;
+  prefetchQueue = [];
+  if (prefetchTimer) {
+    clearTimeout(prefetchTimer);
+    prefetchTimer = null;
+  }
+  cancelPrefetches();
+  cancelTaps();
   teardownPlayback();
   cancelSynth();
 }

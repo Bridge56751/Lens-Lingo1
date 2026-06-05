@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -10,13 +10,13 @@ import {
   Easing,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useColors } from "@/hooks/useColors";
 import { usePreferences } from "@/hooks/usePreferences";
 import { useT } from "@/hooks/useT";
-import { speakWord, prefetchSpeech } from "@/lib/speech";
+import { speakWord, prefetchSpeech, stopSpeaking } from "@/lib/speech";
 import { ALPHABETS, RTL_LANGUAGES } from "@/constants/alphabets";
 
 const NON_LATIN_LANGS = new Set(["Japanese", "Chinese", "Korean", "Arabic", "Russian", "Hindi"]);
@@ -56,6 +56,14 @@ export default function AlphabetScreen() {
     prefetchSpeech(letterText, prefs.targetLanguage);
     prefetchSpeech(current.example.replace(/\s*\(.*\)/, ""), prefs.targetLanguage);
   }, [current, prefs.targetLanguage]);
+
+  // Stop playback and cancel pending prefetches when leaving the screen, so
+  // rapid navigation doesn't leave a queue of requests saturating the server.
+  useFocusEffect(
+    useCallback(() => {
+      return () => stopSpeaking();
+    }, []),
+  );
 
   const markCompleted = (idx: number) => {
     setCompleted((prev) => {

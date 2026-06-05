@@ -44,3 +44,15 @@ deliberately NOT deleted on playback teardown — only on LRU eviction.
 **Gotcha that bit us:** when `playCached` swallows a web `audio.play()` rejection it
 must return `false` so `speakWord` can still fall back to the device voice; returning
 `true` unconditionally silently breaks the fallback on web autoplay/decoder failures.
+
+**Prefetch must never flood the single TTS endpoint.** Naive prefetch-on-every-change
+(e.g. alphabet firing 2 requests per letter) produced bursts where some requests took
+6-7s instead of ~1s — the *tap* then waited behind the prefetch pile-up, which is the
+"still slow when I switch pages and tap quick" complaint. The fix is a priority model
+in `lib/speech.ts`: prefetch is debounced + serialized (one at a time) and PAUSES
+while a tap is active (`activeTaps` counter); a tap aborts in-flight prefetches AND
+stale taps (AbortController per request); every screen calls `stopSpeaking()` on blur
+(`useFocusEffect`, not just unmount — a stack screen can blur without unmounting) to
+clear the queue and abort pending requests. **Why:** with one shared, rate-limited TTS
+route, concurrency is the enemy of latency — fewer concurrent requests beats a faster
+model.
