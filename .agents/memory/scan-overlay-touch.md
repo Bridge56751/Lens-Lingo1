@@ -30,6 +30,18 @@ Prefer full-bleed: camera/placeholder fills the screen uniformly, with only a ce
 corner-bracket frame on top (no dim bands). On web the placeholder is then one uniform
 shade with no banding.
 
+## Native camera bleeds through on top of pushed screens
+On native, expo-camera's `CameraView` preview renders ABOVE overlying React Native
+views, including a new screen pushed on top via `router.push`. Symptom: tapping
+"Just chat" navigates to the conversation, but the camera still shows on top so the
+chat is unreachable ("opens the chat behind the camera"). The scan screen stays
+mounted underneath in the stack, so its camera keeps painting over everything.
+
+**Fix / rule:** gate the `CameraView` render on a focus flag so the camera UNMOUNTS
+when the screen loses focus. Drive a `screenFocused` state from `useFocusEffect`
+(true on focus, false in the cleanup) and render the camera only when focused. This
+covers every navigation path (just-chat AND scan→conversation), not just one button.
+
 ## pointerEvents
 Use `style={{ pointerEvents: ... }}`, not the `pointerEvents` PROP (deprecated on RN Web).
 A residual "props.pointerEvents is deprecated" warning can still come from libraries

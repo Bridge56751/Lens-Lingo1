@@ -164,12 +164,18 @@ export default function ScanScreen() {
 
   const isOpeningRef = useRef(false);
   const [isOpening, setIsOpening] = useState(false);
+  // Unmount the live camera whenever the screen is not focused. Native camera
+  // previews render above overlying React views, so without this the camera
+  // bleeds through on top of any screen we navigate to (e.g. "Just chat").
+  const [screenFocused, setScreenFocused] = useState(true);
 
   useFocusEffect(
     useCallback(() => {
       isOpeningRef.current = false;
       setIsOpening(false);
+      setScreenFocused(true);
       return () => {
+        setScreenFocused(false);
         stopSpeaking();
       };
     }, []),
@@ -319,7 +325,7 @@ export default function ScanScreen() {
     <View style={[styles.container, { backgroundColor: "#0A0A12" }]}>
       {/* Viewfinder */}
       <View style={styles.viewfinder}>
-        {canUseCamera && !scannedImage ? (
+        {canUseCamera && !scannedImage && screenFocused ? (
           <CameraView ref={cameraRef} style={StyleSheet.absoluteFill} facing="back" />
         ) : scannedImage ? (
           <Image source={{ uri: scannedImage }} style={StyleSheet.absoluteFill} resizeMode="cover" />
