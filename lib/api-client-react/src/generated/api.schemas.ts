@@ -143,6 +143,17 @@ export interface SentenceBank {
   sentences: SentencePhrase[];
 }
 
+export interface StartChatInput {
+  targetLanguage: string;
+  nativeLanguage: string;
+}
+
+export interface StartChatResult {
+  conversationId: number;
+  /** The tutor's opening message in the target language */
+  initialMessage: string;
+}
+
 export type GetVocabBankParams = {
 targetLanguage: string;
 nativeLanguage: string;

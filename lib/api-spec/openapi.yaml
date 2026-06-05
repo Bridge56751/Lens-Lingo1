@@ -311,6 +311,30 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiError"
+  /openai/conversations/chat:
+    post:
+      operationId: startOpenaiChat
+      tags: [openai]
+      summary: Start a free speak-or-type tutor conversation (no scan required)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StartChatInput"
+      responses:
+        "201":
+          description: Conversation created with an opening tutor message
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StartChatResult"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
   /openai/conversations/{id}/messages:
     get:
       operationId: listOpenaiMessages
@@ -644,3 +668,24 @@ components:
             $ref: "#/components/schemas/SentencePhrase"
       required:
         - sentences
+    StartChatInput:
+      type: object
+      properties:
+        targetLanguage:
+          type: string
+        nativeLanguage:
+          type: string
+      required:
+        - targetLanguage
+        - nativeLanguage
+    StartChatResult:
+      type: object
+      properties:
+        conversationId:
+          type: integer
+        initialMessage:
+          type: string
+          description: The tutor's opening message in the target language
+      required:
+        - conversationId
+        - initialMessage

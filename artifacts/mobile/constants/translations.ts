@@ -55,6 +55,8 @@ export type TKey =
   | "home.pathChatTitle"
   | "home.pathChatSub"
   | "home.pathChatCta"
+  | "home.chatErrorTitle"
+  | "home.chatErrorBody"
   | "home.continueConvos"
   | "home.newHere"
   | "home.newHereDesc"
@@ -307,6 +309,8 @@ const en: Record<TKey, string> = {
   "home.pathChatTitle": "Full Conversation",
   "home.pathChatSub": "Talk freely with your AI tutor",
   "home.pathChatCta": "Start Chatting",
+  "home.chatErrorTitle": "Couldn't start chat",
+  "home.chatErrorBody": "Something went wrong starting your conversation. Please try again.",
   "home.continueConvos": "Continue your conversations",
   "home.newHere": "New here?",
   "home.newHereDesc": "Take your first photo to begin",

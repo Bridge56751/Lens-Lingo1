@@ -116,6 +116,94 @@ router.post("/openai/conversations", async (req, res) => {
   res.status(201).json(conv);
 });
 
+// POST /openai/conversations/chat - start a free speak-or-type tutor chat (no scan)
+router.post("/openai/conversations/chat", async (req, res) => {
+  const { targetLanguage: rawTarget, nativeLanguage: rawNative } = req.body as {
+    targetLanguage?: string;
+    nativeLanguage?: string;
+  };
+
+  const targetLanguage = (rawTarget ?? "").trim();
+  const nativeLanguage = (rawNative ?? "").trim();
+
+  // Both languages get interpolated into a high-priority system prompt, so
+  // validate them against the supported allowlist (prevents prompt-injection).
+  if (!SUPPORTED_LANGUAGES.has(targetLanguage) || !SUPPORTED_LANGUAGES.has(nativeLanguage)) {
+    res.status(400).json({ error: "Unsupported targetLanguage or nativeLanguage" });
+    return;
+  }
+
+  if (req.customerId == null) {
+    res.status(400).json({ error: "Missing or unresolved x-device-id" });
+    return;
+  }
+  const customerId = req.customerId;
+
+  const systemPrompt = `You are an enthusiastic, patient language tutor helping a native ${nativeLanguage} speaker learn ${targetLanguage} through free conversation. There is no specific topic — chat naturally about everyday life and let the learner steer.
+
+CRITICAL LANGUAGE RULES (these override everything else):
+- ALWAYS write your replies in ${targetLanguage}. Never reply primarily in ${nativeLanguage}, even if the user writes or speaks to you in ${nativeLanguage}.
+- After any ${targetLanguage} sentence that uses a new or difficult word, add a short ${nativeLanguage} translation in parentheses so a beginner can follow.
+- If the user writes in ${nativeLanguage}, warmly encourage them to try in ${targetLanguage}, and still model the answer in ${targetLanguage}.
+- If the user makes a mistake in ${targetLanguage}, gently correct it in one short phrase, then continue the conversation.
+
+Teaching style:
+- Keep replies SHORT (2-4 sentences max).
+- Talk about everyday topics and useful vocabulary the learner can use right away.
+- End every reply with one simple question in ${targetLanguage} to keep the conversation going.
+- Be warm and encouraging. Do not use emojis.`;
+
+  const triggerMessage = `Let's have a free conversation in ${targetLanguage} to practice. Please start.`;
+
+  // Generate the opening tutor message (kept outside the DB transaction below).
+  let initialContent = `Let's practice ${targetLanguage} together!`;
+  try {
+    const initialResponse = await openai.chat.completions.create({
+      model: "gpt-4o",
+      max_completion_tokens: 300,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: triggerMessage },
+      ],
+    });
+    initialContent = initialResponse.choices[0]?.message?.content ?? initialContent;
+  } catch (err) {
+    req.log.error({ err }, "Free-chat initial message generation failed");
+  }
+
+  // Seed the conversation with a system message + opening assistant turn so the
+  // message-send route (which 404s on an empty conversation) works immediately.
+  const conversation = await db.transaction(async (tx) => {
+    const [conv] = await tx
+      .insert(conversations)
+      .values({
+        title: `Free Chat • ${targetLanguage}`,
+        targetLanguage,
+        nativeLanguage,
+        customerId,
+      })
+      .returning();
+
+    await tx.insert(messages).values([
+      { conversationId: conv.id, role: "system", content: systemPrompt },
+      { conversationId: conv.id, role: "assistant", content: initialContent },
+    ]);
+
+    // Track usage: one chat started.
+    await tx
+      .update(customers)
+      .set({ chatCount: sql`${customers.chatCount} + 1` })
+      .where(eq(customers.id, customerId));
+
+    return conv;
+  });
+
+  res.status(201).json({
+    conversationId: conversation.id,
+    initialMessage: initialContent,
+  });
+});
+
 // GET /openai/conversations/:id - get conversation with messages (excluding system messages)
 router.get("/openai/conversations/:id", async (req, res) => {
   const id = parseInt(req.params.id ?? "", 10);

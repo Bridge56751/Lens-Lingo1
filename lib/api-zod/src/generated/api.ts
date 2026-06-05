@@ -193,6 +193,15 @@ export const GetSentenceBankResponse = zod.object({
 
 
 /**
+ * @summary Start a free speak-or-type tutor conversation (no scan required)
+ */
+export const StartOpenaiChatBody = zod.object({
+  "targetLanguage": zod.string(),
+  "nativeLanguage": zod.string()
+})
+
+
+/**
  * @summary List messages in a conversation
  */
 export const ListOpenaiMessagesParams = zod.object({

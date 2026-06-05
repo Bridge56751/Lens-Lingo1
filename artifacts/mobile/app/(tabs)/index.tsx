@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Platform,
+  Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
@@ -20,7 +21,10 @@ import Animated, {
   withSpring,
   Easing,
 } from "react-native-reanimated";
-import { useListOpenaiConversations } from "@workspace/api-client-react";
+import {
+  useListOpenaiConversations,
+  useStartOpenaiChat,
+} from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { usePreferences, type Language } from "@/hooks/usePreferences";
 import { useT } from "@/hooks/useT";
@@ -330,6 +334,28 @@ export default function HomeScreen() {
     router.push("/scan");
   };
 
+  const startChat = useStartOpenaiChat();
+  const goFreeChat = () => {
+    if (startChat.isPending) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    startChat.mutate(
+      {
+        data: {
+          targetLanguage: prefs.targetLanguage,
+          nativeLanguage: prefs.nativeLanguage,
+        },
+      },
+      {
+        onSuccess: (res) => {
+          router.push(`/conversation/${res.conversationId}`);
+        },
+        onError: () => {
+          Alert.alert(t("home.chatErrorTitle"), t("home.chatErrorBody"));
+        },
+      },
+    );
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView
@@ -490,7 +516,7 @@ export default function HomeScreen() {
             ctaBg="#FFFFFF"
             ctaFg="#C2410C"
             watermark="AI"
-            onPress={goScan}
+            onPress={goFreeChat}
           />
         </View>
 

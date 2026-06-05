@@ -34,6 +34,8 @@ import type {
   ScanRequest,
   ScanResult,
   SentenceBank,
+  StartChatInput,
+  StartChatResult,
   VocabBank,
   VocabCheck,
   VocabCheckInput,
@@ -1111,6 +1113,77 @@ export function useGetSentenceBank<TData = Awaited<ReturnType<typeof getSentence
 
 
 
+
+export const getStartOpenaiChatUrl = () => {
+
+
+
+
+  return `/api/openai/conversations/chat`
+}
+
+/**
+ * @summary Start a free speak-or-type tutor conversation (no scan required)
+ */
+export const startOpenaiChat = async (startChatInput: StartChatInput, options?: RequestInit): Promise<StartChatResult> => {
+
+  return customFetch<StartChatResult>(getStartOpenaiChatUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      startChatInput,)
+  }
+);}
+
+
+
+
+export const getStartOpenaiChatMutationOptions = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startOpenaiChat>>, TError,{data: BodyType<StartChatInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof startOpenaiChat>>, TError,{data: BodyType<StartChatInput>}, TContext> => {
+
+const mutationKey = ['startOpenaiChat'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof startOpenaiChat>>, {data: BodyType<StartChatInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  startOpenaiChat(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type StartOpenaiChatMutationResult = NonNullable<Awaited<ReturnType<typeof startOpenaiChat>>>
+    export type StartOpenaiChatMutationBody = BodyType<StartChatInput>
+    export type StartOpenaiChatMutationError = ErrorType<ApiError>
+
+    /**
+ * @summary Start a free speak-or-type tutor conversation (no scan required)
+ */
+export const useStartOpenaiChat = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startOpenaiChat>>, TError,{data: BodyType<StartChatInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof startOpenaiChat>>,
+        TError,
+        {data: BodyType<StartChatInput>},
+        TContext
+      > => {
+      return useMutation(getStartOpenaiChatMutationOptions(options));
+    }
 
 export const getListOpenaiMessagesUrl = (id: number,) => {
 

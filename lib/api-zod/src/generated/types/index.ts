@@ -21,6 +21,8 @@ export * from './scanRequest';
 export * from './scanResult';
 export * from './sentenceBank';
 export * from './sentencePhrase';
+export * from './startChatInput';
+export * from './startChatResult';
 export * from './vocabBank';
 export * from './vocabBankWord';
 export * from './vocabCheck';
