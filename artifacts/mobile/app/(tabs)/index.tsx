@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   Platform,
-  Image,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
@@ -146,6 +145,77 @@ function ConversationRow({ item }: { item: Conversation }) {
         <Text style={[styles.continueText, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
           Continue
         </Text>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+function PathCard({
+  tag,
+  title,
+  subtitle,
+  cta,
+  bg,
+  fg,
+  tagBg,
+  tagFg,
+  ctaBg,
+  ctaFg,
+  ctaBorder,
+  watermark,
+  onPress,
+}: {
+  tag: string;
+  title: string;
+  subtitle: string;
+  cta: string;
+  bg: string;
+  fg: string;
+  tagBg: string;
+  tagFg: string;
+  ctaBg?: string;
+  ctaFg: string;
+  ctaBorder?: string;
+  watermark: string;
+  onPress: () => void;
+}) {
+  return (
+    <TouchableOpacity
+      style={[styles.pathCard, { backgroundColor: bg }]}
+      onPress={() => {
+        Haptics.selectionAsync();
+        onPress();
+      }}
+      activeOpacity={0.9}
+    >
+      <View style={styles.pathWatermark} pointerEvents="none">
+        <Text style={[styles.pathWatermarkText, { color: fg }]} numberOfLines={1}>
+          {watermark}
+        </Text>
+      </View>
+      <View style={[styles.pathTag, { backgroundColor: tagBg }]}>
+        <Text style={[styles.pathTagText, { color: tagFg, fontFamily: "Inter_700Bold" }]}>
+          {tag}
+        </Text>
+      </View>
+      <Text style={[styles.pathTitle, { color: fg, fontFamily: "Inter_700Bold" }]}>
+        {title}
+      </Text>
+      <Text style={[styles.pathSub, { color: fg, fontFamily: "Inter_500Medium" }]}>
+        {subtitle}
+      </Text>
+      <View
+        style={[
+          styles.pathCta,
+          ctaBorder
+            ? { borderColor: ctaBorder, borderWidth: 1.5 }
+            : { backgroundColor: ctaBg },
+        ]}
+      >
+        <Text style={[styles.pathCtaText, { color: ctaFg, fontFamily: "Inter_700Bold" }]}>
+          {cta}
+        </Text>
+        <Ionicons name="arrow-forward" size={16} color={ctaFg} />
       </View>
     </TouchableOpacity>
   );
@@ -339,29 +409,6 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* Alphabet big button */}
-        <TouchableOpacity
-          style={[styles.alphabetCard, { backgroundColor: "#FEF3C7" }]}
-          onPress={() => {
-            Haptics.selectionAsync();
-            router.push("/alphabet");
-          }}
-          activeOpacity={0.85}
-        >
-          <View style={[styles.alphabetIcon, { backgroundColor: "#F59E0B" }]}>
-            <Text style={[styles.alphabetIconText, { fontFamily: "Inter_700Bold" }]}>Aa</Text>
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={[styles.alphabetTitle, { color: "#7C2D12", fontFamily: "Inter_700Bold" }]}>
-              {t("home.alphabet")}
-            </Text>
-            <Text style={[styles.alphabetSub, { color: "#92400E", fontFamily: "Inter_500Medium" }]}>
-              {t("home.alphabetDesc", { lang: prefs.targetLanguage })}
-            </Text>
-          </View>
-          <Ionicons name="chevron-forward" size={22} color="#92400E" />
-        </TouchableOpacity>
-
         {/* Stats grid */}
         <View style={styles.statsRow}>
           <StatTile
@@ -398,6 +445,52 @@ export default function HomeScreen() {
             title={t("home.challenges")}
             subtitle={t("home.earnBadges")}
             onPress={() => router.push("/challenges")}
+          />
+        </View>
+
+        {/* Learning paths */}
+        <View style={{ gap: 14 }}>
+          <PathCard
+            tag={t("home.pathAlphabetTag")}
+            title={t("home.pathAlphabetTitle")}
+            subtitle={t("home.pathAlphabetSub")}
+            cta={t("home.pathAlphabetCta")}
+            bg="#FBBF24"
+            fg="#422006"
+            tagBg="rgba(255,255,255,0.55)"
+            tagFg="#422006"
+            ctaBg="#422006"
+            ctaFg="#FBBF24"
+            watermark="Aa"
+            onPress={() => router.push("/alphabet")}
+          />
+          <PathCard
+            tag={t("home.pathVocabTag")}
+            title={t("home.pathVocabTitle")}
+            subtitle={t("home.pathVocabSub")}
+            cta={t("home.pathVocabCta")}
+            bg="#2563EB"
+            fg="#FFFFFF"
+            tagBg="#FFFFFF"
+            tagFg="#1D4ED8"
+            ctaBg="#FFFFFF"
+            ctaFg="#1D4ED8"
+            watermark="abc"
+            onPress={() => router.push("/vocab-bank")}
+          />
+          <PathCard
+            tag={t("home.pathChatTag")}
+            title={t("home.pathChatTitle")}
+            subtitle={t("home.pathChatSub")}
+            cta={t("home.pathChatCta")}
+            bg="#EA580C"
+            fg="#FFFFFF"
+            tagBg="#FFFFFF"
+            tagFg="#C2410C"
+            ctaBg="#FFFFFF"
+            ctaFg="#C2410C"
+            watermark="AI"
+            onPress={goScan}
           />
         </View>
 
@@ -552,23 +645,39 @@ const styles = StyleSheet.create({
   },
   heroChipText: { fontSize: 13 },
 
-  alphabetCard: {
+  pathCard: {
+    borderRadius: 24,
+    padding: 20,
+    overflow: "hidden",
+  },
+  pathWatermark: {
+    position: "absolute",
+    right: -6,
+    bottom: -22,
+    opacity: 0.16,
+  },
+  pathWatermarkText: { fontSize: 110, fontFamily: "Inter_700Bold", letterSpacing: -4 },
+  pathTag: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    marginBottom: 10,
+  },
+  pathTagText: { fontSize: 11, letterSpacing: 0.6 },
+  pathTitle: { fontSize: 26, letterSpacing: -0.6, lineHeight: 30 },
+  pathSub: { fontSize: 13, marginTop: 4 },
+  pathCta: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 14,
-    padding: 16,
-    borderRadius: 20,
+    gap: 8,
+    alignSelf: "flex-start",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 999,
+    marginTop: 16,
   },
-  alphabetIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  alphabetIconText: { color: "#FFFFFF", fontSize: 24, letterSpacing: -0.5 },
-  alphabetTitle: { fontSize: 18, letterSpacing: -0.2 },
-  alphabetSub: { fontSize: 12, marginTop: 2 },
+  pathCtaText: { fontSize: 14 },
   statsRow: { flexDirection: "row", gap: 10 },
   tile: {
     flex: 1,

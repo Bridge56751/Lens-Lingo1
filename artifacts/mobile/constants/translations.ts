@@ -43,6 +43,18 @@ export type TKey =
   | "home.dailyProgress"
   | "home.challenges"
   | "home.earnBadges"
+  | "home.pathAlphabetTag"
+  | "home.pathAlphabetTitle"
+  | "home.pathAlphabetSub"
+  | "home.pathAlphabetCta"
+  | "home.pathVocabTag"
+  | "home.pathVocabTitle"
+  | "home.pathVocabSub"
+  | "home.pathVocabCta"
+  | "home.pathChatTag"
+  | "home.pathChatTitle"
+  | "home.pathChatSub"
+  | "home.pathChatCta"
   | "home.continueConvos"
   | "home.newHere"
   | "home.newHereDesc"
@@ -263,6 +275,18 @@ const en: Record<TKey, string> = {
   "home.dailyProgress": "{done} / {goal} today",
   "home.challenges": "Challenges",
   "home.earnBadges": "Earn badges",
+  "home.pathAlphabetTag": "ALPHABET",
+  "home.pathAlphabetTitle": "Learn the ABC's",
+  "home.pathAlphabetSub": "Letters \u00b7 Sounds \u00b7 Reading",
+  "home.pathAlphabetCta": "Start Learning",
+  "home.pathVocabTag": "WORD BANK",
+  "home.pathVocabTitle": "Build Your Words",
+  "home.pathVocabSub": "Pick \u00b7 Learn \u00b7 Practice",
+  "home.pathVocabCta": "Open Word Bank",
+  "home.pathChatTag": "AI POWERED",
+  "home.pathChatTitle": "Full Conversation",
+  "home.pathChatSub": "Talk freely with your AI tutor",
+  "home.pathChatCta": "Start Chatting",
   "home.continueConvos": "Continue your conversations",
   "home.newHere": "New here?",
   "home.newHereDesc": "Take your first photo to begin",
