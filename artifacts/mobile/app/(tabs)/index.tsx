@@ -473,6 +473,29 @@ export default function HomeScreen() {
               </Text>
             </TouchableOpacity>
           </View>
+          {/* Streak pills stacked */}
+          <View style={styles.streakPills}>
+            <View style={[styles.streakPill, { backgroundColor: "#FEF3C7" }]}>
+              <Animated.Text style={[{ fontSize: 12 }, flameStyle]}>🔥</Animated.Text>
+              <Text style={[styles.streakPillLabel, { color: "#D97706", fontFamily: "Inter_600SemiBold" }]}>
+                {t("home.dailyStreak")}
+              </Text>
+              <Animated.Text
+                style={[styles.streakPillNum, { color: "#D97706", fontFamily: "Inter_700Bold" }, numStyle]}
+              >
+                {stats.streak}
+              </Animated.Text>
+            </View>
+            <View style={[styles.streakPill, { backgroundColor: "#DCFCE7" }]}>
+              <Ionicons name="trophy" size={12} color="#22C55E" />
+              <Text style={[styles.streakPillLabel, { color: "#16A34A", fontFamily: "Inter_600SemiBold" }]}>
+                {t("home.bestStreak")}
+              </Text>
+              <Text style={[styles.streakPillNum, { color: "#16A34A", fontFamily: "Inter_700Bold" }]}>
+                {bestStreak}
+              </Text>
+            </View>
+          </View>
           <View style={styles.greetingRight}>
             <TouchableOpacity
               style={[styles.avatar, { borderColor: colors.primary }]}
@@ -484,30 +507,6 @@ export default function HomeScreen() {
             >
               <Ionicons name="person" size={26} color={colors.primary} />
             </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Streak pills */}
-        <View style={styles.streakPills}>
-          <View style={[styles.streakPill, { backgroundColor: "#FEF3C7" }]}>
-            <Animated.Text style={[{ fontSize: 13 }, flameStyle]}>🔥</Animated.Text>
-            <Text style={[styles.streakPillLabel, { color: "#D97706", fontFamily: "Inter_600SemiBold" }]}>
-              {t("home.dailyStreak")}
-            </Text>
-            <Animated.Text
-              style={[styles.streakPillNum, { color: "#D97706", fontFamily: "Inter_700Bold" }, numStyle]}
-            >
-              {stats.streak}
-            </Animated.Text>
-          </View>
-          <View style={[styles.streakPill, { backgroundColor: "#DCFCE7" }]}>
-            <Ionicons name="trophy" size={13} color="#22C55E" />
-            <Text style={[styles.streakPillLabel, { color: "#16A34A", fontFamily: "Inter_600SemiBold" }]}>
-              {t("home.bestStreak")}
-            </Text>
-            <Text style={[styles.streakPillNum, { color: "#16A34A", fontFamily: "Inter_700Bold" }]}>
-              {bestStreak}
-            </Text>
           </View>
         </View>
 
@@ -709,8 +708,8 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   scroll: { paddingHorizontal: 18, gap: 16 },
 
-  greetingRow: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
-  greeting: { fontSize: 24, letterSpacing: -0.4 },
+  greetingRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  greeting: { fontSize: 22, letterSpacing: -0.4 },
   learningChip: {
     flexDirection: "row",
     alignItems: "center",
@@ -726,21 +725,19 @@ const styles = StyleSheet.create({
     marginBottom: -2,
   },
   streakPills: {
-    flexDirection: "row",
-    gap: 8,
-    marginTop: -4,
+    gap: 6,
   },
   streakPill: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
     paddingLeft: 9,
-    paddingRight: 11,
-    paddingVertical: 6,
-    borderRadius: 12,
+    paddingRight: 10,
+    paddingVertical: 5,
+    borderRadius: 11,
   },
-  streakPillLabel: { fontSize: 12 },
-  streakPillNum: { fontSize: 13, lineHeight: 16 },
+  streakPillLabel: { fontSize: 11, flex: 1 },
+  streakPillNum: { fontSize: 12, lineHeight: 15 },
   avatar: {
     width: 52,
     height: 52,
