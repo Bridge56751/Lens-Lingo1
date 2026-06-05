@@ -25,6 +25,7 @@ import Animated, {
 import {
   useListOpenaiConversations,
   useStartOpenaiChat,
+  useListVocabSelections,
 } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { usePreferences, type Language } from "@/hooks/usePreferences";
@@ -310,6 +311,9 @@ export default function HomeScreen() {
   const { languageProgress } = useAlphabetProgress();
   const alphabet = languageProgress(prefs.targetLanguage);
   const { data: conversations } = useListOpenaiConversations();
+  const { data: vocabSelections } = useListVocabSelections({
+    targetLanguage: prefs.targetLanguage,
+  });
 
   const list = (conversations ?? []) as Conversation[];
 
@@ -321,11 +325,11 @@ export default function HomeScreen() {
     return {
       streak: computeStreak(list.map((c) => c.createdAt)),
       totalConvos: list.length,
-      vocab: list.length * 5,
+      vocab: vocabSelections?.length ?? 0,
       dailyDone: todayCount,
       dailyGoal: 10,
     };
-  }, [list]);
+  }, [list, vocabSelections]);
 
   const topPadding = Platform.OS === "web" ? 16 : insets.top;
   const bottomPadding = Platform.OS === "web" ? 34 + 84 : insets.bottom + 90;
