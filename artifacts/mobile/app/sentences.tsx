@@ -182,6 +182,7 @@ export default function SentencesScreen() {
       </ScrollView>
 
       <ScrollView
+        style={styles.list}
         contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: bottomPadding }}
         showsVerticalScrollIndicator={false}
       >
@@ -245,6 +246,7 @@ const styles = StyleSheet.create({
   },
   tabText: { fontSize: 13 },
 
+  list: { flex: 1 },
   center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 32, gap: 14 },
   loadingText: { fontSize: 14, textAlign: "center" },
   bigSub: { fontSize: 14, textAlign: "center", maxWidth: 300, lineHeight: 20, alignSelf: "center" },
