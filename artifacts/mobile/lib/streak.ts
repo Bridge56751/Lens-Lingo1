@@ -18,21 +18,19 @@ export function activeDayKeys(isoDates: string[]): Set<string> {
 }
 
 /**
- * Consecutive-day streak ending today (or yesterday if there's no activity yet
- * today, so the streak stays "alive" until the day is over). Returns 0 when
- * there has been no activity at all.
+ * Consecutive-day streak ending today. Opening the app counts as today's
+ * activity, so today is always treated as active — the streak is therefore
+ * always at least 1 (more motivating than starting from 0), and chains back
+ * through any consecutive prior active days.
  */
 export function computeStreak(isoDates: string[]): number {
   const days = activeDayKeys(isoDates);
-  if (days.size === 0) return 0;
 
   const cursor = new Date();
   cursor.setHours(0, 0, 0, 0);
 
-  // If nothing logged today yet, the streak can still run through yesterday.
-  if (!days.has(dayKey(cursor))) {
-    cursor.setDate(cursor.getDate() - 1);
-  }
+  // Being in the app right now counts as activity for today.
+  days.add(dayKey(cursor));
 
   let streak = 0;
   while (days.has(dayKey(cursor))) {
