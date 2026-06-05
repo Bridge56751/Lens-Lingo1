@@ -21,6 +21,7 @@ import type {
 
 import type {
   ApiError,
+  GetSentenceBankParams,
   GetVocabBankParams,
   HealthStatus,
   ListVocabSelectionsParams,
@@ -32,6 +33,7 @@ import type {
   OpenaiMessageInput,
   ScanRequest,
   ScanResult,
+  SentenceBank,
   VocabBank,
   VocabCheck,
   VocabCheckInput,
@@ -1025,6 +1027,90 @@ export const useCheckVocabSentence = <TError = ErrorType<ApiError>,
       > => {
       return useMutation(getCheckVocabSentenceMutationOptions(options));
     }
+
+export const getGetSentenceBankUrl = (params: GetSentenceBankParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/sentences/bank?${stringifiedParams}` : `/api/sentences/bank`
+}
+
+/**
+ * @summary Get everyday survival phrases for a language, grouped by situation
+ */
+export const getSentenceBank = async (params: GetSentenceBankParams, options?: RequestInit): Promise<SentenceBank> => {
+
+  return customFetch<SentenceBank>(getGetSentenceBankUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetSentenceBankQueryKey = (params?: GetSentenceBankParams,) => {
+    return [
+    `/api/sentences/bank`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetSentenceBankQueryOptions = <TData = Awaited<ReturnType<typeof getSentenceBank>>, TError = ErrorType<ApiError>>(params: GetSentenceBankParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSentenceBank>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetSentenceBankQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSentenceBank>>> = ({ signal }) => getSentenceBank(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSentenceBank>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetSentenceBankQueryResult = NonNullable<Awaited<ReturnType<typeof getSentenceBank>>>
+export type GetSentenceBankQueryError = ErrorType<ApiError>
+
+
+/**
+ * @summary Get everyday survival phrases for a language, grouped by situation
+ */
+
+export function useGetSentenceBank<TData = Awaited<ReturnType<typeof getSentenceBank>>, TError = ErrorType<ApiError>>(
+ params: GetSentenceBankParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSentenceBank>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetSentenceBankQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 
 export const getListOpenaiMessagesUrl = (id: number,) => {
 

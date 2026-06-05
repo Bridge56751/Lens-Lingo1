@@ -47,10 +47,10 @@ export type TKey =
   | "home.pathAlphabetTitle"
   | "home.pathAlphabetSub"
   | "home.pathAlphabetCta"
-  | "home.pathVocabTag"
-  | "home.pathVocabTitle"
-  | "home.pathVocabSub"
-  | "home.pathVocabCta"
+  | "home.pathSentencesTag"
+  | "home.pathSentencesTitle"
+  | "home.pathSentencesSub"
+  | "home.pathSentencesCta"
   | "home.pathChatTag"
   | "home.pathChatTitle"
   | "home.pathChatSub"
@@ -213,7 +213,17 @@ export type TKey =
   | "vocab.done"
   | "vocab.doneSub"
   | "vocab.restart"
-  | "vocab.actionError";
+  | "vocab.actionError"
+  | "sentences.title"
+  | "sentences.sub"
+  | "sentences.error"
+  | "sentences.empty"
+  | "sentences.greetings"
+  | "sentences.basics"
+  | "sentences.directions"
+  | "sentences.dining"
+  | "sentences.shopping"
+  | "sentences.emergency";
 
 const en: Record<TKey, string> = {
   "vocab.bankTitle": "Word Bank",
@@ -251,6 +261,16 @@ const en: Record<TKey, string> = {
   "vocab.doneSub": "You studied all your picked words.",
   "vocab.restart": "Start over",
   "vocab.actionError": "Something went wrong. Please try again.",
+  "sentences.title": "Simple Sentences",
+  "sentences.sub": "Everyday {lang} phrases to get you around",
+  "sentences.error": "Couldn’t load phrases. Pull to retry.",
+  "sentences.empty": "No phrases available yet. Please try again.",
+  "sentences.greetings": "Greetings",
+  "sentences.basics": "Essentials",
+  "sentences.directions": "Directions",
+  "sentences.dining": "Eating Out",
+  "sentences.shopping": "Shopping",
+  "sentences.emergency": "Emergencies",
   "home.greeting": "Hello, {name}!",
   "home.subtitleLine1": "Scan something around you",
   "home.subtitleLine2": "and start a real conversation.",
@@ -279,10 +299,10 @@ const en: Record<TKey, string> = {
   "home.pathAlphabetTitle": "Learn the ABC's",
   "home.pathAlphabetSub": "Letters \u00b7 Sounds \u00b7 Reading",
   "home.pathAlphabetCta": "Start Learning",
-  "home.pathVocabTag": "WORD BANK",
-  "home.pathVocabTitle": "Build Your Words",
-  "home.pathVocabSub": "Pick \u00b7 Learn \u00b7 Practice",
-  "home.pathVocabCta": "Open Word Bank",
+  "home.pathSentencesTag": "PHRASES",
+  "home.pathSentencesTitle": "Simple Sentences",
+  "home.pathSentencesSub": "Greet \u00b7 Ask \u00b7 Get Around",
+  "home.pathSentencesCta": "Learn Phrases",
   "home.pathChatTag": "AI POWERED",
   "home.pathChatTitle": "Full Conversation",
   "home.pathChatSub": "Talk freely with your AI tutor",

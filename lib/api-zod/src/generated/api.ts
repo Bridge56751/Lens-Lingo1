@@ -176,6 +176,23 @@ export const CheckVocabSentenceResponse = zod.object({
 
 
 /**
+ * @summary Get everyday survival phrases for a language, grouped by situation
+ */
+export const GetSentenceBankQueryParams = zod.object({
+  "targetLanguage": zod.coerce.string(),
+  "nativeLanguage": zod.coerce.string()
+})
+
+export const GetSentenceBankResponse = zod.object({
+  "sentences": zod.array(zod.object({
+  "category": zod.string().describe('Situation grouping, e.g. greetings | basics | directions'),
+  "phrase": zod.string().describe('The phrase written in the target language'),
+  "translation": zod.string().describe('Translation of the phrase in the native language')
+}))
+})
+
+
+/**
  * @summary List messages in a conversation
  */
 export const ListOpenaiMessagesParams = zod.object({

@@ -7,6 +7,7 @@
  */
 
 export * from './apiError';
+export * from './getSentenceBankParams';
 export * from './getVocabBankParams';
 export * from './healthStatus';
 export * from './listVocabSelectionsParams';
@@ -18,6 +19,8 @@ export * from './openaiMessage';
 export * from './openaiMessageInput';
 export * from './scanRequest';
 export * from './scanResult';
+export * from './sentenceBank';
+export * from './sentencePhrase';
 export * from './vocabBank';
 export * from './vocabBankWord';
 export * from './vocabCheck';

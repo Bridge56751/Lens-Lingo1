@@ -282,6 +282,35 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiError"
+  /sentences/bank:
+    get:
+      operationId: getSentenceBank
+      tags: [vocab]
+      summary: Get everyday survival phrases for a language, grouped by situation
+      parameters:
+        - name: targetLanguage
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: nativeLanguage
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Sentence bank
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SentenceBank"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
   /openai/conversations/{id}/messages:
     get:
       operationId: listOpenaiMessages
@@ -590,3 +619,28 @@ components:
         - correct
         - feedback
         - correction
+    SentencePhrase:
+      type: object
+      properties:
+        category:
+          type: string
+          description: Situation grouping, e.g. greetings | basics | directions
+        phrase:
+          type: string
+          description: The phrase written in the target language
+        translation:
+          type: string
+          description: Translation of the phrase in the native language
+      required:
+        - category
+        - phrase
+        - translation
+    SentenceBank:
+      type: object
+      properties:
+        sentences:
+          type: array
+          items:
+            $ref: "#/components/schemas/SentencePhrase"
+      required:
+        - sentences

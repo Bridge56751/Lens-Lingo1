@@ -130,6 +130,19 @@ export interface VocabCheck {
   correction: string;
 }
 
+export interface SentencePhrase {
+  /** Situation grouping, e.g. greetings | basics | directions */
+  category: string;
+  /** The phrase written in the target language */
+  phrase: string;
+  /** Translation of the phrase in the native language */
+  translation: string;
+}
+
+export interface SentenceBank {
+  sentences: SentencePhrase[];
+}
+
 export type GetVocabBankParams = {
 targetLanguage: string;
 nativeLanguage: string;
@@ -137,5 +150,10 @@ nativeLanguage: string;
 
 export type ListVocabSelectionsParams = {
 targetLanguage: string;
+};
+
+export type GetSentenceBankParams = {
+targetLanguage: string;
+nativeLanguage: string;
 };
 

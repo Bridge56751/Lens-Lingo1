@@ -39,6 +39,7 @@ function RootLayoutNav() {
       />
       <Stack.Screen name="settings" options={{ presentation: "card" }} />
       <Stack.Screen name="vocabulary" options={{ presentation: "card" }} />
+      <Stack.Screen name="sentences" options={{ presentation: "card" }} />
       <Stack.Screen name="practice" options={{ presentation: "card" }} />
       <Stack.Screen name="progress" options={{ presentation: "card" }} />
       <Stack.Screen name="challenges" options={{ presentation: "card" }} />

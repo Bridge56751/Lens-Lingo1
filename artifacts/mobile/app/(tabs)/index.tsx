@@ -465,18 +465,18 @@ export default function HomeScreen() {
             onPress={() => router.push("/alphabet")}
           />
           <PathCard
-            tag={t("home.pathVocabTag")}
-            title={t("home.pathVocabTitle")}
-            subtitle={t("home.pathVocabSub")}
-            cta={t("home.pathVocabCta")}
+            tag={t("home.pathSentencesTag")}
+            title={t("home.pathSentencesTitle")}
+            subtitle={t("home.pathSentencesSub")}
+            cta={t("home.pathSentencesCta")}
             bg="#2563EB"
             fg="#FFFFFF"
             tagBg="#FFFFFF"
             tagFg="#1D4ED8"
             ctaBg="#FFFFFF"
             ctaFg="#1D4ED8"
-            watermark="abc"
-            onPress={() => router.push("/vocab-bank")}
+            watermark="Hi"
+            onPress={() => router.push("/sentences")}
           />
           <PathCard
             tag={t("home.pathChatTag")}
