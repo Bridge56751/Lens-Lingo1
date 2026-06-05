@@ -235,12 +235,13 @@ export default function ScanScreen() {
   // sit right at the very bottom edge (just clear of the home indicator).
   const bottomPadding = Platform.OS === "web" ? 24 : insets.bottom + 16;
 
-  // Big, near-full-height viewfinder. The frame is centered, so we leave room
-  // for the top bar above and the capture/history/gallery controls below.
+  // Anchor the viewfinder just below the top guidance zone rather than
+  // vertically centering it (which left an empty grey band at the top).
   const { width: screenW, height: screenH } = useWindowDimensions();
-  const frameWidth = Math.min(screenW - 36, 480);
-  const frameHeight = Math.max(280, screenH - (topPadding + 70) - (bottomPadding + 96));
-  const hintTop = Math.max(topPadding + 56, (screenH - frameHeight) / 2 - 46);
+  const frameTop = topPadding + 140;
+  const bottomReserve = bottomPadding + 150;
+  const frameWidth = Math.min(screenW - 40, 460);
+  const frameHeight = Math.max(240, screenH - frameTop - bottomReserve);
 
   // RESULT SCREEN
   if (scannedImage && scanResult && !isScanning) {
@@ -354,7 +355,7 @@ export default function ScanScreen() {
 
         {/* Dim overlay around frame */}
         <View pointerEvents="none" style={styles.dimOverlay}>
-          <View style={styles.dimSide} />
+          <View style={[styles.dimTop, { height: frameTop }]} />
           <View style={[styles.dimMiddle, { height: frameHeight }]}>
             <View style={styles.dimSide} />
             <Animated.View style={[styles.scanFrame, { width: frameWidth, height: frameHeight }, pulseStyle]}>
@@ -374,42 +375,54 @@ export default function ScanScreen() {
         </View>
       </View>
 
-      {/* Top bar */}
-      <View style={[styles.topBar, { paddingTop: topPadding + 8 }]} pointerEvents="box-none">
-        <TouchableOpacity
-          style={styles.closeButton}
-          onPress={() => router.back()}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="close" size={22} color="#FFFFFF" />
-        </TouchableOpacity>
-
-        <View style={{ flex: 1 }} />
-
-        <View style={{ flexDirection: "row", gap: 8 }}>
+      {/* Top zone: close + level/language chips + guidance */}
+      <View style={[styles.topZone, { paddingTop: topPadding + 8 }]} pointerEvents="box-none">
+        <View style={styles.topRow}>
           <TouchableOpacity
-            style={styles.topIconButton}
-            onPress={() => setLevelPickerOpen(true)}
+            style={styles.closeButton}
+            onPress={() => router.back()}
             activeOpacity={0.8}
           >
-            <Ionicons name="school-outline" size={18} color="#FFFFFF" />
-            <Text style={[styles.topIconText, { fontFamily: "Inter_600SemiBold" }]}>
-              {t(`difficulty.${prefs.difficulty}` as const)}
-            </Text>
+            <Ionicons name="close" size={22} color="#FFFFFF" />
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.topIconButton}
-            onPress={() =>
-              Alert.alert(t("scan.languageLockedTitle"), t("scan.languageLockedBody"))
-            }
-            activeOpacity={0.8}
-          >
-            <Ionicons name="globe-outline" size={18} color="#FFFFFF" />
-            <Text style={[styles.topIconText, { fontFamily: "Inter_600SemiBold" }]}>
-              {selectedLanguage}
+          <View style={styles.topChips}>
+            <TouchableOpacity
+              style={styles.topIconButton}
+              onPress={() => setLevelPickerOpen(true)}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="school-outline" size={18} color="#FFFFFF" />
+              <Text style={[styles.topIconText, { fontFamily: "Inter_600SemiBold" }]}>
+                {t(`difficulty.${prefs.difficulty}` as const)}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.topIconButton}
+              onPress={() => {
+                Haptics.selectionAsync();
+                router.push("/settings");
+              }}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="globe-outline" size={18} color="#FFFFFF" />
+              <Text style={[styles.topIconText, { fontFamily: "Inter_600SemiBold" }]}>
+                {selectedLanguage}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <View pointerEvents="none" style={styles.guidance}>
+          <View style={styles.hintPill}>
+            <Text style={[styles.hintText, { fontFamily: "Inter_500Medium" }]}>
+              {t("scan.hint")}
             </Text>
-          </TouchableOpacity>
+          </View>
+          <Text style={[styles.changeHint, { fontFamily: "Inter_500Medium" }]}>
+            {t("scan.changeHint")}
+          </Text>
         </View>
       </View>
 
@@ -469,15 +482,6 @@ export default function ScanScreen() {
           </Pressable>
         </Pressable>
       </Modal>
-
-      {/* Hint text */}
-      <View pointerEvents="none" style={[styles.hintWrap, { top: hintTop }]}>
-        <View style={styles.hintPill}>
-          <Text style={[styles.hintText, { fontFamily: "Inter_500Medium" }]}>
-            {t("scan.hint")}
-          </Text>
-        </View>
-      </View>
 
       {/* Skip the camera — start a free chat with the tutor */}
       <View
@@ -602,16 +606,31 @@ const styles = StyleSheet.create({
   },
   scanningBadgeText: { color: "#FFFFFF", fontSize: 13 },
 
-  topBar: {
+  topZone: {
     position: "absolute",
     top: 0,
     left: 0,
     right: 0,
-    flexDirection: "row",
-    alignItems: "center",
     paddingHorizontal: 16,
     paddingBottom: 8,
+  },
+  topRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  topChips: {
+    flexDirection: "row",
     gap: 8,
+  },
+  guidance: {
+    marginTop: 16,
+    alignItems: "center",
+    gap: 8,
+  },
+  changeHint: {
+    color: "rgba(255,255,255,0.75)",
+    fontSize: 12,
   },
   topIconButton: {
     flexDirection: "row",
@@ -674,7 +693,7 @@ const styles = StyleSheet.create({
   },
   justChatText: { color: "#FFFFFF", fontSize: 14 },
 
-  hintWrap: { position: "absolute", left: 0, right: 0, alignItems: "center" },
+  dimTop: { backgroundColor: "rgba(10,10,18,0.55)" },
   hintPill: {
     backgroundColor: "rgba(0,0,0,0.55)",
     paddingHorizontal: 16,
