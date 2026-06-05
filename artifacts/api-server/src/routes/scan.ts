@@ -8,7 +8,7 @@ import {
   difficultyInstructions,
   normalizeDifficulty,
 } from "../lib/difficulty";
-import { SUPPORTED_LANGUAGES } from "../lib/languages";
+import { SUPPORTED_LANGUAGES, speakingStyleRules } from "../lib/languages";
 
 const router = Router();
 
@@ -107,6 +107,8 @@ Teaching style:
 - Stay focused on the scanned item and everyday vocabulary related to it.
 - End every reply with one simple question in ${targetLanguage} to keep the conversation going.
 - Be warm and encouraging. Do not use emojis.
+
+${speakingStyleRules(targetLanguage)}
 
 ${difficultyInstructions(difficulty, targetLanguage, nativeLanguage)}`;
 

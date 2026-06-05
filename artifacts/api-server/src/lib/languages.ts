@@ -27,6 +27,21 @@ export function safeLanguage(value: string | undefined | null): string | undefin
   return SUPPORTED_LANGUAGES.has(trimmed) ? trimmed : undefined;
 }
 
+// Shared "speaking-first" guidance interpolated into the tutor system prompts
+// and per-turn reminder. The app is built around spoken practice (mic →
+// transcribe → auto-send → spoken reply), so the tutor should behave like a
+// real conversation partner the learner can talk WITH out loud, not a textbook
+// that writes long passages to be read. Keep replies short, plain, and easy to
+// say and shadow aloud; avoid written-only formatting that breaks when spoken.
+export function speakingStyleRules(targetLanguage: string): string {
+  return `Speaking-first style (this is a spoken conversation, not a writing exercise):
+- Talk like a real person speaking out loud: short, natural, casual ${targetLanguage} the learner can hear, repeat, and say back. Prefer 1-2 short spoken sentences.
+- Use everyday spoken phrasing and contractions a native speaker would actually say in conversation, not formal written prose.
+- Never use written-only formatting: no bullet points, numbered lists, headings, bold, or long parentheses. Keep any translation hint to a few words so it does not interrupt the flow of speech.
+- Keep the back-and-forth going: always finish with one short, easy spoken question so the learner is invited to answer aloud.
+- Now and then, warmly nudge the learner to say their answer out loud (e.g. encourage them to speak rather than type).`;
+}
+
 // Shared correctness guardrails interpolated into vocabulary/phrase generation
 // prompts. Models drift toward the wrong word when languages share a script —
 // e.g. emitting a Chinese-only term (or a Chinese reading) for Japanese because

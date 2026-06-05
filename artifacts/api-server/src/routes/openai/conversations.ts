@@ -9,7 +9,11 @@ import {
   difficultyReminder,
   normalizeDifficulty,
 } from "../../lib/difficulty";
-import { SUPPORTED_LANGUAGES, safeLanguage } from "../../lib/languages";
+import {
+  SUPPORTED_LANGUAGES,
+  safeLanguage,
+  speakingStyleRules,
+} from "../../lib/languages";
 
 const router = Router();
 
@@ -183,7 +187,9 @@ Teaching style:
 - Keep replies SHORT (2-4 sentences max).
 - Talk about everyday topics and useful vocabulary the learner can use right away.
 - End every reply with one simple question in ${targetLanguage} to keep the conversation going.
-- Be warm and encouraging. Do not use emojis.`;
+- Be warm and encouraging. Do not use emojis.
+
+${speakingStyleRules(targetLanguage)}`;
 
   const triggerMessage = `Let's have a free conversation in ${targetLanguage} to practice. Please start.`;
 
@@ -485,7 +491,7 @@ router.post("/openai/conversations/:id/messages", async (req, res) => {
   if (targetLanguage) {
     chatMessages.push({
       role: "system",
-      content: `Reminder: reply in ${targetLanguage}, not English (unless the learner's language is English). Keep it short (2-4 sentences), add a brief parenthetical translation for any new word, gently correct mistakes, and end with one simple question in ${targetLanguage}. ${difficultyReminder(difficulty, targetLanguage)}`,
+      content: `Reminder: reply in ${targetLanguage}, not English (unless the learner's language is English). This is a SPOKEN conversation — talk like a real person out loud in short, natural ${targetLanguage} (1-2 sentences) that's easy to hear and say back. No lists, headings, or long parentheses; keep any translation hint to a few words. Gently correct mistakes and end with one short, easy question in ${targetLanguage} so the learner can answer aloud. ${difficultyReminder(difficulty, targetLanguage)}`,
     });
   }
 
