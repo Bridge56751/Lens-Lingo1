@@ -61,15 +61,29 @@ model.
 per-session (lost on reload) and per-device, so the same small fixed word set (bank,
 flashcards, alphabet) was re-synthesized by OpenAI on every cold start — measured
 963-2012ms per `/api/openai/tts` call, and it sent `Cache-Control: no-store`. The
-route now keeps its own in-memory LRU (`Map<string,Buffer>`, key `${voice}:${input}`,
-cap 400) plus in-flight de-dup (`Map<string,Promise<Buffer>>`) so concurrent first-time
+route now keeps its own in-memory LRU (`Map<string,Buffer>`, key now
+`${voice}:${lang ?? "auto"}:${input}` — see the language section below, cap 400) plus
+in-flight de-dup (`Map<string,Promise<Buffer>>`) so concurrent first-time
 misses for the same clip collapse to ONE synth. Responses set `Cache-Control: private,
 max-age=86400` and an `X-TTS-Cache: hit|miss` header. Measured: miss ~1.1s, hit ~7ms.
 **Why:** HTTP caching can't help (endpoint is POST — browsers don't cache POST), so the
-server cache + the client cache are complementary, not redundant. The client always
-sends only `{text}` so voice defaults to "nova" → one canonical key per word → high hit
-rate. Flashcard screens (`vocab-study.tsx`) prefetch the next 3 cards to warm both caches
+server cache + the client cache are complementary, not redundant. The client sends
+`{text, language}` (voice still defaults to "nova") → one canonical key per word+language
+→ high hit rate. Flashcard screens (`vocab-study.tsx`) prefetch the next 3 cards to warm both caches
 before the user advances.
+
+## Pronunciation must be language-anchored or shared scripts read wrong
+
+**Symptom:** Japanese words "sounded Chinese." `gpt-4o-mini-tts` guesses pronunciation
+from the script, and Japanese kanji ≈ Chinese hanzi (and accented Latin overlaps), so it
+defaults to the wrong accent.
+
+**Fix:** the client `speakWord`/`prefetchSpeech` already know the `Language`, so thread it
+to `/api/openai/tts` in the body; the route validates it against the allowlist and passes an
+`instructions` string telling the model to read as a native speaker of that language. **The
+language MUST be part of both the client and server cache keys** (`${voice}:${lang}:${input}`
+client-side `clipKey(text,language)`), or the same characters reuse a clip rendered with
+another language's accent. Without language the server falls back to `auto` (no instructions).
 
 **There is no reliable model/format trick for COLD (uncached) latency — don't re-chase it.**
 Benchmarked OpenAI TTS direct (the server uses the user's `OPENAI_API_KEY`, so calls already

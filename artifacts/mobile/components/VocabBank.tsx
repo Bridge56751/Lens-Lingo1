@@ -124,7 +124,7 @@ export default function VocabBank() {
         },
       });
       // Warm the audio so the first tap on the study screen is instant.
-      prefetchSpeech(w.word);
+      prefetchSpeech(w.word, target);
     }
   };
 

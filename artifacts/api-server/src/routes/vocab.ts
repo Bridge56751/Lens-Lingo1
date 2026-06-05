@@ -3,6 +3,7 @@ import { and, asc, eq } from "drizzle-orm";
 import { db } from "@workspace/db";
 import { vocabBank, vocabSelections } from "@workspace/db";
 import { openai } from "@workspace/integrations-openai-ai-server";
+import { accuracyRules } from "../lib/languages";
 
 const router = Router();
 
@@ -55,7 +56,9 @@ Provide common, genuinely useful single words or short phrases at four difficult
 - advanced: 12 richer, less common words
 - expert: 12 sophisticated, nuanced words a near-fluent speaker would learn
 
-For each entry give the word written in ${targetLanguage} and its translation in ${nativeLanguage}.
+${accuracyRules(targetLanguage, nativeLanguage)}
+
+For each entry give the word written in ${targetLanguage} and its accurate translation in ${nativeLanguage}.
 Respond with ONLY valid JSON in exactly this shape:
 {"beginner":[{"word":"...","translation":"..."}],"intermediate":[{"word":"...","translation":"..."}],"advanced":[{"word":"...","translation":"..."}],"expert":[{"word":"...","translation":"..."}]}`;
 
@@ -277,7 +280,7 @@ router.post("/vocab/example", async (req, res) => {
       messages: [
         {
           role: "user",
-          content: `Write one short, natural example sentence in ${targetLanguage} that uses the word "${word}". Keep it simple enough for a learner. Respond with ONLY valid JSON: {"sentence":"the sentence in ${targetLanguage}","translation":"its translation in ${nativeLanguage}"}`,
+          content: `Write one short, natural example sentence in ${targetLanguage} that uses the word "${word}". Keep it simple enough for a learner. The sentence must be correct, idiomatic, natively-written ${targetLanguage} in ${targetLanguage}'s own correct script — do NOT substitute words, characters, or readings from another language even where scripts overlap (e.g. never read or write it as Chinese for Japanese). Respond with ONLY valid JSON: {"sentence":"the sentence in ${targetLanguage}","translation":"its accurate translation in ${nativeLanguage}"}`,
         },
       ],
     });

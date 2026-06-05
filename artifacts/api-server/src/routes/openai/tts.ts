@@ -22,6 +22,33 @@ const VOICES = new Set([
 // Cap input so a runaway payload can't generate minutes of audio.
 const MAX_TTS_CHARS = 1200;
 
+// Languages we'll steer pronunciation for. Validated before being interpolated
+// into the TTS instructions so a client can't inject arbitrary instruction text.
+const SUPPORTED_LANGUAGES = new Set([
+  "English",
+  "Spanish",
+  "French",
+  "German",
+  "Italian",
+  "Portuguese",
+  "Japanese",
+  "Chinese",
+  "Korean",
+  "Arabic",
+  "Russian",
+  "Hindi",
+  "Dutch",
+]);
+
+// Without an explicit language the model guesses pronunciation from the script.
+// Many languages share characters (Japanese kanji vs Chinese hanzi, accented
+// Latin letters), so it can read Japanese with a Chinese accent, etc. Telling it
+// the language up front keeps every clip in the correct accent.
+function pronunciationInstructions(language: string | undefined): string | undefined {
+  if (!language || !SUPPORTED_LANGUAGES.has(language)) return undefined;
+  return `Read the text as a fluent native ${language} speaker. Use natural, correct ${language} pronunciation, rhythm, and intonation throughout. The text is ${language} — never read it with the accent or pronunciation of any other language, even where characters look similar to those used in other languages.`;
+}
+
 // Synthesis is the slow part (~1-2s per call to OpenAI). The app replays a small,
 // fixed set of words/phrases (word bank, flashcards, alphabet) over and over, so
 // we cache each rendered MP3 in memory keyed by voice+text. Repeat requests —
@@ -63,7 +90,12 @@ function sendAudio(res: import("express").Response, buffer: Buffer, cacheState: 
   res.send(buffer);
 }
 
-function synthesize(voice: string, input: string, cacheKey: string): Promise<Buffer> {
+function synthesize(
+  voice: string,
+  input: string,
+  cacheKey: string,
+  instructions: string | undefined,
+): Promise<Buffer> {
   const existing = inflight.get(cacheKey);
   if (existing) return existing;
 
@@ -74,6 +106,7 @@ function synthesize(voice: string, input: string, cacheKey: string): Promise<Buf
         voice,
         input,
         response_format: "mp3",
+        ...(instructions ? { instructions } : {}),
       });
       const buffer = Buffer.from(await speech.arrayBuffer());
       cacheSet(cacheKey, buffer);
@@ -91,7 +124,11 @@ function synthesize(voice: string, input: string, cacheKey: string): Promise<Buf
 // Used by the app's "tap to hear" buttons and chat auto-play. Far smoother than
 // the on-device system voices, which sound robotic.
 router.post("/openai/tts", async (req, res) => {
-  const { text, voice } = req.body as { text?: unknown; voice?: unknown };
+  const { text, voice, language } = req.body as {
+    text?: unknown;
+    voice?: unknown;
+    language?: unknown;
+  };
 
   if (typeof text !== "string" || !text.trim()) {
     res.status(400).json({ error: "text is required" });
@@ -100,7 +137,12 @@ router.post("/openai/tts", async (req, res) => {
 
   const input = text.trim().slice(0, MAX_TTS_CHARS);
   const chosenVoice = typeof voice === "string" && VOICES.has(voice) ? voice : "nova";
-  const cacheKey = `${chosenVoice}:${input}`;
+  const lang =
+    typeof language === "string" && SUPPORTED_LANGUAGES.has(language) ? language : undefined;
+  const instructions = pronunciationInstructions(lang);
+  // Language is part of the key: the same characters must not reuse a clip
+  // rendered with another language's accent (e.g. shared Japanese/Chinese kanji).
+  const cacheKey = `${chosenVoice}:${lang ?? "auto"}:${input}`;
 
   const cached = cacheGet(cacheKey);
   if (cached) {
@@ -109,7 +151,7 @@ router.post("/openai/tts", async (req, res) => {
   }
 
   try {
-    const buffer = await synthesize(chosenVoice, input, cacheKey);
+    const buffer = await synthesize(chosenVoice, input, cacheKey, instructions);
     sendAudio(res, buffer, "miss");
   } catch (err) {
     req.log.error({ err }, "TTS failed");

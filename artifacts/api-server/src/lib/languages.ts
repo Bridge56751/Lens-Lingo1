@@ -26,3 +26,17 @@ export function safeLanguage(value: string | undefined | null): string | undefin
   const trimmed = (value ?? "").trim();
   return SUPPORTED_LANGUAGES.has(trimmed) ? trimmed : undefined;
 }
+
+// Shared correctness guardrails interpolated into vocabulary/phrase generation
+// prompts. Models drift toward the wrong word when languages share a script —
+// e.g. emitting a Chinese-only term (or a Chinese reading) for Japanese because
+// both use Han characters. These rules force the natural, native form of the
+// *target* language and an accurate translation.
+export function accuracyRules(targetLanguage: string, nativeLanguage: string): string {
+  return `Accuracy is critical — this is study material, so every entry must be correct:
+- Use the exact word a native ${targetLanguage} speaker genuinely uses in everyday life, spelled and written correctly in standard modern ${targetLanguage}.
+- Write each word in ${targetLanguage}'s own correct script and orthography (including any required diacritics, accents, or characters). Do NOT substitute a word, character, spelling, or reading from another language — even when ${targetLanguage} shares a script or characters with that language. The entry must be ${targetLanguage}, never a look-alike from a different language.
+- Give the genuine, idiomatic ${targetLanguage} word for the meaning, not a literal character-by-character borrowing from ${nativeLanguage} or any other language.
+- Make the ${nativeLanguage} translation precise and unambiguous for the intended meaning.
+- If you are unsure a word is correct natural ${targetLanguage}, replace it with a common word you are certain about. Never guess or invent words.`;
+}

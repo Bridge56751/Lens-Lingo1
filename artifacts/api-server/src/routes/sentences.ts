@@ -3,6 +3,7 @@ import { and, asc, eq } from "drizzle-orm";
 import { db } from "@workspace/db";
 import { sentenceBank } from "@workspace/db";
 import { openai } from "@workspace/integrations-openai-ai-server";
+import { accuracyRules } from "../lib/languages";
 
 const router = Router();
 
@@ -76,7 +77,9 @@ These are short, practical full sentences a beginner traveller would actually sa
 Provide phrases in these categories:
 ${categoryLines}
 
-For each entry give the phrase written in ${targetLanguage} and its translation in ${nativeLanguage}.
+${accuracyRules(targetLanguage, nativeLanguage)}
+
+For each entry give the phrase written in ${targetLanguage} and its accurate translation in ${nativeLanguage}.
 Respond with ONLY valid JSON in exactly this shape (one key per category):
 {"greetings":[{"phrase":"...","translation":"..."}],"basics":[...],"directions":[...],"dining":[...],"shopping":[...],"emergency":[...]}`;
 

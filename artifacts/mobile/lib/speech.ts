@@ -110,34 +110,48 @@ function store(key: string, val: CacheValue): void {
   }
 }
 
+/**
+ * Cache/queue key for a clip. Language is part of the key because the same text
+ * (e.g. kanji shared between Japanese and Chinese) must not reuse a clip
+ * rendered with another language's accent.
+ */
+function clipKey(text: string, language?: Language): string {
+  return language ? `${language}\u0001${text}` : text;
+}
+
 /** Fetch (or reuse cached) synthesized audio for `text`. Never throws. */
-async function fetchAudio(text: string, priority: Priority): Promise<CacheValue | null> {
-  const cached = audioCache.get(text);
+async function fetchAudio(
+  text: string,
+  priority: Priority,
+  language?: Language,
+): Promise<CacheValue | null> {
+  const key = clipKey(text, language);
+  const cached = audioCache.get(key);
   if (cached !== undefined) {
     if (typeof cached === "string") {
       // Native: make sure the cached temp file still exists.
       try {
         if (new File(cached).exists) {
-          touch(text, cached);
+          touch(key, cached);
           return cached;
         }
       } catch {
         // fall through to re-fetch
       }
-      audioCache.delete(text);
+      audioCache.delete(key);
     } else {
-      touch(text, cached);
+      touch(key, cached);
       return cached;
     }
   }
 
   // A real tap should never queue behind prefetch traffic or stale taps.
   if (priority === "tap") {
-    cancelPrefetches(text);
-    cancelTaps(text);
+    cancelPrefetches(key);
+    cancelTaps(key);
   }
 
-  const pending = inflight.get(text);
+  const pending = inflight.get(key);
   if (pending) {
     if (priority === "tap") pending.priority = "tap";
     return pending.promise;
@@ -153,19 +167,19 @@ async function fetchAudio(text: string, priority: Priority): Promise<CacheValue 
           "Content-Type": "application/json",
           ...(deviceId ? { "x-device-id": deviceId } : {}),
         },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify(language ? { text, language } : { text }),
         signal: controller.signal,
       });
       if (!res.ok) return null;
 
       if (Platform.OS === "web") {
         const blob = await res.blob();
-        store(text, blob);
+        store(key, blob);
         return blob;
       }
 
       const bytes = new Uint8Array(await res.arrayBuffer());
-      const file = new File(Paths.cache, `tts-${hashKey(text)}.mp3`);
+      const file = new File(Paths.cache, `tts-${hashKey(key)}.mp3`);
       try {
         file.write(bytes);
       } catch {
@@ -176,17 +190,17 @@ async function fetchAudio(text: string, priority: Priority): Promise<CacheValue 
           return null;
         }
       }
-      store(text, file.uri);
+      store(key, file.uri);
       return file.uri;
     } catch {
       // Includes AbortError when a tap cancels a prefetch.
       return null;
     } finally {
-      inflight.delete(text);
+      inflight.delete(key);
     }
   })();
 
-  inflight.set(text, { promise: job, controller, priority });
+  inflight.set(key, { promise: job, controller, priority });
   return job;
 }
 
@@ -344,7 +358,7 @@ export function speakWord(word: string, language: Language): void {
 
   void (async () => {
     try {
-      const audio = await fetchAudio(text, "tap");
+      const audio = await fetchAudio(text, "tap", language);
       if (token !== playToken) return; // superseded by a newer tap
       if (!audio) {
         speakDevice(text, language);
@@ -369,7 +383,8 @@ export function speakWord(word: string, language: Language): void {
 // debounced (so rapid letter/page switches collapse) and run one at a time, so
 // a real tap always has a clear lane.
 const PREFETCH_DEBOUNCE_MS = 350;
-let prefetchQueue: string[] = [];
+type PrefetchItem = { text: string; language?: Language };
+let prefetchQueue: PrefetchItem[] = [];
 let prefetchTimer: ReturnType<typeof setTimeout> | null = null;
 let prefetchRunning = false;
 
@@ -379,9 +394,9 @@ async function drainPrefetchQueue(): Promise<void> {
   try {
     // Pause while a tap is running so prefetch never contends for the server.
     while (prefetchQueue.length > 0 && activeTaps === 0) {
-      const text = prefetchQueue.shift();
-      if (!text || audioCache.has(text)) continue;
-      await fetchAudio(text, "prefetch");
+      const item = prefetchQueue.shift();
+      if (!item || audioCache.has(clipKey(item.text, item.language))) continue;
+      await fetchAudio(item.text, "prefetch", item.language);
     }
   } finally {
     prefetchRunning = false;
@@ -400,10 +415,12 @@ function scheduleDrain(): void {
  * Warm the cache for `text` without playing it, so a later tap is instant.
  * Debounced and serialized so rapid navigation never floods the server.
  */
-export function prefetchSpeech(word: string, _language?: Language): void {
+export function prefetchSpeech(word: string, language?: Language): void {
   const text = word?.trim();
-  if (!text || audioCache.has(text)) return;
-  if (!prefetchQueue.includes(text)) prefetchQueue.push(text);
+  if (!text || audioCache.has(clipKey(text, language))) return;
+  if (!prefetchQueue.some((i) => i.text === text && i.language === language)) {
+    prefetchQueue.push({ text, language });
+  }
   scheduleDrain();
 }
 
