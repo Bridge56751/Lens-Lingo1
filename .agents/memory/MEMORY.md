@@ -4,4 +4,4 @@
 - [Day streak](day-streak.md) — derived from conversation createdAt dates (no DB column); consecutive-days-ending-today/yesterday semantics; celebrate animation once per new calendar day.
 - [Practice flashcards](practice-flashcards.md) — don't rebuild card deck on React Query refetch (resets progress); shared TTS lives in lib/speech.ts.
 - [SSE streaming contract](sse-streaming-contract.md) — chat stream emits {content}/{done}/{error}; client MUST handle {error} or server failures look like a silent no-reply.
-- [Web TTS reliability](web-tts.md) — expo-speech is silent on web; route all speech through shared speakWord/stopSpeaking (SpeechSynthesis + voice match), never call Speech.* in screens.
+- [TTS architecture](web-tts.md) — natural voice via OpenAI POST /api/openai/tts (gpt-4o-mini-tts) played by shared speakWord, device synth fallback; never call expo-speech/synth in screens.

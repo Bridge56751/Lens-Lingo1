@@ -1,31 +1,30 @@
 ---
-name: Web text-to-speech reliability
-description: Why expo-speech is silent on web and how the shared speech helper works around it.
+name: Text-to-speech architecture
+description: Why TTS is server-synthesized (OpenAI) with on-device fallback, and the non-obvious platform constraints.
 ---
 
-# Web TTS goes through SpeechSynthesis, not expo-speech
+# TTS is OpenAI-synthesized, with on-device synth only as fallback
 
-`expo-speech`'s `Speech.speak` is unreliable on **web**: it frequently makes no
-sound when (a) no installed voice matches the requested BCP-47 locale, or (b)
-voices haven't finished loading yet — `speechSynthesis.getVoices()` returns an
-empty array on the first call and only populates after the `voiceschanged` event.
+**Decision:** speech is synthesized server-side via OpenAI (`/api/openai/tts`),
+not the on-device voices. The client helper plays the returned MP3 and only falls
+back to the system synth when the network call fails.
 
-**Fix (centralized in `lib/speech.ts`):** on `Platform.OS === "web"`, drive
-`window.speechSynthesis` directly — build an utterance, pick the best matching
-voice (exact locale → language-prefix → first available), and if `getVoices()`
-is still empty, speak on the `voiceschanged` event with a `setTimeout` fallback
-(guarded by a `spoken` flag so it never double-speaks). Native still uses
-`Speech.speak`.
+**Why:** on-device voices sound robotic, and `expo-speech` is additionally silent
+on web (no matching voice / voices not loaded yet). Users complained the voice was
+robotic and (earlier) silent on web. All speech must go through the shared
+`speakWord` / `stopSpeaking` in `lib/speech.ts` — calling `expo-speech` or
+`speechSynthesis` directly in a screen re-introduces both problems.
 
-**Stopping:** `Speech.stop()` does NOT cancel web synth utterances. Use the
-shared `stopSpeaking()` which calls `speechSynthesis.cancel()` on web.
-
-**Rule:** all screens (scan, conversation, practice, etc.) must call the shared
-`speakWord` / `stopSpeaking` helpers — do not call `expo-speech` directly in a
-screen, or web audio silently breaks again.
-
-**Why:** users reported "it won't speak to me" on scan + conversation; root cause
-was screens calling bare `Speech.speak`, which is a no-op on web for non-English
-locales / cold voice lists. Note TTS is also genuinely unreliable inside the
-Replit web-preview iframe regardless — real verification must happen on a device
-via Expo Go.
+**Non-obvious constraints (not derivable from reading the happy path):**
+- The standard `openai.audio.speech.create` (gpt-4o-mini-tts) DOES work through the
+  Replit AI-Integrations proxy — verified. You do NOT need the `gpt-audio`
+  chat-completions workaround in `integrations-openai-ai-server/audio`.
+- Native playback is silent on a muted iPhone unless
+  `setAudioModeAsync({ playsInSilentMode: true })` is set before playing.
+- Native temp MP3 files (written to cache for the player) leak unless deleted
+  deterministically — on stop, on `didJustFinish`, and on every stale/abandoned
+  path. A monotonic play-token discards stale playback after rapid re-taps.
+- Web `audio.play()` can reject under autoplay/user-gesture policy; revoke the
+  object URL on rejection or it leaks.
+- Audio is unreliable in the Replit web-preview iframe regardless — verify on a
+  device via Expo Go.

@@ -13,29 +13,13 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import * as Speech from "expo-speech";
 import { useColors } from "@/hooks/useColors";
 import { usePreferences } from "@/hooks/usePreferences";
 import { useT } from "@/hooks/useT";
+import { speakWord } from "@/lib/speech";
 import { ALPHABETS, RTL_LANGUAGES } from "@/constants/alphabets";
 
 const NON_LATIN_LANGS = new Set(["Japanese", "Chinese", "Korean", "Arabic", "Russian", "Hindi"]);
-
-const SPEECH_LOCALES: Record<string, string> = {
-  English: "en-US",
-  Spanish: "es-ES",
-  French: "fr-FR",
-  German: "de-DE",
-  Italian: "it-IT",
-  Portuguese: "pt-PT",
-  Japanese: "ja-JP",
-  Chinese: "zh-CN",
-  Korean: "ko-KR",
-  Arabic: "ar-SA",
-  Russian: "ru-RU",
-  Hindi: "hi-IN",
-  Dutch: "nl-NL",
-};
 
 export default function AlphabetScreen() {
   const t = useT();
@@ -79,40 +63,7 @@ export default function AlphabetScreen() {
       Animated.timing(target, { toValue: 1.08, duration: 120, useNativeDriver: true }),
       Animated.timing(target, { toValue: 1, duration: 180, useNativeDriver: true }),
     ]).start();
-    const locale = SPEECH_LOCALES[prefs.targetLanguage] ?? "en-US";
-    if (Platform.OS === "web") {
-      try {
-        const synth = (globalThis as { speechSynthesis?: SpeechSynthesis }).speechSynthesis;
-        const SU = (globalThis as { SpeechSynthesisUtterance?: typeof SpeechSynthesisUtterance })
-          .SpeechSynthesisUtterance;
-        if (!synth || !SU) {
-          console.warn("[speak] SpeechSynthesis not available in this browser");
-          return;
-        }
-        synth.cancel();
-        const utter = new SU(text);
-        utter.lang = locale;
-        utter.rate = 0.85;
-        const voices = synth.getVoices();
-        const langPrefix = locale.split("-")[0];
-        const match =
-          voices.find((v) => v.lang === locale) ||
-          voices.find((v) => v.lang.toLowerCase().startsWith(langPrefix)) ||
-          voices[0];
-        if (match) utter.voice = match;
-        utter.onerror = (e) => console.warn("[speak] error", e);
-        synth.speak(utter);
-      } catch (err) {
-        console.warn("[speak] failed", err);
-      }
-      return;
-    }
-    try {
-      Speech.stop();
-      Speech.speak(text, { language: locale, rate: 0.85 });
-    } catch {
-      // ignore — Speech is unavailable on some web browsers
-    }
+    speakWord(text, prefs.targetLanguage);
   };
 
   const animateTo = (nextIndex: number) => {
