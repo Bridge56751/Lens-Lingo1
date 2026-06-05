@@ -274,9 +274,6 @@ export default function HomeScreen() {
                 {t("home.greeting", { name: prefs.displayName })}
               </Text>
             </View>
-            <Text style={[styles.greetingSub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-              {t("home.subtitleLine1")}{"\n"}{t("home.subtitleLine2")}
-            </Text>
           </View>
           <View style={styles.greetingRight}>
             <View style={[styles.streakPill, { backgroundColor: "#FFF1E6" }]}>
@@ -475,7 +472,6 @@ const styles = StyleSheet.create({
 
   greetingRow: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
   greeting: { fontSize: 24, letterSpacing: -0.4 },
-  greetingSub: { fontSize: 13, marginTop: 4, lineHeight: 18 },
   greetingRight: { flexDirection: "row", alignItems: "center", gap: 10 },
   streakPill: {
     flexDirection: "row",
