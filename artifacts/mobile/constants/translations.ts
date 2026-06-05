@@ -151,6 +151,8 @@ export type TKey =
   | "scan.history"
   | "scan.gallery"
   | "scan.chooseLanguage"
+  | "scan.languageLockedTitle"
+  | "scan.languageLockedBody"
   | "scan.hint"
   | "conv.placeholder"
   | "conv.title"
@@ -420,6 +422,8 @@ const en: Record<TKey, string> = {
   "scan.history": "History",
   "scan.gallery": "Gallery",
   "scan.chooseLanguage": "Choose a language",
+  "scan.languageLockedTitle": "Switch language in Settings",
+  "scan.languageLockedBody": "To change the language you're learning, head to Settings.",
   "scan.hint": "Point your camera at any item to scan",
   "conv.placeholder": "Tap to speak or type\u2026",
   "conv.title": "Conversation",

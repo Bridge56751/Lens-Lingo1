@@ -9,8 +9,6 @@ import {
   ScrollView,
   Platform,
   Alert,
-  Modal,
-  Pressable,
   useWindowDimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -28,7 +26,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColors";
-import { usePreferences, LANGUAGES, type Language } from "@/hooks/usePreferences";
+import { usePreferences } from "@/hooks/usePreferences";
 import { useT } from "@/hooks/useT";
 import { getDeviceIdSync } from "@/lib/device";
 import { speakWord, stopSpeaking, prefetchSpeech } from "@/lib/speech";
@@ -50,9 +48,8 @@ export default function ScanScreen() {
   const insets = useSafeAreaInsets();
   const cameraRef = useRef<CameraView>(null);
   const [permission, requestPermission] = useCameraPermissions();
-  const { prefs, update } = usePreferences();
+  const { prefs } = usePreferences();
   const selectedLanguage = prefs.targetLanguage;
-  const [showLanguagePicker, setShowLanguagePicker] = useState(false);
   const [scannedImage, setScannedImage] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState<{
@@ -363,14 +360,15 @@ export default function ScanScreen() {
 
         <TouchableOpacity
           style={styles.topIconButton}
-          onPress={() => setShowLanguagePicker(true)}
+          onPress={() =>
+            Alert.alert(t("scan.languageLockedTitle"), t("scan.languageLockedBody"))
+          }
           activeOpacity={0.8}
         >
           <Ionicons name="globe-outline" size={18} color="#FFFFFF" />
           <Text style={[styles.topIconText, { fontFamily: "Inter_600SemiBold" }]}>
             {selectedLanguage}
           </Text>
-          <Ionicons name="chevron-down" size={16} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
 
@@ -429,58 +427,6 @@ export default function ScanScreen() {
           </Text>
         </TouchableOpacity>
       </View>
-
-      {/* Language picker modal */}
-      <Modal
-        visible={showLanguagePicker}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowLanguagePicker(false)}
-      >
-        <Pressable style={styles.modalBackdrop} onPress={() => setShowLanguagePicker(false)}>
-          <Pressable
-            style={[styles.modalCard, { backgroundColor: colors.card }]}
-            onPress={(e) => e.stopPropagation()}
-          >
-            <Text style={[styles.modalTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-              {t("scan.chooseLanguage")}
-            </Text>
-            <ScrollView style={{ maxHeight: 380 }}>
-              {LANGUAGES.map((lang) => {
-                const active = lang === selectedLanguage;
-                return (
-                  <TouchableOpacity
-                    key={lang}
-                    style={[
-                      styles.langOption,
-                      active && { backgroundColor: colors.primarySoft },
-                    ]}
-                    onPress={() => {
-                      update("targetLanguage", lang as Language);
-                      setShowLanguagePicker(false);
-                      Haptics.selectionAsync();
-                    }}
-                    activeOpacity={0.7}
-                  >
-                    <Text
-                      style={[
-                        styles.langOptionText,
-                        {
-                          color: active ? colors.primary : colors.foreground,
-                          fontFamily: active ? "Inter_600SemiBold" : "Inter_400Regular",
-                        },
-                      ]}
-                    >
-                      {lang}
-                    </Text>
-                    {active && <Ionicons name="checkmark" size={20} color={colors.primary} />}
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-          </Pressable>
-        </Pressable>
-      </Modal>
     </View>
   );
 }
@@ -659,29 +605,4 @@ const styles = StyleSheet.create({
   primaryButtonText: { color: "#FFFFFF", fontSize: 16 },
   linkButton: { alignItems: "center", paddingVertical: 8 },
   linkButtonText: { fontSize: 14 },
-
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 24,
-  },
-  modalCard: {
-    width: "100%",
-    maxWidth: 360,
-    borderRadius: 20,
-    padding: 16,
-    gap: 8,
-  },
-  modalTitle: { fontSize: 18, paddingHorizontal: 8, paddingTop: 4, paddingBottom: 8 },
-  langOption: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 14,
-    paddingVertical: 13,
-    borderRadius: 12,
-  },
-  langOptionText: { fontSize: 15 },
 });
