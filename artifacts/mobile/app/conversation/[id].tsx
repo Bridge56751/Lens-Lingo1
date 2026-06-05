@@ -269,7 +269,12 @@ export default function ConversationScreen() {
   const [streamingContent, setStreamingContent] = useState("");
 
   const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
-  const [isRecording, setIsRecording] = useState(false);
+  const [isRecording, setIsRecordingState] = useState(false);
+  const isRecordingRef = useRef(false);
+  const setIsRecording = useCallback((value: boolean) => {
+    isRecordingRef.current = value;
+    setIsRecordingState(value);
+  }, []);
   const [isTranscribing, setIsTranscribing] = useState(false);
 
   const [gradeModalOpen, setGradeModalOpen] = useState(false);
@@ -279,12 +284,26 @@ export default function ConversationScreen() {
 
   useEffect(() => {
     return () => {
-      if (audioRecorder.isRecording) {
-        audioRecorder.stop().catch(() => {});
+      // Best-effort teardown on unmount. expo-audio can release the recorder's
+      // native shared object during unmount; touching ANY of its
+      // properties/methods afterward throws NativeSharedObjectNotFoundException
+      // synchronously, which surfaces as an uncaught redbox on the device. Never
+      // read the native `audioRecorder.isRecording` getter here (use our ref),
+      // and wrap every native call in try/catch.
+      try {
+        if (isRecordingRef.current) {
+          audioRecorder.stop().catch(() => {});
+        }
+      } catch {
+        // recorder already released — nothing to stop
       }
       setAudioModeAsync({ allowsRecording: false }).catch(() => {});
     };
-  }, [audioRecorder]);
+    // Intentionally run only on true unmount. `audioRecorder` is stable from
+    // useAudioRecorder; depending on it risks tearing down a live recorder
+    // mid-session if its identity ever changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Stop tutor playback when the screen loses focus (blur) or unmounts — a
   // stack screen can blur without unmounting, so this covers both.
