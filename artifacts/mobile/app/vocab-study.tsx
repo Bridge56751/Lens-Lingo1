@@ -39,6 +39,17 @@ import {
   EmptyTranscriptError,
 } from "@/lib/audio";
 
+// Target languages whose scripts a default Latin/QWERTY keyboard can't type, so
+// the learner needs to add that keyboard to their device (or use the mic).
+const NON_LATIN_LANGS = new Set([
+  "Japanese",
+  "Chinese",
+  "Korean",
+  "Arabic",
+  "Russian",
+  "Hindi",
+]);
+
 export default function VocabStudyScreen() {
   const t = useT();
   const colors = useColors();
@@ -430,6 +441,14 @@ export default function VocabStudyScreen() {
           <Text style={[styles.blockLabel, { color: colors.mutedForeground, fontFamily: "Inter_600SemiBold" }]}>
             {t("vocab.yourTurn")}
           </Text>
+          {NON_LATIN_LANGS.has(target) && (
+            <View style={styles.scriptHint}>
+              <Ionicons name="information-circle-outline" size={15} color={colors.mutedForeground} />
+              <Text style={[styles.scriptHintText, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                {t("vocab.scriptHint", { lang: target })}
+              </Text>
+            </View>
+          )}
           <TextInput
             style={[
               styles.input,
@@ -643,6 +662,9 @@ const styles = StyleSheet.create({
   },
   micBtnText: { fontSize: 14 },
   recDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: "#DC2626" },
+
+  scriptHint: { flexDirection: "row", alignItems: "flex-start", gap: 6, marginTop: -2 },
+  scriptHintText: { flex: 1, fontSize: 12, lineHeight: 17 },
 
   feedback: { borderRadius: 14, padding: 14, gap: 8 },
   feedbackHead: { flexDirection: "row", alignItems: "center", gap: 6 },
