@@ -390,7 +390,7 @@ export default function ScanScreen() {
       >
         <TouchableOpacity
           style={styles.sideButton}
-          onPress={() => router.push("/history")}
+          onPress={() => router.dismissTo("/(tabs)/history")}
           activeOpacity={0.7}
         >
           <Ionicons name="time-outline" size={22} color="#FFFFFF" />

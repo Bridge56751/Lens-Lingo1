@@ -511,7 +511,7 @@ export default function HomeScreen() {
             iconBg={colors.primarySoft}
             title={t("home.aiChats")}
             subtitle={t("home.sessions", { n: stats.totalConvos })}
-            onPress={() => router.push("/(tabs)/history")}
+            onPress={() => router.navigate("/(tabs)/history")}
           />
           <StatTile
             icon="book"
@@ -616,7 +616,7 @@ export default function HomeScreen() {
             {t("home.continueConvos")}
           </Text>
           {list.length > 0 && (
-            <TouchableOpacity onPress={() => router.push("/history")} activeOpacity={0.7}>
+            <TouchableOpacity onPress={() => router.navigate("/(tabs)/history")} activeOpacity={0.7}>
               <Text style={[styles.seeAll, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
                 See all
               </Text>
