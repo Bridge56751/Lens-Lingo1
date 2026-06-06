@@ -612,17 +612,7 @@ export default function ConversationScreen() {
             {language ? ` • ${language}` : ""}
           </Text>
         </View>
-        <TouchableOpacity
-          style={styles.backButton}
-          activeOpacity={0.7}
-          onPress={() => setGradeModalOpen(true)}
-        >
-          <Ionicons
-            name={grade ? "ribbon" : "ribbon-outline"}
-            size={22}
-            color={grade ? colors.primary : colors.foreground}
-          />
-        </TouchableOpacity>
+        <View style={styles.backButton} />
       </View>
 
       <KeyboardAvoidingView
@@ -670,6 +660,20 @@ export default function ConversationScreen() {
             </Text>
           </View>
         ) : null}
+
+        <TouchableOpacity
+          style={[
+            styles.gradeBarButton,
+            { backgroundColor: colors.primarySoft, borderColor: colors.primary },
+          ]}
+          onPress={() => setGradeModalOpen(true)}
+          activeOpacity={0.85}
+        >
+          <Ionicons name={grade ? "ribbon" : "ribbon-outline"} size={18} color={colors.primary} />
+          <Text style={[styles.gradeBarText, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
+            {t("conv.grade")}
+          </Text>
+        </TouchableOpacity>
 
         <View
           style={[
@@ -995,6 +999,18 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   recordingText: { fontSize: 13 },
+  gradeBarButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    marginHorizontal: 14,
+    marginBottom: 2,
+    paddingVertical: 13,
+    borderRadius: 26,
+    borderWidth: 1,
+  },
+  gradeBarText: { fontSize: 15 },
   inputBar: {
     flexDirection: "row",
     alignItems: "flex-end",

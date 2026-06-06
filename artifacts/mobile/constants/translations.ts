@@ -516,7 +516,7 @@ const en: Record<TKey, string> = {
   "conv.listening": "Listening\u2026",
   "conv.micTooLongTitle": "Recording too long",
   "conv.micTooLongBody": "That recording is too long. Please try a shorter message.",
-  "conv.grade": "Grade chat",
+  "conv.grade": "Grade conversation",
   "conv.grading": "Grading\u2026",
   "conv.gradeTitle": "Your score",
   "conv.gradePromptTitle": "Grade your conversation",
