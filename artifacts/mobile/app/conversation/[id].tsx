@@ -36,7 +36,7 @@ import { useColors } from "@/hooks/useColors";
 import { useT } from "@/hooks/useT";
 import { usePreferences, type Language } from "@/hooks/usePreferences";
 import { getDeviceIdSync } from "@/lib/device";
-import { speakWord, stopSpeaking } from "@/lib/speech";
+import { speakWord, stopSpeaking, prefetchSpeech } from "@/lib/speech";
 import { fetch as expoFetch } from "expo/fetch";
 
 type Message = {
@@ -346,6 +346,20 @@ export default function ConversationScreen() {
   const parts = (conversation?.title ?? "").split(" • ");
   const itemName = parts[0] ?? t("conv.fallbackName");
   const language = prefs.targetLanguage;
+
+  // Warm the TTS cache for the latest tutor message so the first "tap to hear"
+  // after opening/returning to a conversation plays instantly instead of
+  // waiting on a cold synth (messages loaded from the server aren't auto-played
+  // the way freshly-streamed replies are).
+  useEffect(() => {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const m = messages[i];
+      if (m && m.role === "assistant") {
+        prefetchSpeech(m.content, language);
+        break;
+      }
+    }
+  }, [messages, language]);
 
   const runGrade = useCallback(async () => {
     if (isGrading) return;
