@@ -15,7 +15,12 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.lenslingo.app"
+      "bundleIdentifier": "com.lenslingo.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Lens Lingo uses your camera to scan real-world objects so it can identify them and start a language lesson.",
+        "NSMicrophoneUsageDescription": "Lens Lingo uses your microphone so you can speak with your AI tutor and practice your pronunciation.",
+        "NSPhotoLibraryUsageDescription": "Lens Lingo accesses your photos so you can choose a picture of an object to identify and learn its translation."
+      }
     },
     "android": {
       "package": "com.lenslingo.app"
@@ -32,17 +37,23 @@
       ],
       "expo-font",
       "expo-web-browser",
-      "expo-image-picker",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Lens Lingo accesses your photos so you can choose a picture of an object to identify and learn its translation."
+        }
+      ],
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow LinguaScan to use your camera to scan items."
+          "cameraPermission": "Lens Lingo uses your camera to scan real-world objects so it can identify them and start a language lesson.",
+          "recordAudioAndroid": false
         }
       ],
       [
         "expo-audio",
         {
-          "microphonePermission": "Allow LinguaScan to use your microphone to talk with your tutor."
+          "microphonePermission": "Lens Lingo uses your microphone so you can speak with your AI tutor and practice your pronunciation."
         }
       ]
     ],
