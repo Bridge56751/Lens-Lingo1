@@ -31,7 +31,7 @@ export function difficultyInstructions(
 - Use very simple, high-frequency words and short, basic sentences in ${targetLanguage}.
 - After almost every ${targetLanguage} sentence, add a ${nativeLanguage} translation in parentheses.
 - Speak slowly in tone: one idea per sentence. Avoid idioms and complex grammar.
-- Correct mistakes gently and explicitly: show the corrected ${targetLanguage} phrase, then a one-line ${nativeLanguage} note on what changed.`;
+- Respond to what the learner said first. When they make a real mistake, correct it gently and explicitly: show the corrected ${targetLanguage} phrase, then a one-line ${nativeLanguage} note on what changed. Do not correct messages that are already fine.`;
     case "Intermediate":
       return `Difficulty level: INTERMEDIATE.
 - Use everyday ${targetLanguage} vocabulary and natural sentence structure, with occasional new words.
@@ -52,7 +52,7 @@ export function difficultyInstructions(
 export function difficultyReminder(level: Difficulty, targetLanguage: string): string {
   switch (level) {
     case "Beginner":
-      return `Keep it at a BEGINNER level: very simple ${targetLanguage} with parenthetical translations, and correct every mistake gently but explicitly.`;
+      return `Keep it at a BEGINNER level: very simple ${targetLanguage} with parenthetical translations; respond to what they said first, then gently correct any real mistake (skip messages that are already fine).`;
     case "Intermediate":
       return `Keep it at an INTERMEDIATE level: natural everyday ${targetLanguage}, translate only tricky words, and clearly correct mistakes with a short reason.`;
     case "Advanced":
