@@ -19,43 +19,15 @@ import {
   useListVocabSelections,
 } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
-import { usePreferences, type Language } from "@/hooks/usePreferences";
+import { usePreferences } from "@/hooks/usePreferences";
 import { useT } from "@/hooks/useT";
 import { useAlphabetProgress } from "@/lib/alphabetProgress";
-
-const HELLOS: Record<Language, string> = {
-  English: "hello",
-  Spanish: "hola",
-  French: "bonjour",
-  German: "hallo",
-  Italian: "ciao",
-  Portuguese: "olá",
-  Japanese: "こんにちは",
-  Chinese: "你好",
-  Korean: "안녕",
-  Arabic: "مرحبا",
-  Russian: "привет",
-  Hindi: "नमस्ते",
-  Dutch: "hallo",
-};
 
 type Conversation = {
   id: number;
   title: string;
   createdAt: string;
 };
-
-function CornerBrackets({ color, size = 22 }: { color: string; size?: number }) {
-  const b = { borderColor: color, width: size, height: size, position: "absolute" as const };
-  return (
-    <>
-      <View style={[b, { top: 0, left: 0, borderTopWidth: 2.5, borderLeftWidth: 2.5, borderTopLeftRadius: 6 }]} />
-      <View style={[b, { top: 0, right: 0, borderTopWidth: 2.5, borderRightWidth: 2.5, borderTopRightRadius: 6 }]} />
-      <View style={[b, { bottom: 0, left: 0, borderBottomWidth: 2.5, borderLeftWidth: 2.5, borderBottomLeftRadius: 6 }]} />
-      <View style={[b, { bottom: 0, right: 0, borderBottomWidth: 2.5, borderRightWidth: 2.5, borderBottomRightRadius: 6 }]} />
-    </>
-  );
-}
 
 function StatTile({
   icon,
@@ -108,44 +80,40 @@ function StatTile({
   );
 }
 
-function PathCard({
+function GridCard({
   tag,
   title,
-  subtitle,
-  cta,
   bg,
   fg,
   tagBg,
   tagFg,
   ctaBg,
   ctaFg,
-  ctaBorder,
   watermark,
+  watermarkIcon,
+  icon = "arrow-forward",
   progress,
-  progressLabel,
   onPress,
   loading,
 }: {
   tag: string;
   title: string;
-  subtitle: string;
-  cta: string;
   bg: string;
   fg: string;
   tagBg: string;
   tagFg: string;
-  ctaBg?: string;
+  ctaBg: string;
   ctaFg: string;
-  ctaBorder?: string;
-  watermark: string;
+  watermark?: string;
+  watermarkIcon?: keyof typeof Ionicons.glyphMap;
+  icon?: keyof typeof Ionicons.glyphMap;
   progress?: number;
-  progressLabel?: string;
   onPress: () => void;
   loading?: boolean;
 }) {
   return (
     <TouchableOpacity
-      style={[styles.pathCard, { backgroundColor: bg, opacity: loading ? 0.7 : 1 }]}
+      style={[styles.gridCard, { backgroundColor: bg, opacity: loading ? 0.7 : 1 }]}
       onPress={() => {
         if (loading) return;
         Haptics.selectionAsync();
@@ -154,24 +122,28 @@ function PathCard({
       activeOpacity={0.9}
       disabled={loading}
     >
-      <View style={styles.pathWatermark} pointerEvents="none">
-        <Text style={[styles.pathWatermarkText, { color: fg }]} numberOfLines={1}>
-          {watermark}
-        </Text>
+      <View style={styles.gridWatermark} pointerEvents="none">
+        {watermarkIcon ? (
+          <Ionicons name={watermarkIcon} size={90} color={fg} />
+        ) : (
+          <Text style={[styles.gridWatermarkText, { color: fg }]} numberOfLines={1}>
+            {watermark}
+          </Text>
+        )}
       </View>
       <View style={[styles.pathTag, { backgroundColor: tagBg }]}>
         <Text style={[styles.pathTagText, { color: tagFg, fontFamily: "Inter_700Bold" }]}>
           {tag}
         </Text>
       </View>
-      <Text style={[styles.pathTitle, { color: fg, fontFamily: "Inter_700Bold" }]}>
-        {title}
-      </Text>
-      <Text style={[styles.pathSub, { color: fg, fontFamily: "Inter_500Medium" }]}>
-        {subtitle}
-      </Text>
-      {progress !== undefined && (
-        <View style={styles.pathProgressWrap}>
+      <View style={{ gap: 10 }}>
+        <Text
+          style={[styles.gridTitle, { color: fg, fontFamily: "Inter_700Bold" }]}
+          numberOfLines={2}
+        >
+          {title}
+        </Text>
+        {progress !== undefined && (
           <View style={[styles.pathProgressTrack, { backgroundColor: "rgba(0,0,0,0.14)" }]}>
             <View
               style={[
@@ -180,76 +152,15 @@ function PathCard({
               ]}
             />
           </View>
-          {progressLabel ? (
-            <Text style={[styles.pathProgressLabel, { color: fg, fontFamily: "Inter_600SemiBold" }]}>
-              {progressLabel}
-            </Text>
-          ) : null}
-        </View>
-      )}
-      <View
-        style={[
-          styles.pathCta,
-          ctaBorder
-            ? { borderColor: ctaBorder, borderWidth: 1.5 }
-            : { backgroundColor: ctaBg },
-        ]}
-      >
-        {loading ? (
-          <ActivityIndicator size="small" color={ctaFg} />
-        ) : (
-          <>
-            <Text style={[styles.pathCtaText, { color: ctaFg, fontFamily: "Inter_700Bold" }]}>
-              {cta}
-            </Text>
-            <Ionicons name="arrow-forward" size={16} color={ctaFg} />
-          </>
         )}
+        <View style={[styles.gridCta, { backgroundColor: ctaBg }]}>
+          {loading ? (
+            <ActivityIndicator size="small" color={ctaFg} />
+          ) : (
+            <Ionicons name={icon} size={18} color={ctaFg} />
+          )}
+        </View>
       </View>
-    </TouchableOpacity>
-  );
-}
-
-function AlphabetMasteredStrip({
-  onReview,
-  onHide,
-}: {
-  onReview: () => void;
-  onHide: () => void;
-}) {
-  const t = useT();
-  return (
-    <TouchableOpacity
-      style={[styles.masteredStrip, { backgroundColor: "#FEF9C3", borderColor: "#FDE68A", borderWidth: 1 }]}
-      onPress={() => {
-        Haptics.selectionAsync();
-        onReview();
-      }}
-      activeOpacity={0.8}
-    >
-      <View style={[styles.masteredIcon, { backgroundColor: "#FDE68A" }]}>
-        <Ionicons name="checkmark-circle" size={20} color="#CA8A04" />
-      </View>
-      <View style={{ flex: 1 }}>
-        <Text style={[styles.masteredTitle, { color: "#854D0E", fontFamily: "Inter_700Bold" }]}>
-          {t("home.alphabetMastered")}
-        </Text>
-        <Text style={[styles.masteredSub, { color: "#A16207", fontFamily: "Inter_400Regular" }]}>
-          {t("home.alphabetMasteredSub")}
-        </Text>
-      </View>
-      <TouchableOpacity
-        onPress={(e) => {
-          e.stopPropagation();
-          Haptics.selectionAsync();
-          onHide();
-        }}
-        hitSlop={10}
-        style={styles.masteredClose}
-        activeOpacity={0.6}
-      >
-        <Ionicons name="close" size={18} color="#A16207" />
-      </TouchableOpacity>
     </TouchableOpacity>
   );
 }
@@ -258,7 +169,7 @@ export default function HomeScreen() {
   const t = useT();
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { prefs, update } = usePreferences();
+  const { prefs } = usePreferences();
   const { languageProgress } = useAlphabetProgress();
   const alphabet = languageProgress(prefs.targetLanguage);
   const { data: conversations } = useListOpenaiConversations();
@@ -352,111 +263,63 @@ export default function HomeScreen() {
 
         <View style={[styles.headerDivider, { backgroundColor: colors.border }]} />
 
-        {/* Hero card */}
-        <View style={[styles.hero, { backgroundColor: "#5B3FD9" }]}>
-          <View style={styles.heroLeft}>
-            <Text style={[styles.heroTitle, { color: "#FFFFFF", fontFamily: "Inter_700Bold" }]}>
-              {t("home.scanLearnSpeak")}
-            </Text>
-            <Text style={[styles.heroBody, { color: "rgba(255,255,255,0.82)", fontFamily: "Inter_400Regular" }]}>
-              {t("home.heroDesc")}
-            </Text>
-            <TouchableOpacity
-              style={[styles.heroButton, { backgroundColor: "#FFFFFF" }]}
-              onPress={goScan}
-              activeOpacity={0.85}
-            >
-              <Ionicons name="scan" size={16} color={colors.primary} />
-              <Text style={[styles.heroButtonText, { color: colors.primary, fontFamily: "Inter_700Bold" }]}>
-                {t("home.scanCta")}
-              </Text>
-              <Ionicons name="arrow-forward" size={16} color={colors.primary} />
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.heroRight}>
-            <View style={styles.heroBracket}>
-              <CornerBrackets color="#FFFFFF" size={20} />
-              <View style={[styles.heroIconCircle, { backgroundColor: "#FFFFFF" }]}>
-                <Ionicons name="cube" size={48} color={colors.primary} />
-              </View>
-            </View>
-            <View style={[styles.heroChip, { backgroundColor: "#FFFFFF" }]}>
-              <Text style={[styles.heroChipText, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-                {HELLOS[prefs.targetLanguage] ?? "Hello"}
-              </Text>
-              <Ionicons name="volume-medium" size={14} color={colors.primary} />
-            </View>
-          </View>
-        </View>
-
-        {/* Learning paths */}
+        {/* Top categories — 2x2 grid */}
         <View style={{ gap: 14 }}>
-          <PathCard
-            tag={t("home.pathSentencesTag")}
-            title={t("home.pathSentencesTitle")}
-            subtitle={t("home.pathSentencesSub")}
-            cta={t("home.pathSentencesCta")}
-            bg="#2563EB"
-            fg="#FFFFFF"
-            tagBg="#FFFFFF"
-            tagFg="#1D4ED8"
-            ctaBg="#FFFFFF"
-            ctaFg="#1D4ED8"
-            watermark="Hi"
-            onPress={() => router.push("/sentences")}
-          />
-          <PathCard
-            tag={t("home.pathChatTag")}
-            title={t("home.pathChatTitle")}
-            subtitle={t("home.pathChatSub")}
-            cta={t("home.pathChatCta")}
-            bg="#EA580C"
-            fg="#FFFFFF"
-            tagBg="#FFFFFF"
-            tagFg="#C2410C"
-            ctaBg="#FFFFFF"
-            ctaFg="#C2410C"
-            watermark="AI"
-            onPress={goFreeChat}
-            loading={startChat.isPending}
-          />
-          {!prefs.alphabetCardHidden[prefs.targetLanguage] &&
-            (alphabet.mastered ? (
-              <AlphabetMasteredStrip
-                onReview={() => router.push("/alphabet")}
-                onHide={() =>
-                  update("alphabetCardHidden", {
-                    ...prefs.alphabetCardHidden,
-                    [prefs.targetLanguage]: true,
-                  })
-                }
-              />
-            ) : (
-              <PathCard
-                tag={t("home.pathAlphabetTag")}
-                title={t("home.pathAlphabetTitle")}
-                subtitle={t("home.pathAlphabetSub")}
-                cta={t("home.pathAlphabetCta")}
-                bg="#FBBF24"
-                fg="#422006"
-                tagBg="rgba(255,255,255,0.55)"
-                tagFg="#422006"
-                ctaBg="#422006"
-                ctaFg="#FBBF24"
-                watermark="Aa"
-                progress={alphabet.total > 0 ? alphabet.ratio : undefined}
-                progressLabel={
-                  alphabet.completed > 0
-                    ? t("home.alphabetProgress", {
-                        done: alphabet.completed,
-                        total: alphabet.total,
-                      })
-                    : undefined
-                }
-                onPress={() => router.push("/alphabet")}
-              />
-            ))}
+          <View style={styles.gridRow}>
+            <GridCard
+              tag={t("home.scanTag")}
+              title={t("home.scanCta")}
+              bg="#5B3FD9"
+              fg="#FFFFFF"
+              tagBg="#FFFFFF"
+              tagFg="#5B3FD9"
+              ctaBg="#FFFFFF"
+              ctaFg="#5B3FD9"
+              watermarkIcon="scan"
+              icon="scan"
+              onPress={goScan}
+            />
+            <GridCard
+              tag={t("home.pathSentencesTag")}
+              title={t("home.pathSentencesTitle")}
+              bg="#2563EB"
+              fg="#FFFFFF"
+              tagBg="#FFFFFF"
+              tagFg="#1D4ED8"
+              ctaBg="#FFFFFF"
+              ctaFg="#1D4ED8"
+              watermark="Hi"
+              onPress={() => router.push("/sentences")}
+            />
+          </View>
+          <View style={styles.gridRow}>
+            <GridCard
+              tag={t("home.pathChatTag")}
+              title={t("home.pathChatTitle")}
+              bg="#EA580C"
+              fg="#FFFFFF"
+              tagBg="#FFFFFF"
+              tagFg="#C2410C"
+              ctaBg="#FFFFFF"
+              ctaFg="#C2410C"
+              watermark="AI"
+              onPress={goFreeChat}
+              loading={startChat.isPending}
+            />
+            <GridCard
+              tag={t("home.pathAlphabetTag")}
+              title={t("home.pathAlphabetTitle")}
+              bg="#FBBF24"
+              fg="#422006"
+              tagBg="rgba(255,255,255,0.55)"
+              tagFg="#422006"
+              ctaBg="#422006"
+              ctaFg="#FBBF24"
+              watermark="Aa"
+              progress={alphabet.total > 0 ? alphabet.ratio : undefined}
+              onPress={() => router.push("/alphabet")}
+            />
+          </View>
         </View>
 
         {/* Stats grid */}
@@ -541,77 +404,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
   },
 
-  hero: {
-    flexDirection: "row",
-    borderRadius: 24,
-    padding: 20,
-    gap: 12,
-    overflow: "hidden",
-  },
-  heroLeft: { flex: 1, gap: 10 },
-  heroTitle: { fontSize: 24, letterSpacing: -0.5, lineHeight: 28 },
-  heroBody: { fontSize: 12, lineHeight: 17 },
-  heroButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingHorizontal: 18,
-    paddingVertical: 12,
-    borderRadius: 999,
-    alignSelf: "flex-start",
-    marginTop: 4,
-  },
-  heroButtonText: { color: "#FFFFFF", fontSize: 14 },
-
-  heroRight: {
-    width: 120,
-    alignItems: "center",
-    justifyContent: "center",
-    position: "relative",
-  },
-  heroBracket: {
-    width: 100,
-    height: 100,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  heroIconCircle: {
-    width: 76,
-    height: 76,
-    borderRadius: 38,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  heroChip: {
-    position: "absolute",
-    top: 0,
-    right: -4,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 14,
-    shadowColor: "#1A1B2E",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  heroChipText: { fontSize: 13 },
-
-  pathCard: {
-    borderRadius: 24,
-    padding: 20,
-    overflow: "hidden",
-  },
-  pathWatermark: {
-    position: "absolute",
-    right: -6,
-    bottom: -22,
-    opacity: 0.16,
-  },
-  pathWatermarkText: { fontSize: 110, fontFamily: "Inter_700Bold", letterSpacing: -4 },
   pathTag: {
     alignSelf: "flex-start",
     paddingHorizontal: 10,
@@ -620,45 +412,28 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   pathTagText: { fontSize: 11, letterSpacing: 0.6 },
-  pathTitle: { fontSize: 26, letterSpacing: -0.6, lineHeight: 30 },
-  pathSub: { fontSize: 13, marginTop: 4 },
-  pathCta: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    alignSelf: "flex-start",
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 999,
-    marginTop: 16,
-  },
-  pathCtaText: { fontSize: 14 },
-  pathProgressWrap: { marginTop: 14, gap: 6 },
   pathProgressTrack: { height: 8, borderRadius: 4, overflow: "hidden" },
   pathProgressFill: { height: "100%", borderRadius: 4 },
-  pathProgressLabel: { fontSize: 12 },
-  masteredStrip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    padding: 14,
-    borderRadius: 16,
+  gridRow: { flexDirection: "row", gap: 14 },
+  gridCard: {
+    flex: 1,
+    minHeight: 150,
+    borderRadius: 22,
+    padding: 16,
+    overflow: "hidden",
+    justifyContent: "space-between",
   },
-  masteredIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 11,
+  gridWatermark: { position: "absolute", right: -4, bottom: -14, opacity: 0.16 },
+  gridWatermarkText: { fontSize: 84, fontFamily: "Inter_700Bold", letterSpacing: -3 },
+  gridTitle: { fontSize: 19, letterSpacing: -0.4, lineHeight: 23 },
+  gridCta: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     alignItems: "center",
     justifyContent: "center",
-  },
-  masteredTitle: { fontSize: 15 },
-  masteredSub: { fontSize: 12, marginTop: 2 },
-  masteredClose: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    alignItems: "center",
-    justifyContent: "center",
+    alignSelf: "flex-start",
+    marginTop: 2,
   },
   statsRow: { flexDirection: "row", gap: 10 },
   tile: {

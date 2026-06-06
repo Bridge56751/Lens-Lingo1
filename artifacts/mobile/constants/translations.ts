@@ -79,6 +79,7 @@ export type TKey =
   | "onboarding.abcDesc"
   | "onboarding.sentencesTitle"
   | "onboarding.sentencesDesc"
+  | "home.scanTag"
   | "home.scanCta"
   | "home.practicing"
   | "home.continueBtn"
@@ -97,8 +98,6 @@ export type TKey =
   | "settings.about"
   | "settings.haptics"
   | "settings.hapticsSub"
-  | "settings.alphabetCard"
-  | "settings.alphabetCardSub"
   | "settings.daily"
   | "settings.dailySub"
   | "settings.help"
@@ -405,6 +404,7 @@ const en: Record<TKey, string> = {
   "onboarding.abcDesc": "Learn the letters and sounds of your new language with bite-sized, interactive alphabet lessons.",
   "onboarding.sentencesTitle": "Speak in Sentences",
   "onboarding.sentencesDesc": "Pick up everyday phrases to greet people, ask questions, and get around — ready for real conversations.",
+  "home.scanTag": "SCAN",
   "home.scanCta": "Scan Object",
   "home.practicing": "Practicing {lang}",
   "home.continueBtn": "Continue",
@@ -423,8 +423,6 @@ const en: Record<TKey, string> = {
   "settings.about": "ABOUT",
   "settings.haptics": "Haptic feedback",
   "settings.hapticsSub": "Vibrate on actions",
-  "settings.alphabetCard": "Alphabet card",
-  "settings.alphabetCardSub": "Show the {lang} alphabet card on Home",
   "settings.daily": "Daily reminder",
   "settings.dailySub": "Practice every day",
   "settings.help": "Help & support",

@@ -235,27 +235,6 @@ export default function SettingsScreen() {
             onPress={() => setPicker("difficulty")}
           />
           <Row
-            icon="text"
-            iconBg="#FEF9C3"
-            iconColor="#CA8A04"
-            title={t("settings.alphabetCard")}
-            subtitle={t("settings.alphabetCardSub", { lang: prefs.targetLanguage })}
-            right={
-              <Switch
-                value={!prefs.alphabetCardHidden[prefs.targetLanguage]}
-                onValueChange={(v) => {
-                  update("alphabetCardHidden", {
-                    ...prefs.alphabetCardHidden,
-                    [prefs.targetLanguage]: !v,
-                  });
-                  if (v) Haptics.selectionAsync();
-                }}
-                trackColor={{ false: colors.muted, true: colors.primary }}
-                thumbColor="#FFFFFF"
-              />
-            }
-          />
-          <Row
             icon="notifications"
             iconBg="#FCE7F3"
             iconColor="#EC4899"
