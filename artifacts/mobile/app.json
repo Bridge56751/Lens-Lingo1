@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "LinguaScan",
-    "slug": "mobile",
+    "name": "Lens Lingo",
+    "slug": "lenslingo",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "mobile",
+    "scheme": "lenslingo",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
@@ -14,9 +14,12 @@
       "backgroundColor": "#F5F4FB"
     },
     "ios": {
-      "supportsTablet": false
+      "supportsTablet": false,
+      "bundleIdentifier": "com.lenslingo.app"
     },
-    "android": {},
+    "android": {
+      "package": "com.lenslingo.app"
+    },
     "web": {
       "favicon": "./assets/images/icon.png"
     },
