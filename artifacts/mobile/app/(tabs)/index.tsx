@@ -110,6 +110,8 @@ function StatTile({
 function GridCard({
   tag,
   title,
+  subtitle,
+  ctaLabel,
   bg,
   fg,
   tagBg,
@@ -125,6 +127,8 @@ function GridCard({
 }: {
   tag: string;
   title: string;
+  subtitle?: string;
+  ctaLabel?: string;
   bg: string;
   fg: string;
   tagBg: string;
@@ -158,18 +162,30 @@ function GridCard({
           </Text>
         )}
       </View>
-      <View style={[styles.pathTag, { backgroundColor: tagBg }]}>
-        <Text style={[styles.pathTagText, { color: tagFg, fontFamily: "Inter_700Bold" }]}>
-          {tag}
-        </Text>
-      </View>
-      <View style={{ gap: 10 }}>
+
+      <View style={{ gap: 8 }}>
+        <View style={[styles.pathTag, { backgroundColor: tagBg, marginBottom: 0 }]}>
+          <Text style={[styles.pathTagText, { color: tagFg, fontFamily: "Inter_700Bold" }]}>
+            {tag}
+          </Text>
+        </View>
         <Text
           style={[styles.gridTitle, { color: fg, fontFamily: "Inter_700Bold" }]}
           numberOfLines={2}
         >
           {title}
         </Text>
+        {subtitle ? (
+          <Text
+            style={[styles.gridSub, { color: fg, fontFamily: "Inter_400Regular" }]}
+            numberOfLines={2}
+          >
+            {subtitle}
+          </Text>
+        ) : null}
+      </View>
+
+      <View style={{ gap: 10 }}>
         {progress !== undefined && (
           <View style={[styles.pathProgressTrack, { backgroundColor: "rgba(0,0,0,0.14)" }]}>
             <View
@@ -180,13 +196,31 @@ function GridCard({
             />
           </View>
         )}
-        <View style={[styles.gridCta, { backgroundColor: ctaBg }]}>
-          {loading ? (
-            <ActivityIndicator size="small" color={ctaFg} />
-          ) : (
-            <Ionicons name={icon} size={18} color={ctaFg} />
-          )}
-        </View>
+        {ctaLabel ? (
+          <View style={[styles.gridCtaWide, { backgroundColor: ctaBg }]}>
+            {loading ? (
+              <ActivityIndicator size="small" color={ctaFg} />
+            ) : (
+              <>
+                <Text
+                  style={[styles.gridCtaLabel, { color: ctaFg, fontFamily: "Inter_700Bold" }]}
+                  numberOfLines={1}
+                >
+                  {ctaLabel}
+                </Text>
+                <Ionicons name={icon} size={16} color={ctaFg} />
+              </>
+            )}
+          </View>
+        ) : (
+          <View style={[styles.gridCta, { backgroundColor: ctaBg }]}>
+            {loading ? (
+              <ActivityIndicator size="small" color={ctaFg} />
+            ) : (
+              <Ionicons name={icon} size={18} color={ctaFg} />
+            )}
+          </View>
+        )}
       </View>
     </TouchableOpacity>
   );
@@ -330,6 +364,8 @@ export default function HomeScreen() {
             <GridCard
               tag={t("home.pathSentencesTag")}
               title={t("home.pathSentencesTitle")}
+              subtitle={t("home.pathSentencesSub")}
+              ctaLabel={t("home.pathSentencesCta")}
               bg="#2563EB"
               fg="#FFFFFF"
               tagBg="#FFFFFF"
@@ -342,6 +378,8 @@ export default function HomeScreen() {
             <GridCard
               tag={t("home.pathChatTag")}
               title={t("home.pathChatTitle")}
+              subtitle={t("home.pathChatSub")}
+              ctaLabel={t("home.pathChatCta")}
               bg="#EA580C"
               fg="#FFFFFF"
               tagBg="#FFFFFF"
@@ -357,6 +395,8 @@ export default function HomeScreen() {
             <GridCard
               tag={t("home.pathAlphabetTag")}
               title={t("home.pathAlphabetTitle")}
+              subtitle={t("home.pathAlphabetSub")}
+              ctaLabel={t("home.pathAlphabetCta")}
               bg="#FBBF24"
               fg="#422006"
               tagBg="rgba(255,255,255,0.55)"
@@ -370,6 +410,8 @@ export default function HomeScreen() {
             <GridCard
               tag={t("home.vocabTag")}
               title={t("home.vocabulary")}
+              subtitle={t("home.pathVocabSub")}
+              ctaLabel={t("home.pathVocabCta")}
               bg="#047857"
               fg="#FFFFFF"
               tagBg="#FFFFFF"
@@ -526,7 +568,7 @@ const styles = StyleSheet.create({
   gridRow: { flexDirection: "row", gap: 14 },
   gridCard: {
     flex: 1,
-    minHeight: 150,
+    minHeight: 210,
     borderRadius: 22,
     padding: 16,
     overflow: "hidden",
@@ -535,6 +577,7 @@ const styles = StyleSheet.create({
   gridWatermark: { position: "absolute", right: -4, bottom: -14, opacity: 0.16 },
   gridWatermarkText: { fontSize: 84, fontFamily: "Inter_700Bold", letterSpacing: -3 },
   gridTitle: { fontSize: 19, letterSpacing: -0.4, lineHeight: 23 },
+  gridSub: { fontSize: 12.5, lineHeight: 17, opacity: 0.82 },
   gridCta: {
     width: 38,
     height: 38,
@@ -544,6 +587,17 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
     marginTop: 2,
   },
+  gridCtaWide: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 999,
+    marginTop: 2,
+  },
+  gridCtaLabel: { fontSize: 14, letterSpacing: -0.2 },
   statsRow: { flexDirection: "row", gap: 10 },
   tile: {
     flex: 1,
