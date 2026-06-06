@@ -84,15 +84,22 @@ function StatTile({
       }}
       activeOpacity={onPress ? 0.7 : 1}
     >
-      <View style={[styles.tileIcon, { backgroundColor: iconBg }]}>
-        <Ionicons name={icon} size={20} color={iconColor} />
+      <View style={styles.tileRow}>
+        <View style={[styles.tileIcon, { backgroundColor: iconBg }]}>
+          <Ionicons name={icon} size={22} color={iconColor} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.tileTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
+            {title}
+          </Text>
+          <Text style={[styles.tileSubtitle, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+            {subtitle}
+          </Text>
+        </View>
+        {onPress && (
+          <Ionicons name="chevron-forward" size={20} color={colors.mutedForeground} />
+        )}
       </View>
-      <Text style={[styles.tileTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-        {title}
-      </Text>
-      <Text style={[styles.tileSubtitle, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-        {subtitle}
-      </Text>
       {progress !== undefined && (
         <View style={[styles.progressTrack, { backgroundColor: colors.muted }]}>
           <View
@@ -604,18 +611,19 @@ const styles = StyleSheet.create({
   tile: {
     flex: 1,
     borderRadius: 18,
-    padding: 14,
-    gap: 8,
+    padding: 16,
+    gap: 10,
   },
+  tileRow: { flexDirection: "row", alignItems: "center", gap: 14 },
   tileIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 11,
+    width: 46,
+    height: 46,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
   },
-  tileTitle: { fontSize: 14 },
-  tileSubtitle: { fontSize: 11, lineHeight: 14 },
+  tileTitle: { fontSize: 16, letterSpacing: -0.2 },
+  tileSubtitle: { fontSize: 12.5, lineHeight: 16 },
   progressTrack: { height: 5, borderRadius: 3, overflow: "hidden", marginTop: 2 },
   progressFill: { height: "100%", borderRadius: 3 },
 

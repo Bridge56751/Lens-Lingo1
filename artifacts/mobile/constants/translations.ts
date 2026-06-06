@@ -365,7 +365,7 @@ const en: Record<TKey, string> = {
   "alphabet.complete": "Great job!",
   "alphabet.completeBody": "You\u2019ve gone through the whole {lang} alphabet.",
   "alphabet.startOver": "Start over",
-  "home.aiChats": "AI Chats",
+  "home.aiChats": "AI Chat History",
   "home.sessions": "{n} sessions",
   "home.vocabulary": "Vocabulary",
   "home.vocabTag": "WORD BANK",
