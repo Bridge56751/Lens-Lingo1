@@ -207,7 +207,7 @@ export default function AlphabetScreen() {
         contentContainerStyle={[styles.scroll, { paddingBottom: bottomPadding }]}
         showsVerticalScrollIndicator={false}
       >
-        {isDone ? (
+        {isDone && (
           <View style={[styles.doneCard, { backgroundColor: colors.primarySoft }]}>
             <View style={[styles.doneBadge, { backgroundColor: colors.primary }]}>
               <Ionicons name="trophy" size={36} color="#FFFFFF" />
@@ -229,7 +229,8 @@ export default function AlphabetScreen() {
               </Text>
             </TouchableOpacity>
           </View>
-        ) : (
+        )}
+
           <Animated.View style={{ opacity: fade }}>
             <Animated.View style={{ transform: [{ scale }] }}>
               <TouchableOpacity
@@ -305,10 +306,8 @@ export default function AlphabetScreen() {
               </TouchableOpacity>
             </Animated.View>
           </Animated.View>
-        )}
       </ScrollView>
 
-      {!isDone && (
         <View
           style={[
             styles.footer,
@@ -340,7 +339,6 @@ export default function AlphabetScreen() {
             <Ionicons name={isLast ? "checkmark" : "chevron-forward"} size={18} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
-      )}
     </View>
   );
 }
