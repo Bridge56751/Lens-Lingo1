@@ -622,7 +622,7 @@ router.post("/openai/conversations/:id/messages", async (req, res) => {
 });
 
 // Minimum learner turns required before a conversation can be graded.
-const MIN_USER_MESSAGES_TO_GRADE = 2;
+const MIN_USER_MESSAGES_TO_GRADE = 1;
 
 // POST /openai/conversations/:id/grade - grade the learner's performance.
 // Returns a 0-100 score plus structured strengths/mistakes/suggestions and

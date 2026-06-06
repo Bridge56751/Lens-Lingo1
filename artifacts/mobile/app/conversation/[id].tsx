@@ -279,6 +279,7 @@ export default function ConversationScreen() {
 
   const [gradeModalOpen, setGradeModalOpen] = useState(false);
   const [grade, setGrade] = useState<OpenaiConversationGrade | null>(null);
+  const [gradeError, setGradeError] = useState<string | null>(null);
   const { mutateAsync: gradeConversation, isPending: isGrading } =
     useGradeOpenaiConversation();
 
@@ -349,6 +350,7 @@ export default function ConversationScreen() {
   const runGrade = useCallback(async () => {
     if (isGrading) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setGradeError(null);
     try {
       const result = await gradeConversation({
         id: conversationId,
@@ -368,6 +370,7 @@ export default function ConversationScreen() {
         err && typeof err === "object" && "status" in err
           ? (err as { status?: number }).status
           : undefined;
+      setGradeError(status === 422 ? t("conv.gradeTooFewBody") : t("conv.gradeErrorBody"));
       if (status === 422) {
         Alert.alert(t("conv.gradeTooFewTitle"), t("conv.gradeTooFewBody"));
       } else {
@@ -666,7 +669,10 @@ export default function ConversationScreen() {
             styles.gradeBarButton,
             { backgroundColor: colors.primarySoft, borderColor: colors.primary },
           ]}
-          onPress={() => setGradeModalOpen(true)}
+          onPress={() => {
+            setGradeError(null);
+            setGradeModalOpen(true);
+          }}
           activeOpacity={0.85}
         >
           <Ionicons name={grade ? "ribbon" : "ribbon-outline"} size={18} color={colors.primary} />
@@ -757,6 +763,12 @@ export default function ConversationScreen() {
                 <Ionicons name="close" size={24} color={colors.mutedForeground} />
               </TouchableOpacity>
             </View>
+
+            {gradeError && !isGrading ? (
+              <Text style={[styles.gradeErrorText, { color: "#EF4444", fontFamily: "Inter_500Medium" }]}>
+                {gradeError}
+              </Text>
+            ) : null}
 
             {isGrading ? (
               <View style={styles.gradeLoading}>
@@ -1011,6 +1023,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   gradeBarText: { fontSize: 15 },
+  gradeErrorText: { fontSize: 14, marginTop: 12, lineHeight: 20 },
   inputBar: {
     flexDirection: "row",
     alignItems: "flex-end",
