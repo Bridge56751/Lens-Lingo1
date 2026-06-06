@@ -330,7 +330,7 @@ export default function HomeScreen() {
               }}
               activeOpacity={0.7}
             >
-              <Ionicons name="globe-outline" size={14} color={colors.primary} />
+              <Ionicons name="globe-outline" size={17} color={colors.primary} />
               <Text style={[styles.learningChipText, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
                 {t("settings.learningSub", { lang: prefs.targetLanguage })}
               </Text>
@@ -521,7 +521,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
     alignSelf: "flex-start",
   },
-  learningChipText: { fontSize: 13 },
+  learningChipText: { fontSize: 16 },
   greetingRight: { flexDirection: "row", alignItems: "center", gap: 10 },
   headerDivider: {
     height: 1,
