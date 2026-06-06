@@ -77,8 +77,8 @@ export type TKey =
   | "onboarding.chatDesc"
   | "onboarding.abcTitle"
   | "onboarding.abcDesc"
-  | "onboarding.vocabTitle"
-  | "onboarding.vocabDesc"
+  | "onboarding.sentencesTitle"
+  | "onboarding.sentencesDesc"
   | "home.scanCta"
   | "home.practicing"
   | "home.continueBtn"
@@ -403,8 +403,8 @@ const en: Record<TKey, string> = {
   "onboarding.chatDesc": "Jump into a real conversation about what you scanned. Your tutor replies in your target language and gently corrects you.",
   "onboarding.abcTitle": "Master the Alphabet",
   "onboarding.abcDesc": "Learn the letters and sounds of your new language with bite-sized, interactive alphabet lessons.",
-  "onboarding.vocabTitle": "Build Your Vocabulary",
-  "onboarding.vocabDesc": "Every word you discover is saved to your personal word bank, ready to review and practice with flashcards.",
+  "onboarding.sentencesTitle": "Speak in Sentences",
+  "onboarding.sentencesDesc": "Pick up everyday phrases to greet people, ask questions, and get around — ready for real conversations.",
   "home.scanCta": "Scan Object",
   "home.practicing": "Practicing {lang}",
   "home.continueBtn": "Continue",

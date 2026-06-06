@@ -50,18 +50,18 @@ const SLIDES: Slide[] = [
   {
     icon: "text",
     glyph: "Aa",
-    color: "#2563EB",
-    soft: "#DBEAFE",
+    color: "#F59E0B",
+    soft: "#FEF3C7",
     titleKey: "onboarding.abcTitle",
     descKey: "onboarding.abcDesc",
   },
   {
-    icon: "book",
-    glyph: "📖",
-    color: "#10B981",
-    soft: "#D1FAE5",
-    titleKey: "onboarding.vocabTitle",
-    descKey: "onboarding.vocabDesc",
+    icon: "chatbox-ellipses",
+    glyph: "Hi",
+    color: "#2563EB",
+    soft: "#DBEAFE",
+    titleKey: "onboarding.sentencesTitle",
+    descKey: "onboarding.sentencesDesc",
   },
 ];
 
