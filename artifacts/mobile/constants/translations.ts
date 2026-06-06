@@ -40,6 +40,7 @@ export type TKey =
   | "home.aiChats"
   | "home.sessions"
   | "home.vocabulary"
+  | "home.vocabTag"
   | "home.words"
   | "home.dailyGoal"
   | "home.dailyProgress"
@@ -365,6 +366,7 @@ const en: Record<TKey, string> = {
   "home.aiChats": "AI Chats",
   "home.sessions": "{n} sessions",
   "home.vocabulary": "Vocabulary",
+  "home.vocabTag": "WORD BANK",
   "home.words": "{n} words",
   "home.dailyGoal": "Daily Goal",
   "home.dailyProgress": "{done} / {goal} today",

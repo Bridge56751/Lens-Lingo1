@@ -16,10 +16,9 @@ import * as Haptics from "expo-haptics";
 import {
   useListOpenaiConversations,
   useStartOpenaiChat,
-  useListVocabSelections,
 } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
-import { usePreferences } from "@/hooks/usePreferences";
+import { usePreferences, type Language } from "@/hooks/usePreferences";
 import { useT } from "@/hooks/useT";
 import { useAlphabetProgress } from "@/lib/alphabetProgress";
 
@@ -28,6 +27,34 @@ type Conversation = {
   title: string;
   createdAt: string;
 };
+
+const HELLOS: Record<Language, string> = {
+  English: "hello",
+  Spanish: "hola",
+  French: "bonjour",
+  German: "hallo",
+  Italian: "ciao",
+  Portuguese: "olá",
+  Japanese: "こんにちは",
+  Chinese: "你好",
+  Korean: "안녕",
+  Arabic: "مرحبا",
+  Russian: "привет",
+  Hindi: "नमस्ते",
+  Dutch: "hallo",
+};
+
+function CornerBrackets({ color, size = 22 }: { color: string; size?: number }) {
+  const b = { borderColor: color, width: size, height: size, position: "absolute" as const };
+  return (
+    <>
+      <View style={[b, { top: 0, left: 0, borderTopWidth: 2.5, borderLeftWidth: 2.5, borderTopLeftRadius: 6 }]} />
+      <View style={[b, { top: 0, right: 0, borderTopWidth: 2.5, borderRightWidth: 2.5, borderTopRightRadius: 6 }]} />
+      <View style={[b, { bottom: 0, left: 0, borderBottomWidth: 2.5, borderLeftWidth: 2.5, borderBottomLeftRadius: 6 }]} />
+      <View style={[b, { bottom: 0, right: 0, borderBottomWidth: 2.5, borderRightWidth: 2.5, borderBottomRightRadius: 6 }]} />
+    </>
+  );
+}
 
 function StatTile({
   icon,
@@ -173,18 +200,14 @@ export default function HomeScreen() {
   const { languageProgress } = useAlphabetProgress();
   const alphabet = languageProgress(prefs.targetLanguage);
   const { data: conversations } = useListOpenaiConversations();
-  const { data: vocabSelections } = useListVocabSelections({
-    targetLanguage: prefs.targetLanguage,
-  });
 
   const list = (conversations ?? []) as Conversation[];
 
   const stats = useMemo(() => {
     return {
       totalConvos: list.length,
-      vocab: vocabSelections?.length ?? 0,
     };
-  }, [list, vocabSelections]);
+  }, [list]);
 
   const topPadding = Platform.OS === "web" ? 16 : insets.top;
   const bottomPadding = Platform.OS === "web" ? 34 + 84 : insets.bottom + 90;
@@ -263,22 +286,47 @@ export default function HomeScreen() {
 
         <View style={[styles.headerDivider, { backgroundColor: colors.border }]} />
 
-        {/* Top categories — 2x2 grid */}
+        {/* Hero card */}
+        <View style={[styles.hero, { backgroundColor: "#5B3FD9" }]}>
+          <View style={styles.heroLeft}>
+            <Text style={[styles.heroTitle, { color: "#FFFFFF", fontFamily: "Inter_700Bold" }]}>
+              {t("home.scanLearnSpeak")}
+            </Text>
+            <Text style={[styles.heroBody, { color: "rgba(255,255,255,0.82)", fontFamily: "Inter_400Regular" }]}>
+              {t("home.heroDesc")}
+            </Text>
+            <TouchableOpacity
+              style={[styles.heroButton, { backgroundColor: "#FFFFFF" }]}
+              onPress={goScan}
+              activeOpacity={0.85}
+            >
+              <Ionicons name="scan" size={16} color={colors.primary} />
+              <Text style={[styles.heroButtonText, { color: colors.primary, fontFamily: "Inter_700Bold" }]}>
+                {t("home.scanCta")}
+              </Text>
+              <Ionicons name="arrow-forward" size={16} color={colors.primary} />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.heroRight}>
+            <View style={styles.heroBracket}>
+              <CornerBrackets color="#FFFFFF" size={20} />
+              <View style={[styles.heroIconCircle, { backgroundColor: "#FFFFFF" }]}>
+                <Ionicons name="cube" size={48} color={colors.primary} />
+              </View>
+            </View>
+            <View style={[styles.heroChip, { backgroundColor: "#FFFFFF" }]}>
+              <Text style={[styles.heroChipText, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
+                {HELLOS[prefs.targetLanguage] ?? "Hello"}
+              </Text>
+              <Ionicons name="volume-medium" size={14} color={colors.primary} />
+            </View>
+          </View>
+        </View>
+
+        {/* Categories — 2x2 grid */}
         <View style={{ gap: 14 }}>
           <View style={styles.gridRow}>
-            <GridCard
-              tag={t("home.scanTag")}
-              title={t("home.scanCta")}
-              bg="#5B3FD9"
-              fg="#FFFFFF"
-              tagBg="#FFFFFF"
-              tagFg="#5B3FD9"
-              ctaBg="#FFFFFF"
-              ctaFg="#5B3FD9"
-              watermarkIcon="scan"
-              icon="scan"
-              onPress={goScan}
-            />
             <GridCard
               tag={t("home.pathSentencesTag")}
               title={t("home.pathSentencesTitle")}
@@ -291,8 +339,6 @@ export default function HomeScreen() {
               watermark="Hi"
               onPress={() => router.push("/sentences")}
             />
-          </View>
-          <View style={styles.gridRow}>
             <GridCard
               tag={t("home.pathChatTag")}
               title={t("home.pathChatTitle")}
@@ -306,6 +352,8 @@ export default function HomeScreen() {
               onPress={goFreeChat}
               loading={startChat.isPending}
             />
+          </View>
+          <View style={styles.gridRow}>
             <GridCard
               tag={t("home.pathAlphabetTag")}
               title={t("home.pathAlphabetTitle")}
@@ -319,6 +367,18 @@ export default function HomeScreen() {
               progress={alphabet.total > 0 ? alphabet.ratio : undefined}
               onPress={() => router.push("/alphabet")}
             />
+            <GridCard
+              tag={t("home.vocabTag")}
+              title={t("home.vocabulary")}
+              bg="#047857"
+              fg="#FFFFFF"
+              tagBg="#FFFFFF"
+              tagFg="#047857"
+              ctaBg="#FFFFFF"
+              ctaFg="#047857"
+              watermarkIcon="book"
+              onPress={() => router.push("/vocabulary")}
+            />
           </View>
         </View>
 
@@ -331,14 +391,6 @@ export default function HomeScreen() {
             title={t("home.aiChats")}
             subtitle={t("home.sessions", { n: stats.totalConvos })}
             onPress={() => router.navigate("/(tabs)/history")}
-          />
-          <StatTile
-            icon="book"
-            iconColor="#F59E0B"
-            iconBg="#FEF3C7"
-            title={t("home.vocabulary")}
-            subtitle={t("home.words", { n: stats.vocab })}
-            onPress={() => router.push("/vocabulary")}
           />
         </View>
 
@@ -404,6 +456,63 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
   },
 
+  hero: {
+    flexDirection: "row",
+    borderRadius: 24,
+    padding: 20,
+    gap: 12,
+    overflow: "hidden",
+  },
+  heroLeft: { flex: 1, gap: 10 },
+  heroTitle: { fontSize: 24, letterSpacing: -0.5, lineHeight: 28 },
+  heroBody: { fontSize: 12, lineHeight: 17 },
+  heroButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    borderRadius: 999,
+    alignSelf: "flex-start",
+    marginTop: 4,
+  },
+  heroButtonText: { color: "#FFFFFF", fontSize: 14 },
+  heroRight: {
+    width: 120,
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+  },
+  heroBracket: {
+    width: 100,
+    height: 100,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  heroIconCircle: {
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  heroChip: {
+    position: "absolute",
+    top: 0,
+    right: -4,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 14,
+    shadowColor: "#1A1B2E",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  heroChipText: { fontSize: 13 },
   pathTag: {
     alignSelf: "flex-start",
     paddingHorizontal: 10,
