@@ -205,10 +205,12 @@ function GridCard({
                 <Text
                   style={[styles.gridCtaLabel, { color: ctaFg, fontFamily: "Inter_700Bold" }]}
                   numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.8}
                 >
                   {ctaLabel}
                 </Text>
-                <Ionicons name={icon} size={16} color={ctaFg} />
+                <Ionicons name={icon} size={14} color={ctaFg} />
               </>
             )}
           </View>
@@ -591,13 +593,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
+    gap: 5,
+    paddingVertical: 11,
+    paddingHorizontal: 8,
     borderRadius: 999,
     marginTop: 2,
   },
-  gridCtaLabel: { fontSize: 14, letterSpacing: -0.2 },
+  gridCtaLabel: { fontSize: 12.5, letterSpacing: -0.3, flexShrink: 1 },
   statsRow: { flexDirection: "row", gap: 10 },
   tile: {
     flex: 1,
