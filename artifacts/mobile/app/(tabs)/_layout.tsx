@@ -1,9 +1,10 @@
-import { Tabs, router } from "expo-router";
+import { Tabs, router, Redirect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Platform, Pressable, StyleSheet, View } from "react-native";
 import * as Haptics from "expo-haptics";
 import { useColors } from "@/hooks/useColors";
+import { usePreferences } from "@/hooks/usePreferences";
 import { useT } from "@/hooks/useT";
 
 function ScanTabButton() {
@@ -32,6 +33,17 @@ function ScanTabButton() {
 export default function TabLayout() {
   const t = useT();
   const colors = useColors();
+  const { prefs, ready } = usePreferences();
+
+  // First-run gate for every tab entry path. Block rendering until prefs load
+  // (`ready`) so first-run users never flash a tab before the onboarding tour,
+  // and returning users (onboardingSeen === true) never see it at all.
+  if (!ready) {
+    return <View style={{ flex: 1, backgroundColor: colors.background }} />;
+  }
+  if (!prefs.onboardingSeen) {
+    return <Redirect href="/onboarding" />;
+  }
 
   return (
     <View style={{ flex: 1 }}>

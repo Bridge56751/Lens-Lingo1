@@ -31,6 +31,14 @@ function RootLayoutNav() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" />
       <Stack.Screen
+        name="onboarding"
+        options={{
+          presentation: "fullScreenModal",
+          animation: "fade",
+          gestureEnabled: false,
+        }}
+      />
+      <Stack.Screen
         name="scan"
         options={{
           presentation: "modal",

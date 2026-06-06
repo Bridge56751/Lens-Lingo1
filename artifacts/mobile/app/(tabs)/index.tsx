@@ -494,12 +494,15 @@ export default function HomeScreen() {
           </View>
           <TouchableOpacity
             style={[styles.tourBtn, { backgroundColor: "#FFFFFF" }]}
-            onPress={goScan}
+            onPress={() => {
+              Haptics.selectionAsync();
+              router.push("/onboarding");
+            }}
             activeOpacity={0.85}
           >
             <Ionicons name="play" size={12} color={colors.primary} />
             <Text style={[styles.tourBtnText, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
-              Start
+              {t("home.takeTour")}
             </Text>
           </TouchableOpacity>
         </View>

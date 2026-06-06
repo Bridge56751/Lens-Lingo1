@@ -36,6 +36,8 @@ export type Preferences = {
   // Best (longest) consecutive-day login streak ever reached. Persisted so it
   // survives even if the conversations it was derived from are deleted.
   bestStreak: number;
+  // Whether the user has completed (or skipped) the first-run onboarding tour.
+  onboardingSeen: boolean;
 };
 
 const DEFAULTS: Preferences = {
@@ -47,6 +49,7 @@ const DEFAULTS: Preferences = {
   difficulty: "Beginner",
   alphabetCardHidden: {},
   bestStreak: 0,
+  onboardingSeen: false,
 };
 
 const STORAGE_KEY = "@linguascan/preferences/v1";
@@ -97,11 +100,15 @@ async function writeCached() {
 
 export function usePreferences() {
   const [prefs, setPrefs] = useState<Preferences>(cached);
+  // `ready` flips true once the initial AsyncStorage read resolves. Callers that
+  // route on a persisted flag (e.g. first-run onboarding) must wait for this to
+  // avoid acting on DEFAULTS before the stored value loads.
+  const [ready, setReady] = useState(loaded);
 
   useEffect(() => {
     const listener: Listener = (next) => setPrefs(next);
     listeners.add(listener);
-    ensureLoaded();
+    ensureLoaded().then(() => setReady(true));
     return () => {
       listeners.delete(listener);
     };
@@ -118,5 +125,5 @@ export function usePreferences() {
     }
   }, []);
 
-  return { prefs, update };
+  return { prefs, update, ready };
 }

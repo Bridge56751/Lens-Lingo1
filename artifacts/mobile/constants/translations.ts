@@ -67,6 +67,18 @@ export type TKey =
   | "home.continueConvos"
   | "home.newHere"
   | "home.newHereDesc"
+  | "home.takeTour"
+  | "onboarding.skip"
+  | "onboarding.next"
+  | "onboarding.getStarted"
+  | "onboarding.scanTitle"
+  | "onboarding.scanDesc"
+  | "onboarding.chatTitle"
+  | "onboarding.chatDesc"
+  | "onboarding.abcTitle"
+  | "onboarding.abcDesc"
+  | "onboarding.vocabTitle"
+  | "onboarding.vocabDesc"
   | "home.scanCta"
   | "home.practicing"
   | "home.continueBtn"
@@ -380,7 +392,19 @@ const en: Record<TKey, string> = {
   "home.chatErrorBody": "Something went wrong starting your conversation. Please try again.",
   "home.continueConvos": "Continue your conversations",
   "home.newHere": "New here?",
-  "home.newHereDesc": "Take your first photo to begin",
+  "home.newHereDesc": "Take a quick tour of what you can do",
+  "home.takeTour": "Tour",
+  "onboarding.skip": "Skip",
+  "onboarding.next": "Next",
+  "onboarding.getStarted": "Get Started",
+  "onboarding.scanTitle": "Scan Anything",
+  "onboarding.scanDesc": "Point your camera at any object and the AI instantly identifies it and translates it into the language you're learning.",
+  "onboarding.chatTitle": "Chat with an AI Tutor",
+  "onboarding.chatDesc": "Jump into a real conversation about what you scanned. Your tutor replies in your target language and gently corrects you.",
+  "onboarding.abcTitle": "Master the Alphabet",
+  "onboarding.abcDesc": "Learn the letters and sounds of your new language with bite-sized, interactive alphabet lessons.",
+  "onboarding.vocabTitle": "Build Your Vocabulary",
+  "onboarding.vocabDesc": "Every word you discover is saved to your personal word bank, ready to review and practice with flashcards.",
   "home.scanCta": "Scan Object",
   "home.practicing": "Practicing {lang}",
   "home.continueBtn": "Continue",
