@@ -78,7 +78,15 @@ export default function OnboardingScreen() {
   const finish = () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     update("onboardingSeen", true);
-    router.replace("/(tabs)");
+    // When opened manually (e.g. "Take tour" from home) onboarding is pushed
+    // on top of the existing tabs, so pop back to avoid stacking a new tabs
+    // screen each time. On first launch it's reached via Redirect (no back
+    // stack), so fall back to replacing into the tabs.
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/(tabs)");
+    }
   };
 
   const goNext = () => {
