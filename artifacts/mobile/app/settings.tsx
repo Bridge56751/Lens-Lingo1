@@ -316,6 +316,40 @@ export default function SettingsScreen() {
           </Text>
         </View>
 
+        {/* Activity */}
+        <View style={styles.streakRow}>
+          <View style={[styles.streakCard, { backgroundColor: "#FEF3C7" }]}>
+            <Text style={{ fontSize: 22 }}>🔥</Text>
+            <Text style={[styles.streakNum, { color: "#D97706", fontFamily: "Inter_700Bold" }]}>
+              {streak}
+            </Text>
+            <Text style={[styles.streakLabel, { color: "#B45309", fontFamily: "Inter_600SemiBold" }]}>
+              {t("home.dailyStreak")}
+            </Text>
+          </View>
+          <View style={[styles.streakCard, { backgroundColor: "#DCFCE7" }]}>
+            <Ionicons name="trophy" size={20} color="#22C55E" />
+            <Text style={[styles.streakNum, { color: "#16A34A", fontFamily: "Inter_700Bold" }]}>
+              {bestStreak}
+            </Text>
+            <Text style={[styles.streakLabel, { color: "#15803D", fontFamily: "Inter_600SemiBold" }]}>
+              {t("home.bestStreak")}
+            </Text>
+          </View>
+        </View>
+        <Row
+          icon="checkmark-circle"
+          iconBg="#DCFCE7"
+          iconColor="#22C55E"
+          title={t("home.dailyGoal")}
+          subtitle={t("settings.dailyGoalSub")}
+          right={<Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />}
+          onPress={() => {
+            Haptics.selectionAsync();
+            router.push("/progress");
+          }}
+        />
+
         {/* Languages */}
         <Row
           icon="globe"
@@ -375,59 +409,6 @@ export default function SettingsScreen() {
                 thumbColor="#FFFFFF"
               />
             }
-          />
-        </Section>
-
-        {/* Activity */}
-        <Section
-          title={t("settings.activity")}
-          icon="stats-chart"
-          iconBg="#DCFCE7"
-          iconColor="#22C55E"
-        >
-          <View style={styles.streakRow}>
-            <View style={[styles.streakCard, { backgroundColor: "#FEF3C7" }]}>
-              <Text style={{ fontSize: 22 }}>🔥</Text>
-              <Text style={[styles.streakNum, { color: "#D97706", fontFamily: "Inter_700Bold" }]}>
-                {streak}
-              </Text>
-              <Text style={[styles.streakLabel, { color: "#B45309", fontFamily: "Inter_600SemiBold" }]}>
-                {t("home.dailyStreak")}
-              </Text>
-            </View>
-            <View style={[styles.streakCard, { backgroundColor: "#DCFCE7" }]}>
-              <Ionicons name="trophy" size={20} color="#22C55E" />
-              <Text style={[styles.streakNum, { color: "#16A34A", fontFamily: "Inter_700Bold" }]}>
-                {bestStreak}
-              </Text>
-              <Text style={[styles.streakLabel, { color: "#15803D", fontFamily: "Inter_600SemiBold" }]}>
-                {t("home.bestStreak")}
-              </Text>
-            </View>
-          </View>
-          <Row
-            icon="checkmark-circle"
-            iconBg="#DCFCE7"
-            iconColor="#22C55E"
-            title={t("home.dailyGoal")}
-            subtitle={t("settings.dailyGoalSub")}
-            right={<Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />}
-            onPress={() => {
-              Haptics.selectionAsync();
-              router.push("/progress");
-            }}
-          />
-          <Row
-            icon="trophy"
-            iconBg="#DBEAFE"
-            iconColor="#3B82F6"
-            title={t("home.challenges")}
-            subtitle={t("settings.challengesSub")}
-            right={<Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />}
-            onPress={() => {
-              Haptics.selectionAsync();
-              router.push("/challenges");
-            }}
           />
         </Section>
 
