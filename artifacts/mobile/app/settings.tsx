@@ -27,7 +27,7 @@ import {
   type Difficulty,
 } from "@/hooks/usePreferences";
 import { useT } from "@/hooks/useT";
-import { LOCALE_NATIVE_NAMES, LOCALES, type Locale } from "@/constants/translations";
+import { LOCALE_NATIVE_NAMES, type Locale } from "@/constants/translations";
 import { useListOpenaiConversations } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { computeStreak, computeBestStreak } from "@/lib/streak";
@@ -139,7 +139,7 @@ function Section({
   );
 }
 
-type PickerKind = "learning" | "native" | "difficulty" | null;
+type PickerKind = "learning" | "difficulty" | null;
 
 export default function SettingsScreen() {
   const colors = useColors();
@@ -253,9 +253,6 @@ export default function SettingsScreen() {
     Haptics.selectionAsync();
   };
 
-  const nativeLabel =
-    LOCALE_NATIVE_NAMES[(prefs.nativeLanguage as Locale) ?? "English"] ?? prefs.nativeLanguage;
-
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { paddingTop: topPadding + 8 }]}>
@@ -335,15 +332,6 @@ export default function SettingsScreen() {
             subtitle={prefs.targetLanguage}
             right={<Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />}
             onPress={() => setPicker("learning")}
-          />
-          <Row
-            icon="language"
-            iconBg="#DBEAFE"
-            iconColor="#3B82F6"
-            title={t("settings.iSpeak")}
-            subtitle={nativeLabel}
-            right={<Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />}
-            onPress={() => setPicker("native")}
           />
         </Section>
 
@@ -545,7 +533,7 @@ export default function SettingsScreen() {
         </Section>
       </ScrollView>
 
-      {/* Language picker modal (used for both learning & native) */}
+      {/* Learning-language picker modal (also reused for difficulty) */}
       <Modal
         visible={picker !== null}
         transparent
@@ -557,9 +545,7 @@ export default function SettingsScreen() {
             <Text style={[styles.modalTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
               {picker === "difficulty"
                 ? t("settings.chooseDifficulty")
-                : picker === "native"
-                  ? t("settings.chooseNative")
-                  : t("settings.chooseLearning")}
+                : t("settings.chooseLearning")}
             </Text>
             {picker === "difficulty" ? (
               <View>
@@ -607,36 +593,24 @@ export default function SettingsScreen() {
               </View>
             ) : (
             <ScrollView style={{ maxHeight: 420 }}>
-              {(picker === "native" ? LOCALES : LANGUAGES).map((lang) => {
-                const active =
-                  picker === "native"
-                    ? lang === prefs.nativeLanguage
-                    : lang === prefs.targetLanguage;
-                const comingSoon = picker === "native" && lang !== "English";
+              {LANGUAGES.map((lang) => {
+                const active = lang === prefs.targetLanguage;
                 const nativeName =
                   LOCALE_NATIVE_NAMES[lang as Locale] ?? lang;
                 return (
                   <TouchableOpacity
                     key={lang}
-                    disabled={comingSoon}
                     style={[
                       styles.langOption,
                       active && { backgroundColor: colors.primarySoft },
-                      comingSoon && { opacity: 0.45 },
                     ]}
                     onPress={() => {
-                      const isNative = picker === "native";
-                      const other = isNative ? prefs.targetLanguage : prefs.nativeLanguage;
                       const apply = () => {
-                        if (isNative) {
-                          update("nativeLanguage", lang);
-                        } else {
-                          update("targetLanguage", lang as Language);
-                        }
+                        update("targetLanguage", lang as Language);
                         setPicker(null);
                         Haptics.selectionAsync();
                       };
-                      if (lang === other) {
+                      if (lang === prefs.nativeLanguage) {
                         const title = t("settings.sameLangTitle");
                         const body = t("settings.sameLangBody", { lang });
                         if (Platform.OS === "web") {
@@ -691,20 +665,7 @@ export default function SettingsScreen() {
                         </Text>
                       )}
                     </View>
-                    {comingSoon ? (
-                      <View style={[styles.comingSoonBadge, { backgroundColor: colors.muted }]}>
-                        <Text
-                          style={[
-                            styles.comingSoonText,
-                            { color: colors.mutedForeground, fontFamily: "Inter_600SemiBold" },
-                          ]}
-                        >
-                          {t("settings.nativeComingSoonTitle")}
-                        </Text>
-                      </View>
-                    ) : (
-                      active && <Ionicons name="checkmark" size={20} color={colors.primary} />
-                    )}
+                    {active && <Ionicons name="checkmark" size={20} color={colors.primary} />}
                   </TouchableOpacity>
                 );
               })}
@@ -839,10 +800,4 @@ const styles = StyleSheet.create({
   },
   langOptionText: { fontSize: 15 },
   langOptionSub: { fontSize: 11, marginTop: 2 },
-  comingSoonBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
-  },
-  comingSoonText: { fontSize: 11 },
 });
