@@ -311,21 +311,18 @@ export default function SettingsScreen() {
               <Ionicons name="pencil" size={14} color={colors.mutedForeground} />
             </TouchableOpacity>
           )}
-          <Text style={[styles.profileSub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-            {t("settings.learningSub", { lang: prefs.targetLanguage })}
-          </Text>
+          <TouchableOpacity
+            onPress={() => setPicker("learning")}
+            activeOpacity={0.7}
+            style={[styles.learningPill, { backgroundColor: colors.primarySoft }]}
+          >
+            <Ionicons name="globe" size={14} color={colors.primary} />
+            <Text style={[styles.learningPillText, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
+              {t("settings.learningSub", { lang: prefs.targetLanguage })}
+            </Text>
+            <Ionicons name="chevron-down" size={14} color={colors.primary} />
+          </TouchableOpacity>
         </View>
-
-        {/* Languages */}
-        <Row
-          icon="globe"
-          iconBg={colors.primary}
-          iconColor="#FFFFFF"
-          title={t("settings.learning")}
-          subtitle={prefs.targetLanguage}
-          right={<Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />}
-          onPress={() => setPicker("learning")}
-        />
 
         {/* Activity */}
         <View style={styles.streakRow}>
@@ -683,6 +680,16 @@ const styles = StyleSheet.create({
   },
   profileName: { fontSize: 20 },
   profileSub: { fontSize: 13 },
+  learningPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+    marginTop: 2,
+  },
+  learningPillText: { fontSize: 13 },
   nameInput: {
     fontSize: 20,
     borderBottomWidth: 1.5,
