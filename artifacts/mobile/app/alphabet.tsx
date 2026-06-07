@@ -19,8 +19,7 @@ import { useT } from "@/hooks/useT";
 import { speakWord, prefetchSpeech, stopSpeaking } from "@/lib/speech";
 import { ALPHABETS, RTL_LANGUAGES } from "@/constants/alphabets";
 import { useAlphabetProgress } from "@/lib/alphabetProgress";
-
-const NON_LATIN_LANGS = new Set(["Japanese", "Chinese", "Korean", "Arabic", "Russian", "Hindi"]);
+import { letterSpoken, exampleSpoken } from "@/lib/alphabetSpeech";
 
 export default function AlphabetScreen() {
   const t = useT();
@@ -50,14 +49,10 @@ export default function AlphabetScreen() {
   // Warm the TTS cache for the visible letter + example, plus the NEXT letter, so
   // both tapping and advancing play instantly even on first encounter.
   useEffect(() => {
-    const useChar = NON_LATIN_LANGS.has(prefs.targetLanguage);
     const warm = (letter: (typeof letters)[number] | undefined) => {
       if (!letter) return;
-      const letterText = useChar
-        ? letter.char.split(/\s+/)[0]
-        : (letter.name ?? letter.char).replace(/\s*\(.*\)\s*/g, "").trim();
-      prefetchSpeech(letterText, prefs.targetLanguage);
-      prefetchSpeech(letter.example.replace(/\s*\(.*\)/, ""), prefs.targetLanguage);
+      prefetchSpeech(letterSpoken(letter, prefs.targetLanguage), prefs.targetLanguage);
+      prefetchSpeech(exampleSpoken(letter), prefs.targetLanguage);
     };
     warm(current);
     warm(letters[index + 1]);
@@ -237,11 +232,7 @@ export default function AlphabetScreen() {
                 activeOpacity={0.85}
                 onPress={() => {
                   if (!current) return;
-                  const useChar = NON_LATIN_LANGS.has(prefs.targetLanguage);
-                  const text = useChar
-                    ? current.char.split(/\s+/)[0]
-                    : (current.name ?? current.char).replace(/\s*\(.*\)\s*/g, "").trim();
-                  speak(text);
+                  speak(letterSpoken(current, prefs.targetLanguage));
                 }}
                 style={[styles.letterCard, { backgroundColor: colors.card, borderColor: colors.primarySoft }]}
               >
@@ -279,7 +270,7 @@ export default function AlphabetScreen() {
               <TouchableOpacity
                 style={styles.exampleRow}
                 activeOpacity={0.7}
-                onPress={() => current && speak(current.example.replace(/\s*\(.*\)/, ""), "example")}
+                onPress={() => current && speak(exampleSpoken(current), "example")}
               >
                 <View style={{ flex: 1 }}>
                   <Text

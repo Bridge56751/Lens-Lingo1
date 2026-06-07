@@ -121,7 +121,9 @@ export default function SentencesScreen() {
     );
   }
 
-  if (isError) {
+  // Data-first: only show the error screen when we have nothing cached. A
+  // background refetch that fails offline must not hide already-cached content.
+  if (isError && !data) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         {Header}

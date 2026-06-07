@@ -117,6 +117,20 @@ export type TKey =
   | "settings.activity"
   | "settings.dailyGoalSub"
   | "settings.challengesSub"
+  | "offline.title"
+  | "offline.download"
+  | "offline.subtitle"
+  | "offline.downloaded"
+  | "offline.start"
+  | "offline.redownload"
+  | "offline.errorTitle"
+  | "offline.errorBody"
+  | "offline.cancel"
+  | "offline.progress"
+  | "offline.phase.content"
+  | "offline.phase.examples"
+  | "offline.phase.audio"
+  | "offline.phase.done"
   | "vocab.title"
   | "vocab.all"
   | "vocab.empty"
@@ -445,6 +459,20 @@ const en: Record<TKey, string> = {
   "settings.activity": "ACTIVITY",
   "settings.dailyGoalSub": "Track your daily learning goal",
   "settings.challengesSub": "Earn badges as you learn",
+  "offline.title": "OFFLINE",
+  "offline.download": "Save {lang} for offline",
+  "offline.subtitle": "Use sentences, alphabet and flashcards with no connection",
+  "offline.downloaded": "Saved \u2014 {count} clips ready offline",
+  "offline.start": "Download",
+  "offline.redownload": "Update download",
+  "offline.errorTitle": "Download failed",
+  "offline.errorBody": "Something went wrong. Check your connection and try again.",
+  "offline.cancel": "Cancel",
+  "offline.progress": "{current} / {total}",
+  "offline.phase.content": "Getting content\u2026",
+  "offline.phase.examples": "Preparing examples\u2026",
+  "offline.phase.audio": "Downloading audio\u2026",
+  "offline.phase.done": "Done",
   "vocab.title": "Vocabulary",
   "vocab.all": "All",
   "vocab.empty": "No words yet",

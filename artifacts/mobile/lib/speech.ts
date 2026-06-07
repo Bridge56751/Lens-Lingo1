@@ -545,3 +545,60 @@ export function stopSpeaking(): void {
   teardownPlayback();
   cancelSynth();
 }
+
+/**
+ * Awaitable bulk warm of the audio cache for an explicit "download for offline"
+ * action. Unlike prefetchSpeech (debounced, single-lane, best-effort) this runs
+ * a small worker pool and reports progress so the UI can show a bar. Clips
+ * already on disk count as done immediately; individual failures are skipped.
+ * Stops scheduling new work when `signal` aborts (in-flight requests finish).
+ */
+export async function cacheAudioClips(
+  items: { text: string; language?: Language }[],
+  opts?: {
+    onProgress?: (completed: number, total: number) => void;
+    signal?: AbortSignal;
+  },
+): Promise<void> {
+  await ensureCacheLoaded();
+
+  // Dedupe by clip key, dropping blanks, so a shared phrase is fetched once.
+  const seen = new Set<string>();
+  const queue: { text: string; language?: Language }[] = [];
+  for (const it of items) {
+    const text = it.text?.trim();
+    if (!text) continue;
+    const key = clipKey(text, it.language);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    queue.push({ text, language: it.language });
+  }
+
+  const total = queue.length;
+  let completed = 0;
+  opts?.onProgress?.(0, total);
+  if (total === 0) return;
+
+  const CONCURRENCY = 4;
+  let cursor = 0;
+  const worker = async () => {
+    while (true) {
+      if (opts?.signal?.aborted) return;
+      const i = cursor++;
+      if (i >= queue.length) return;
+      const item = queue[i];
+      if (item && !audioCache.has(clipKey(item.text, item.language))) {
+        try {
+          await fetchAudio(item.text, "prefetch", item.language);
+        } catch {
+          // best-effort
+        }
+      }
+      completed++;
+      opts?.onProgress?.(completed, total);
+    }
+  };
+  await Promise.all(
+    Array.from({ length: Math.min(CONCURRENCY, total) }, () => worker()),
+  );
+}

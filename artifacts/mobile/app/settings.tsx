@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -27,7 +27,14 @@ import {
 import { useT } from "@/hooks/useT";
 import { LOCALE_NATIVE_NAMES, LOCALES, type Locale } from "@/constants/translations";
 import { useListOpenaiConversations } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { computeStreak, computeBestStreak } from "@/lib/streak";
+import {
+  downloadOfflinePack,
+  getPackState,
+  type OfflineProgress,
+  type PackState,
+} from "@/lib/offlinePack";
 
 function Row({
   icon,
@@ -100,6 +107,81 @@ export default function SettingsScreen() {
   const [picker, setPicker] = useState<PickerKind>(null);
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState(prefs.displayName);
+
+  // Offline download state, scoped to the current language pair.
+  const queryClient = useQueryClient();
+  const [packState, setPackState] = useState<PackState | null>(null);
+  const [downloading, setDownloading] = useState(false);
+  const [progress, setProgress] = useState<OfflineProgress | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+  // Identifies the current in-flight download so a stale async tail (e.g. after
+  // cancel + restart) can't clobber a newer run's UI state.
+  const runIdRef = useRef(0);
+
+  useEffect(() => {
+    let alive = true;
+    getPackState(prefs.targetLanguage, prefs.nativeLanguage).then((s) => {
+      if (alive) setPackState(s);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [prefs.targetLanguage, prefs.nativeLanguage]);
+
+  useEffect(() => {
+    return () => abortRef.current?.abort();
+  }, []);
+
+  const startDownload = async () => {
+    if (downloading) return;
+    Haptics.selectionAsync();
+    const controller = new AbortController();
+    const runId = runIdRef.current + 1;
+    runIdRef.current = runId;
+    abortRef.current = controller;
+    const isCurrent = () => runIdRef.current === runId;
+    setDownloading(true);
+    setProgress({ phase: "content", completed: 0, total: 1 });
+    try {
+      await downloadOfflinePack({
+        queryClient,
+        target: prefs.targetLanguage,
+        native: prefs.nativeLanguage,
+        signal: controller.signal,
+        onProgress: (p) => {
+          if (isCurrent()) setProgress(p);
+        },
+      });
+      if (isCurrent() && !controller.signal.aborted) {
+        const s = await getPackState(prefs.targetLanguage, prefs.nativeLanguage);
+        setPackState(s);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    } catch {
+      if (isCurrent() && !controller.signal.aborted) {
+        Alert.alert(t("offline.errorTitle"), t("offline.errorBody"));
+      }
+    } finally {
+      // Only the current run may reset shared UI state — a stale tail must not
+      // clobber a newer download started after cancel.
+      if (isCurrent()) {
+        setDownloading(false);
+        setProgress(null);
+        abortRef.current = null;
+      }
+    }
+  };
+
+  const cancelDownload = () => {
+    runIdRef.current += 1;
+    abortRef.current?.abort();
+    abortRef.current = null;
+    setDownloading(false);
+    setProgress(null);
+  };
+
+  const progressPct =
+    progress && progress.total > 0 ? progress.completed / progress.total : 0;
 
   const topPadding = Platform.OS === "web" ? 16 : insets.top;
   const bottomPadding = Platform.OS === "web" ? 34 : insets.bottom + 16;
@@ -300,6 +382,71 @@ export default function SettingsScreen() {
               router.push("/challenges");
             }}
           />
+        </View>
+
+        {/* Offline */}
+        <View style={{ gap: 8 }}>
+          <Text style={[styles.sectionLabel, { color: colors.mutedForeground, fontFamily: "Inter_600SemiBold" }]}>
+            {t("offline.title")}
+          </Text>
+          <View style={[styles.offlineCard, { backgroundColor: colors.card }]}>
+            <View style={styles.offlineHeadRow}>
+              <View style={[styles.rowIcon, { backgroundColor: "#DBEAFE" }]}>
+                <Ionicons name="cloud-download" size={18} color="#3B82F6" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.rowTitle, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
+                  {t("offline.download", { lang: prefs.targetLanguage })}
+                </Text>
+                <Text style={[styles.rowSubtitle, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                  {downloading
+                    ? t(`offline.phase.${progress?.phase ?? "content"}` as const)
+                    : packState
+                      ? t("offline.downloaded", { count: packState.clips })
+                      : t("offline.subtitle")}
+                </Text>
+              </View>
+              {!downloading && packState ? (
+                <Ionicons name="checkmark-circle" size={22} color="#22C55E" />
+              ) : null}
+            </View>
+
+            {downloading && progress ? (
+              <>
+                <View style={[styles.offlineTrack, { backgroundColor: colors.muted }]}>
+                  <View
+                    style={[
+                      styles.offlineFill,
+                      { backgroundColor: colors.primary, width: `${Math.round(progressPct * 100)}%` },
+                    ]}
+                  />
+                </View>
+                <View style={styles.offlineProgressRow}>
+                  <Text style={[styles.offlineProgressText, { color: colors.mutedForeground, fontFamily: "Inter_500Medium" }]}>
+                    {progress.total > 1
+                      ? t("offline.progress", { current: progress.completed, total: progress.total })
+                      : ""}
+                  </Text>
+                  <TouchableOpacity onPress={cancelDownload} activeOpacity={0.7} hitSlop={8}>
+                    <Text style={[styles.offlineCancel, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
+                      {t("offline.cancel")}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            ) : (
+              <TouchableOpacity
+                style={[styles.offlineBtn, { backgroundColor: colors.primary }]}
+                onPress={startDownload}
+                activeOpacity={0.85}
+              >
+                <Ionicons name={packState ? "refresh" : "cloud-download"} size={16} color="#FFFFFF" />
+                <Text style={[styles.offlineBtnText, { fontFamily: "Inter_600SemiBold" }]}>
+                  {packState ? t("offline.redownload") : t("offline.start")}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
 
         {/* About */}
@@ -563,6 +710,23 @@ const styles = StyleSheet.create({
   },
   rowTitle: { fontSize: 15 },
   rowSubtitle: { fontSize: 12, marginTop: 2 },
+
+  offlineCard: { borderRadius: 16, padding: 14, gap: 12 },
+  offlineHeadRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+  offlineTrack: { height: 8, borderRadius: 4, overflow: "hidden" },
+  offlineFill: { height: "100%", borderRadius: 4 },
+  offlineProgressRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  offlineProgressText: { fontSize: 12 },
+  offlineCancel: { fontSize: 14 },
+  offlineBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 12,
+    borderRadius: 14,
+  },
+  offlineBtnText: { color: "#FFFFFF", fontSize: 15 },
 
   modalBackdrop: {
     flex: 1,

@@ -38,6 +38,7 @@ import {
   AudioTooLongError,
   EmptyTranscriptError,
 } from "@/lib/audio";
+import { getOfflineExample, setOfflineExample } from "@/lib/offlineExamples";
 
 // Target languages whose scripts a default Latin/QWERTY keyboard can't type, so
 // the learner needs to add that keyboard to their device (or use the mic).
@@ -105,13 +106,25 @@ export default function VocabStudyScreen() {
     currentWordRef.current = card?.word;
     setSentence("");
     setFeedback(null);
-    if (card) {
-      const cached = exampleCache.current.get(card.word);
-      setExample(cached ?? null);
-    } else {
+    if (!card) {
       setExample(null);
+      return;
     }
-  }, [pos, card]);
+    const cached = exampleCache.current.get(card.word);
+    if (cached) {
+      setExample(cached);
+      return;
+    }
+    setExample(null);
+    // Offline-first: hydrate a previously downloaded example so studying saved
+    // words works with no network.
+    const word = card.word;
+    void getOfflineExample(target, native, word).then((stored) => {
+      if (!stored) return;
+      exampleCache.current.set(word, stored);
+      if (currentWordRef.current === word) setExample(stored);
+    });
+  }, [pos, card, target, native]);
 
   // Speak the word when a new card appears, and warm the audio for the next few
   // cards so advancing feels instant instead of waiting on a fresh synth.
@@ -155,6 +168,8 @@ export default function VocabStudyScreen() {
         data: { word: wordAtRequest, targetLanguage: target, nativeLanguage: native },
       });
       exampleCache.current.set(wordAtRequest, result);
+      // Persist so this example is available offline next time.
+      void setOfflineExample(target, native, wordAtRequest, result);
       // Ignore a result that arrives after the user has moved to another card.
       if (currentWordRef.current !== wordAtRequest) return;
       setExample(result);
