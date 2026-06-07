@@ -286,21 +286,16 @@ export default function SettingsScreen() {
           end={{ x: 1, y: 1 }}
           style={styles.profileCard}
         >
-          {/* Decorative globe + sparkles */}
+          {/* Decorative globe */}
           <View style={styles.profileGlobe} pointerEvents="none">
             <Ionicons name="earth" size={104} color="rgba(255,255,255,0.16)" />
-          </View>
-          <View pointerEvents="none">
-            <Ionicons name="sparkles" size={15} color="rgba(255,255,255,0.55)" style={styles.profileSpark1} />
-            <Ionicons name="sparkles" size={10} color="rgba(255,255,255,0.45)" style={styles.profileSpark2} />
-            <Ionicons name="star" size={9} color="rgba(255,255,255,0.4)" style={styles.profileSpark3} />
           </View>
 
           <View style={styles.profileTop}>
             {/* Avatar with edit badge */}
             <View style={styles.avatarWrap}>
               <View style={styles.avatarLg}>
-                <Ionicons name="person" size={34} color={colors.primary} />
+                <Ionicons name="person" size={28} color={colors.primary} />
               </View>
               {!editingName && (
                 <TouchableOpacity
@@ -730,22 +725,19 @@ const styles = StyleSheet.create({
     right: -16,
     top: 8,
   },
-  profileSpark1: { position: "absolute", top: 10, right: 96 },
-  profileSpark2: { position: "absolute", top: 60, right: 24 },
-  profileSpark3: { position: "absolute", top: 36, right: 110 },
   profileTop: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 14,
+    gap: 12,
   },
   avatarWrap: {
-    width: 72,
-    height: 72,
+    width: 58,
+    height: 58,
   },
   avatarLg: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+    width: 58,
+    height: 58,
+    borderRadius: 29,
     backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
@@ -767,7 +759,7 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
     gap: 8,
-    paddingRight: 56,
+    paddingRight: 40,
   },
   profileName: { fontSize: 24, letterSpacing: -0.4 },
   learningPill: {
