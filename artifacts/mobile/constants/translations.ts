@@ -105,6 +105,12 @@ export type TKey =
   | "settings.dailySub"
   | "settings.help"
   | "settings.version"
+  | "settings.account"
+  | "settings.signIn"
+  | "settings.signInSub"
+  | "settings.signInCta"
+  | "settings.comingSoonTitle"
+  | "settings.comingSoonBody"
   | "settings.chooseLearning"
   | "settings.chooseNative"
   | "settings.helpAlertTitle"
@@ -464,6 +470,12 @@ const en: Record<TKey, string> = {
   "settings.dailySub": "Practice every day",
   "settings.help": "Help & support",
   "settings.version": "Version",
+  "settings.account": "ACCOUNT",
+  "settings.signIn": "Sign in",
+  "settings.signInSub": "Save your progress and sync it to your email",
+  "settings.signInCta": "Sign in with Email",
+  "settings.comingSoonTitle": "Coming soon",
+  "settings.comingSoonBody": "Email accounts are on the way \u2014 soon you'll be able to save your progress and access it from any device.",
   "settings.chooseLearning": "Choose a language to learn",
   "settings.chooseNative": "Choose your language",
   "settings.helpAlertTitle": "Help",

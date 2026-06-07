@@ -324,6 +324,35 @@ export default function SettingsScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* Account / Sign in */}
+        <View style={[styles.signInCard, { backgroundColor: colors.card }]}>
+          <View style={styles.signInHeadRow}>
+            <View style={[styles.rowIcon, { backgroundColor: colors.primary }]}>
+              <Ionicons name="person-circle" size={20} color="#FFFFFF" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.rowTitle, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
+                {t("settings.signIn")}
+              </Text>
+              <Text style={[styles.rowSubtitle, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                {t("settings.signInSub")}
+              </Text>
+            </View>
+          </View>
+          <TouchableOpacity
+            style={[styles.signInBtn, { backgroundColor: colors.primary }]}
+            onPress={() =>
+              Alert.alert(t("settings.comingSoonTitle"), t("settings.comingSoonBody"))
+            }
+            activeOpacity={0.85}
+          >
+            <Ionicons name="mail" size={16} color="#FFFFFF" />
+            <Text style={[styles.signInBtnText, { fontFamily: "Inter_600SemiBold" }]}>
+              {t("settings.signInCta")}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Activity */}
         <View style={styles.streakRow}>
           <View style={[styles.streakCard, { backgroundColor: "rgba(251,191,36,0.18)" }]}>
@@ -690,6 +719,17 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   learningPillText: { fontSize: 13 },
+  signInCard: { borderRadius: 18, padding: 16, gap: 14 },
+  signInHeadRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+  signInBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 12,
+    borderRadius: 14,
+  },
+  signInBtnText: { color: "#FFFFFF", fontSize: 15 },
   nameInput: {
     fontSize: 20,
     borderBottomWidth: 1.5,
