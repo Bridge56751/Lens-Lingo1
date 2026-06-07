@@ -270,9 +270,9 @@ export default function SettingsScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Profile card */}
-        <View style={[styles.profileCard, { backgroundColor: colors.card }]}>
-          <View style={[styles.avatarLg, { backgroundColor: colors.primarySoft, borderColor: colors.primary }]}>
-            <Ionicons name="person" size={32} color={colors.primary} />
+        <View style={[styles.profileCard, { backgroundColor: "#5B3FD9" }]}>
+          <View style={[styles.avatarLg, { backgroundColor: "rgba(255,255,255,0.18)", borderColor: "rgba(255,255,255,0.55)" }]}>
+            <Ionicons name="person" size={32} color="#FFFFFF" />
           </View>
           {editingName ? (
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
@@ -283,8 +283,8 @@ export default function SettingsScreen() {
                 style={[
                   styles.nameInput,
                   {
-                    color: colors.foreground,
-                    borderColor: colors.primary,
+                    color: "#FFFFFF",
+                    borderColor: "rgba(255,255,255,0.7)",
                     fontFamily: "Inter_700Bold",
                   },
                 ]}
@@ -293,7 +293,7 @@ export default function SettingsScreen() {
                 maxLength={20}
               />
               <TouchableOpacity onPress={saveName} activeOpacity={0.7}>
-                <Ionicons name="checkmark-circle" size={28} color={colors.primary} />
+                <Ionicons name="checkmark-circle" size={28} color="#FFFFFF" />
               </TouchableOpacity>
             </View>
           ) : (
@@ -305,42 +305,42 @@ export default function SettingsScreen() {
               activeOpacity={0.7}
               style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
             >
-              <Text style={[styles.profileName, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
+              <Text style={[styles.profileName, { color: "#FFFFFF", fontFamily: "Inter_700Bold" }]}>
                 {prefs.displayName}
               </Text>
-              <Ionicons name="pencil" size={14} color={colors.mutedForeground} />
+              <Ionicons name="pencil" size={14} color="rgba(255,255,255,0.85)" />
             </TouchableOpacity>
           )}
-          <Text style={[styles.profileSub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+          <Text style={[styles.profileSub, { color: "rgba(255,255,255,0.85)", fontFamily: "Inter_400Regular" }]}>
             {t("settings.learningSub", { lang: prefs.targetLanguage })}
           </Text>
         </View>
 
         {/* Activity */}
         <View style={styles.streakRow}>
-          <View style={[styles.streakCard, { backgroundColor: "#FEF3C7" }]}>
+          <View style={[styles.streakCard, { backgroundColor: "#FBBF24" }]}>
             <Text style={{ fontSize: 22 }}>🔥</Text>
-            <Text style={[styles.streakNum, { color: "#D97706", fontFamily: "Inter_700Bold" }]}>
+            <Text style={[styles.streakNum, { color: "#422006", fontFamily: "Inter_700Bold" }]}>
               {streak}
             </Text>
-            <Text style={[styles.streakLabel, { color: "#B45309", fontFamily: "Inter_600SemiBold" }]}>
+            <Text style={[styles.streakLabel, { color: "#7A3E0A", fontFamily: "Inter_600SemiBold" }]}>
               {t("home.dailyStreak")}
             </Text>
           </View>
-          <View style={[styles.streakCard, { backgroundColor: "#DCFCE7" }]}>
-            <Ionicons name="trophy" size={20} color="#22C55E" />
-            <Text style={[styles.streakNum, { color: "#16A34A", fontFamily: "Inter_700Bold" }]}>
+          <View style={[styles.streakCard, { backgroundColor: "#047857" }]}>
+            <Ionicons name="trophy" size={20} color="#FFFFFF" />
+            <Text style={[styles.streakNum, { color: "#FFFFFF", fontFamily: "Inter_700Bold" }]}>
               {bestStreak}
             </Text>
-            <Text style={[styles.streakLabel, { color: "#15803D", fontFamily: "Inter_600SemiBold" }]}>
+            <Text style={[styles.streakLabel, { color: "rgba(255,255,255,0.9)", fontFamily: "Inter_600SemiBold" }]}>
               {t("home.bestStreak")}
             </Text>
           </View>
         </View>
         <Row
           icon="checkmark-circle"
-          iconBg="#DCFCE7"
-          iconColor="#22C55E"
+          iconBg="#16A34A"
+          iconColor="#FFFFFF"
           title={t("home.dailyGoal")}
           subtitle={t("settings.dailyGoalSub")}
           right={<Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />}
@@ -353,8 +353,8 @@ export default function SettingsScreen() {
         {/* Languages */}
         <Row
           icon="globe"
-          iconBg={colors.primarySoft}
-          iconColor={colors.primary}
+          iconBg={colors.primary}
+          iconColor="#FFFFFF"
           title={t("settings.learning")}
           subtitle={prefs.targetLanguage}
           right={<Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />}
@@ -365,13 +365,13 @@ export default function SettingsScreen() {
         <Section
           title={t("settings.preferences")}
           icon="options"
-          iconBg="#FEF3C7"
-          iconColor="#F59E0B"
+          iconBg="#F59E0B"
+          iconColor="#FFFFFF"
         >
           <Row
             icon="phone-portrait"
-            iconBg="#FEF3C7"
-            iconColor="#F59E0B"
+            iconBg="#F59E0B"
+            iconColor="#FFFFFF"
             title={t("settings.haptics")}
             subtitle={t("settings.hapticsSub")}
             right={
@@ -388,8 +388,8 @@ export default function SettingsScreen() {
           />
           <Row
             icon="school"
-            iconBg="#EDE9FE"
-            iconColor="#8B5CF6"
+            iconBg="#8B5CF6"
+            iconColor="#FFFFFF"
             title={t("settings.difficulty")}
             subtitle={t(`difficulty.${prefs.difficulty}` as const)}
             right={<Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />}
@@ -397,8 +397,8 @@ export default function SettingsScreen() {
           />
           <Row
             icon="notifications"
-            iconBg="#FCE7F3"
-            iconColor="#EC4899"
+            iconBg="#EC4899"
+            iconColor="#FFFFFF"
             title={t("settings.daily")}
             subtitle={t("settings.dailySub")}
             right={
@@ -416,13 +416,13 @@ export default function SettingsScreen() {
         <Section
           title={t("offline.title")}
           icon="cloud-download"
-          iconBg="#DBEAFE"
-          iconColor="#3B82F6"
+          iconBg="#3B82F6"
+          iconColor="#FFFFFF"
         >
           <View style={[styles.offlineCard, { backgroundColor: colors.card }]}>
             <View style={styles.offlineHeadRow}>
-              <View style={[styles.rowIcon, { backgroundColor: "#DBEAFE" }]}>
-                <Ionicons name="cloud-download" size={18} color="#3B82F6" />
+              <View style={[styles.rowIcon, { backgroundColor: "#3B82F6" }]}>
+                <Ionicons name="cloud-download" size={18} color="#FFFFFF" />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={[styles.rowTitle, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
@@ -483,13 +483,13 @@ export default function SettingsScreen() {
         <Section
           title={t("settings.about")}
           icon="information-circle"
-          iconBg={colors.muted}
-          iconColor={colors.mutedForeground}
+          iconBg="#64748B"
+          iconColor="#FFFFFF"
         >
           <Row
             icon="help-circle"
-            iconBg="#DCFCE7"
-            iconColor="#22C55E"
+            iconBg="#16A34A"
+            iconColor="#FFFFFF"
             title={t("settings.help")}
             right={<Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />}
             onPress={() =>
@@ -498,8 +498,8 @@ export default function SettingsScreen() {
           />
           <Row
             icon="information-circle"
-            iconBg={colors.muted}
-            iconColor={colors.mutedForeground}
+            iconBg="#64748B"
+            iconColor="#FFFFFF"
             title={t("settings.version")}
             subtitle="1.0.0"
           />
