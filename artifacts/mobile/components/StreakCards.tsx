@@ -58,9 +58,7 @@ function StreakCard({
         </Text>
         <Text
           style={[styles.label, { color: labelColor, fontFamily: "Inter_700Bold" }]}
-          numberOfLines={1}
-          adjustsFontSizeToFit
-          minimumFontScale={0.85}
+          numberOfLines={2}
         >
           {label}
         </Text>
@@ -126,9 +124,9 @@ const styles = StyleSheet.create({
   sparkle2: { position: "absolute", top: 30, right: 40 },
   sparkle3: { position: "absolute", bottom: 14, right: 22 },
   iconBox: {
-    width: 46,
-    height: 46,
-    borderRadius: 14,
+    width: 44,
+    height: 44,
+    borderRadius: 13,
     backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
@@ -137,6 +135,6 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
   },
-  num: { fontSize: 30, letterSpacing: -0.5, lineHeight: 34 },
-  label: { fontSize: 13, marginTop: 1 },
+  num: { fontSize: 28, letterSpacing: -0.5, lineHeight: 32 },
+  label: { fontSize: 12.5, lineHeight: 15, marginTop: 1 },
 });
