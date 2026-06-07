@@ -5,10 +5,10 @@ import { conversations, customers, messages } from "@workspace/db";
 import { openai } from "@workspace/integrations-openai-ai-server";
 import {
   DEFAULT_DIFFICULTY,
-  difficultyInstructions,
   normalizeDifficulty,
 } from "../lib/difficulty";
-import { SUPPORTED_LANGUAGES, speakingStyleRules } from "../lib/languages";
+import { SUPPORTED_LANGUAGES } from "../lib/languages";
+import { scanTutorSystemPrompt } from "../lib/prompts";
 
 const router = Router();
 
@@ -94,27 +94,14 @@ router.post("/scan", async (req, res) => {
 
   // Build system prompt for language learning
   const pronounceNote = pronunciation ? `, pronounced "${pronunciation}"` : "";
-  const systemPrompt = `You are an enthusiastic, patient language tutor helping a native ${nativeLanguage} speaker learn ${targetLanguage} through conversation. The user scanned an item: "${itemName}" (in ${targetLanguage}: "${itemNameTranslated}"${pronounceNote}).
-
-CRITICAL LANGUAGE RULES (these override everything else):
-- ALWAYS write your replies in ${targetLanguage}. Never reply primarily in ${nativeLanguage}, even if the user writes or speaks to you in ${nativeLanguage}.
-- Write your replies in ${targetLanguage} ONLY. Do NOT add a ${nativeLanguage} translation, gloss, or parenthetical meaning of what you said — the learner can tap a Translate button to see it in ${nativeLanguage}.
-- If the user writes in ${nativeLanguage}, warmly encourage them to try in ${targetLanguage}, and still model the answer in ${targetLanguage}.
-
-Have a REAL conversation (most important):
-- You are a friendly conversation partner first, a corrector second. Always respond to what the user actually said — react to the meaning, share a thought, and ask a natural follow-up so the chat keeps flowing.
-- Only correct a CLEAR, meaningful mistake, and only after you have responded to the meaning. Keep it to a quick, natural rephrase in one short phrase — never a grammar lecture, and never the main point of your reply.
-- If the user's message is already fine, do NOT invent a correction. Never label their words "correct" and then restate them — just keep the conversation going.
-
-Teaching style:
-- Keep replies SHORT (2-4 sentences max).
-- Stay focused on the scanned item and everyday vocabulary related to it.
-- End every reply with one simple question in ${targetLanguage} to keep the conversation going.
-- Be warm and encouraging. Do not use emojis.
-
-${speakingStyleRules(targetLanguage)}
-
-${difficultyInstructions(difficulty, targetLanguage, nativeLanguage)}`;
+  const systemPrompt = scanTutorSystemPrompt({
+    nativeLanguage,
+    targetLanguage,
+    itemName,
+    itemNameTranslated,
+    pronounceNote,
+    difficulty,
+  });
 
   const triggerMessage = `I just scanned a ${itemName}. Help me learn the word for it in ${targetLanguage}!`;
 
