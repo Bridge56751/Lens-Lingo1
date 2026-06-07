@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import {
@@ -242,7 +242,15 @@ export default function HomeScreen() {
   const { prefs } = usePreferences();
   const { languageProgress } = useAlphabetProgress();
   const alphabet = languageProgress(prefs.targetLanguage);
-  const { data: conversations } = useListOpenaiConversations();
+  const { data: conversations, refetch } = useListOpenaiConversations();
+
+  // Tab screens stay mounted in Expo Router, so refetch on focus to keep the
+  // chat count fresh after a new conversation is started elsewhere.
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [refetch]),
+  );
 
   const list = (conversations ?? []) as Conversation[];
 

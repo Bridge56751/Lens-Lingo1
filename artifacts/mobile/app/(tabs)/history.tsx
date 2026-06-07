@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -9,7 +9,7 @@ import {
   Platform,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import {
@@ -124,6 +124,15 @@ export default function HistoryScreen() {
 
   const { data: conversations, isLoading, refetch } = useListOpenaiConversations();
   const { mutate: deleteConversation } = useDeleteOpenaiConversation();
+
+  // Tab screens stay mounted in Expo Router, so React Query won't auto-refetch
+  // when the user returns here after starting a new chat. Refetch on focus so
+  // newly created conversations always show up without a manual pull-to-refresh.
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [refetch]),
+  );
 
   const handleDelete = (id: number) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
