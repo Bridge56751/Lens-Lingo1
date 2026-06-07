@@ -11,6 +11,8 @@ import {
   Switch,
   TextInput,
   Alert,
+  LayoutAnimation,
+  UIManager,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
@@ -76,6 +78,64 @@ function Row({
       </View>
       {right}
     </Wrapper>
+  );
+}
+
+// Collapsible accordion section. Tapping the header expands/collapses its rows
+// with a smooth layout animation. Keeps the Settings screen tidy and scales as
+// more groups get added later.
+if (
+  Platform.OS === "android" &&
+  UIManager.setLayoutAnimationEnabledExperimental
+) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
+function Section({
+  title,
+  icon,
+  iconBg,
+  iconColor,
+  defaultOpen = false,
+  children,
+}: {
+  title: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  iconBg: string;
+  iconColor: string;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+}) {
+  const colors = useColors();
+  const [open, setOpen] = useState(defaultOpen);
+  const toggle = () => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setOpen((o) => !o);
+    Haptics.selectionAsync();
+  };
+  return (
+    <View style={{ gap: 8 }}>
+      <TouchableOpacity
+        style={[styles.sectionHeader, { backgroundColor: colors.card }]}
+        onPress={toggle}
+        activeOpacity={0.7}
+      >
+        <View style={[styles.sectionHeaderIcon, { backgroundColor: iconBg }]}>
+          <Ionicons name={icon} size={17} color={iconColor} />
+        </View>
+        <Text
+          style={[styles.sectionHeaderTitle, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}
+        >
+          {title}
+        </Text>
+        <Ionicons
+          name={open ? "chevron-up" : "chevron-down"}
+          size={18}
+          color={colors.mutedForeground}
+        />
+      </TouchableOpacity>
+      {open ? <View style={{ gap: 8 }}>{children}</View> : null}
+    </View>
   );
 }
 
@@ -209,7 +269,7 @@ export default function SettingsScreen() {
       </View>
 
       <ScrollView
-        contentContainerStyle={{ padding: 18, paddingBottom: bottomPadding, gap: 22 }}
+        contentContainerStyle={{ padding: 18, paddingBottom: bottomPadding, gap: 14 }}
         showsVerticalScrollIndicator={false}
       >
         {/* Profile card */}
@@ -260,10 +320,13 @@ export default function SettingsScreen() {
         </View>
 
         {/* Languages */}
-        <View style={{ gap: 8 }}>
-          <Text style={[styles.sectionLabel, { color: colors.mutedForeground, fontFamily: "Inter_600SemiBold" }]}>
-            {t("settings.languages")}
-          </Text>
+        <Section
+          title={t("settings.languages")}
+          icon="globe"
+          iconBg={colors.primarySoft}
+          iconColor={colors.primary}
+          defaultOpen
+        >
           <Row
             icon="globe"
             iconBg={colors.primarySoft}
@@ -282,13 +345,15 @@ export default function SettingsScreen() {
             right={<Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />}
             onPress={() => setPicker("native")}
           />
-        </View>
+        </Section>
 
         {/* Preferences */}
-        <View style={{ gap: 8 }}>
-          <Text style={[styles.sectionLabel, { color: colors.mutedForeground, fontFamily: "Inter_600SemiBold" }]}>
-            {t("settings.preferences")}
-          </Text>
+        <Section
+          title={t("settings.preferences")}
+          icon="options"
+          iconBg="#FEF3C7"
+          iconColor="#F59E0B"
+        >
           <Row
             icon="phone-portrait"
             iconBg="#FEF3C7"
@@ -331,13 +396,15 @@ export default function SettingsScreen() {
               />
             }
           />
-        </View>
+        </Section>
 
         {/* Activity */}
-        <View style={{ gap: 8 }}>
-          <Text style={[styles.sectionLabel, { color: colors.mutedForeground, fontFamily: "Inter_600SemiBold" }]}>
-            {t("settings.activity")}
-          </Text>
+        <Section
+          title={t("settings.activity")}
+          icon="stats-chart"
+          iconBg="#DCFCE7"
+          iconColor="#22C55E"
+        >
           <View style={styles.streakRow}>
             <View style={[styles.streakCard, { backgroundColor: "#FEF3C7" }]}>
               <Text style={{ fontSize: 22 }}>🔥</Text>
@@ -382,13 +449,15 @@ export default function SettingsScreen() {
               router.push("/challenges");
             }}
           />
-        </View>
+        </Section>
 
         {/* Offline */}
-        <View style={{ gap: 8 }}>
-          <Text style={[styles.sectionLabel, { color: colors.mutedForeground, fontFamily: "Inter_600SemiBold" }]}>
-            {t("offline.title")}
-          </Text>
+        <Section
+          title={t("offline.title")}
+          icon="cloud-download"
+          iconBg="#DBEAFE"
+          iconColor="#3B82F6"
+        >
           <View style={[styles.offlineCard, { backgroundColor: colors.card }]}>
             <View style={styles.offlineHeadRow}>
               <View style={[styles.rowIcon, { backgroundColor: "#DBEAFE" }]}>
@@ -447,13 +516,15 @@ export default function SettingsScreen() {
               </TouchableOpacity>
             )}
           </View>
-        </View>
+        </Section>
 
         {/* About */}
-        <View style={{ gap: 8 }}>
-          <Text style={[styles.sectionLabel, { color: colors.mutedForeground, fontFamily: "Inter_600SemiBold" }]}>
-            {t("settings.about")}
-          </Text>
+        <Section
+          title={t("settings.about")}
+          icon="information-circle"
+          iconBg={colors.muted}
+          iconColor={colors.mutedForeground}
+        >
           <Row
             icon="help-circle"
             iconBg="#DCFCE7"
@@ -471,7 +542,7 @@ export default function SettingsScreen() {
             title={t("settings.version")}
             subtitle="1.0.0"
           />
-        </View>
+        </Section>
       </ScrollView>
 
       {/* Language picker modal (used for both learning & native) */}
@@ -683,7 +754,22 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 
-  sectionLabel: { fontSize: 11, letterSpacing: 1, paddingHorizontal: 4 },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 16,
+  },
+  sectionHeaderIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sectionHeaderTitle: { flex: 1, fontSize: 15 },
   streakRow: { flexDirection: "row", gap: 10 },
   streakCard: {
     flex: 1,
