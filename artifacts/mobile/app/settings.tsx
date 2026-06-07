@@ -33,6 +33,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useAuth, useClerk, useUser } from "@clerk/expo";
 import { computeStreak, computeBestStreak } from "@/lib/streak";
 import { StreakCards } from "@/components/StreakCards";
+import { LinearGradient } from "expo-linear-gradient";
 import {
   downloadOfflinePack,
   getPackState,
@@ -279,112 +280,124 @@ export default function SettingsScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Profile card */}
-        <View style={[styles.profileCard, { backgroundColor: colors.card }]}>
-          <View style={[styles.avatarLg, { backgroundColor: colors.primarySoft, borderColor: colors.primary }]}>
-            <Ionicons name="person" size={32} color={colors.primary} />
+        <LinearGradient
+          colors={["#7C5CFF", "#5326CC"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.profileCard}
+        >
+          {/* Decorative globe + sparkles */}
+          <View style={styles.profileGlobe} pointerEvents="none">
+            <Ionicons name="earth" size={104} color="rgba(255,255,255,0.16)" />
           </View>
-          {editingName ? (
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-              <TextInput
-                value={nameDraft}
-                onChangeText={setNameDraft}
-                autoFocus
-                style={[
-                  styles.nameInput,
-                  {
-                    color: colors.foreground,
-                    borderColor: colors.primary,
-                    fontFamily: "Inter_700Bold",
-                  },
-                ]}
-                onSubmitEditing={saveName}
-                returnKeyType="done"
-                maxLength={20}
-              />
-              <TouchableOpacity onPress={saveName} activeOpacity={0.7}>
-                <Ionicons name="checkmark-circle" size={28} color={colors.primary} />
-              </TouchableOpacity>
+          <View pointerEvents="none">
+            <Ionicons name="sparkles" size={15} color="rgba(255,255,255,0.55)" style={styles.profileSpark1} />
+            <Ionicons name="sparkles" size={10} color="rgba(255,255,255,0.45)" style={styles.profileSpark2} />
+            <Ionicons name="star" size={9} color="rgba(255,255,255,0.4)" style={styles.profileSpark3} />
+          </View>
+
+          <View style={styles.profileTop}>
+            {/* Avatar with edit badge */}
+            <View style={styles.avatarWrap}>
+              <View style={styles.avatarLg}>
+                <Ionicons name="person" size={34} color={colors.primary} />
+              </View>
+              {!editingName && (
+                <TouchableOpacity
+                  style={styles.avatarEdit}
+                  onPress={() => {
+                    setNameDraft(prefs.displayName);
+                    setEditingName(true);
+                    Haptics.selectionAsync();
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons name="pencil" size={11} color={colors.primary} />
+                </TouchableOpacity>
+              )}
             </View>
-          ) : (
-            <TouchableOpacity
-              onPress={() => {
-                setNameDraft(prefs.displayName);
-                setEditingName(true);
-              }}
-              activeOpacity={0.7}
-              style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
-            >
-              <Text style={[styles.profileName, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-                {prefs.displayName}
-              </Text>
-              <Ionicons name="pencil" size={14} color={colors.mutedForeground} />
-            </TouchableOpacity>
-          )}
-          <TouchableOpacity
-            onPress={() => setPicker("learning")}
-            activeOpacity={0.7}
-            style={[styles.learningPill, { backgroundColor: colors.primarySoft }]}
-          >
-            <Ionicons name="globe" size={14} color={colors.primary} />
-            <Text style={[styles.learningPillText, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
-              {t("settings.learningSub", { lang: prefs.targetLanguage })}
-            </Text>
-            <Ionicons name="chevron-down" size={14} color={colors.primary} />
-          </TouchableOpacity>
 
-          <View style={[styles.profileDivider, { backgroundColor: colors.border }]} />
+            {/* Name + language + subtitle */}
+            <View style={styles.profileMid}>
+              {editingName ? (
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                  <TextInput
+                    value={nameDraft}
+                    onChangeText={setNameDraft}
+                    autoFocus
+                    style={[styles.nameInput, { color: "#FFFFFF", borderColor: "rgba(255,255,255,0.7)", fontFamily: "Inter_700Bold" }]}
+                    placeholderTextColor="rgba(255,255,255,0.6)"
+                    onSubmitEditing={saveName}
+                    returnKeyType="done"
+                    maxLength={20}
+                  />
+                  <TouchableOpacity onPress={saveName} activeOpacity={0.7}>
+                    <Ionicons name="checkmark-circle" size={26} color="#FFFFFF" />
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <Text style={[styles.profileName, { color: "#FFFFFF", fontFamily: "Inter_700Bold" }]} numberOfLines={1}>
+                  {prefs.displayName}
+                </Text>
+              )}
 
-          {isSignedIn ? (
-            <>
-              <Text style={[styles.profileSignInSub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-                {t("settings.signedInAs")}
-              </Text>
-              {accountEmail ? (
+              <TouchableOpacity
+                onPress={() => setPicker("learning")}
+                activeOpacity={0.8}
+                style={styles.learningPill}
+              >
+                <Ionicons name="globe" size={14} color={colors.primary} />
+                <Text style={[styles.learningPillText, { color: colors.primary, fontFamily: "Inter_700Bold" }]} numberOfLines={1}>
+                  {t("settings.learningSub", { lang: prefs.targetLanguage })}
+                </Text>
+                <Ionicons name="chevron-down" size={14} color={colors.primary} />
+              </TouchableOpacity>
+
+              {isSignedIn && accountEmail ? (
                 <View style={styles.accountEmailRow}>
-                  <Ionicons name="checkmark-circle" size={16} color="#22C55E" />
-                  <Text
-                    style={[styles.accountEmail, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}
-                    numberOfLines={1}
-                  >
+                  <Ionicons name="checkmark-circle" size={15} color="#FFFFFF" />
+                  <Text style={[styles.profileSignInSub, { color: "rgba(255,255,255,0.92)", fontFamily: "Inter_600SemiBold" }]} numberOfLines={1}>
                     {accountEmail}
                   </Text>
                 </View>
-              ) : null}
-              <TouchableOpacity
-                style={[styles.profileSignIn, { backgroundColor: colors.muted }]}
-                onPress={async () => {
-                  Haptics.selectionAsync();
-                  await signOut();
-                }}
-                activeOpacity={0.85}
-              >
-                <Ionicons name="log-out-outline" size={16} color={colors.foreground} />
-                <Text style={[styles.profileSignInText, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
-                  {t("settings.signOut")}
+              ) : (
+                <Text style={[styles.profileSignInSub, { color: "rgba(255,255,255,0.82)", fontFamily: "Inter_400Regular" }]}>
+                  {isSignedIn ? t("settings.signedInAs") : t("settings.signInSub")}
                 </Text>
-              </TouchableOpacity>
-            </>
-          ) : (
-            <>
-              <Text style={[styles.profileSignInSub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-                {t("settings.signInSub")}
+              )}
+            </View>
+          </View>
+
+          {isSignedIn ? (
+            <TouchableOpacity
+              style={styles.profileSignOut}
+              onPress={async () => {
+                Haptics.selectionAsync();
+                await signOut();
+              }}
+              activeOpacity={0.85}
+            >
+              <Ionicons name="log-out-outline" size={16} color="#FFFFFF" />
+              <Text style={[styles.profileSignOutText, { color: "#FFFFFF", fontFamily: "Inter_700Bold" }]}>
+                {t("settings.signOut")}
               </Text>
-              <TouchableOpacity
-                style={[styles.profileSignIn, { backgroundColor: colors.primary }]}
-                onPress={() => {
-                  Haptics.selectionAsync();
-                  router.push("/auth");
-                }}
-                activeOpacity={0.85}
-              >
-                <Ionicons name="mail" size={16} color="#FFFFFF" />
-                <Text style={[styles.profileSignInText, { fontFamily: "Inter_600SemiBold" }]}>
-                  {t("settings.signInCta")}
-                </Text>
-              </TouchableOpacity>
-            </>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={styles.profileSignIn}
+              onPress={() => {
+                Haptics.selectionAsync();
+                router.push("/auth");
+              }}
+              activeOpacity={0.9}
+            >
+              <Ionicons name="mail" size={18} color={colors.primary} />
+              <Text style={[styles.profileSignInText, { color: colors.primary, fontFamily: "Inter_700Bold" }]}>
+                {t("settings.signInCta")}
+              </Text>
+            </TouchableOpacity>
           )}
-        </View>
+        </LinearGradient>
 
         {/* Activity */}
         <StreakCards streak={streak} bestStreak={bestStreak} />
@@ -707,60 +720,101 @@ const styles = StyleSheet.create({
   headerTitle: { flex: 1, textAlign: "center", fontSize: 17 },
 
   profileCard: {
+    padding: 18,
+    borderRadius: 24,
+    gap: 14,
+    overflow: "hidden",
+  },
+  profileGlobe: {
+    position: "absolute",
+    right: -16,
+    top: 8,
+  },
+  profileSpark1: { position: "absolute", top: 10, right: 96 },
+  profileSpark2: { position: "absolute", top: 60, right: 24 },
+  profileSpark3: { position: "absolute", top: 36, right: 110 },
+  profileTop: {
+    flexDirection: "row",
     alignItems: "center",
-    padding: 22,
-    borderRadius: 22,
-    gap: 8,
+    gap: 14,
+  },
+  avatarWrap: {
+    width: 72,
+    height: 72,
   },
   avatarLg: {
-    width: 76,
-    height: 76,
-    borderRadius: 38,
-    borderWidth: 3,
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 4,
   },
-  profileName: { fontSize: 20 },
-  profileSub: { fontSize: 13 },
+  avatarEdit: {
+    position: "absolute",
+    right: -2,
+    bottom: -2,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 3,
+    borderColor: "#6A45E8",
+  },
+  profileMid: {
+    flex: 1,
+    minWidth: 0,
+    gap: 8,
+    paddingRight: 56,
+  },
+  profileName: { fontSize: 24, letterSpacing: -0.4 },
   learningPill: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
     paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingVertical: 7,
     borderRadius: 999,
-    marginTop: 2,
+    backgroundColor: "#FFFFFF",
+    alignSelf: "flex-start",
+    maxWidth: "100%",
   },
-  learningPillText: { fontSize: 13 },
-  profileDivider: { alignSelf: "stretch", height: 1, marginTop: 8, marginBottom: 2 },
-  profileSignInSub: { fontSize: 12, textAlign: "center" },
+  learningPillText: { fontSize: 13, flexShrink: 1 },
+  profileSignInSub: { fontSize: 13, flexShrink: 1 },
   profileSignIn: {
-    alignSelf: "stretch",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    paddingVertical: 15,
+    borderRadius: 16,
+    backgroundColor: "#FFFFFF",
+  },
+  profileSignInText: { fontSize: 16 },
+  profileSignOut: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    paddingVertical: 12,
-    borderRadius: 14,
-    marginTop: 4,
+    paddingVertical: 14,
+    borderRadius: 16,
+    backgroundColor: "rgba(255,255,255,0.18)",
   },
-  profileSignInText: { color: "#FFFFFF", fontSize: 15 },
+  profileSignOutText: { fontSize: 15 },
   accountEmailRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
     gap: 6,
-    marginTop: 2,
   },
-  accountEmail: { fontSize: 15, maxWidth: "85%" },
   nameInput: {
-    fontSize: 20,
+    fontSize: 22,
     borderBottomWidth: 1.5,
     paddingVertical: 2,
-    paddingHorizontal: 4,
-    minWidth: 160,
-    textAlign: "center",
+    paddingHorizontal: 2,
+    minWidth: 120,
+    flexShrink: 1,
   },
 
   sectionHeader: {
