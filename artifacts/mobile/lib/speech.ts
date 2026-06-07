@@ -324,6 +324,13 @@ async function fetchAudio(
 // A token guards against races: rapid taps should only play the latest request.
 let playToken = 0;
 let nativePlayer: AudioPlayer | null = null;
+// Every native player we create is tracked here until torn down. Spam-tapping
+// can create a player and supersede it before its clip finishes loading; on
+// native, remove() on a still-loading player doesn't always halt the deferred
+// playback, so a superseded clip can still start and overlap ("stacked
+// voices"). Stopping every tracked player on teardown — not just the latest —
+// guarantees no orphan keeps playing.
+const nativePlayers = new Set<AudioPlayer>();
 let webAudio: HTMLAudioElement | null = null;
 let audioModeReady = false;
 
@@ -350,14 +357,24 @@ function teardownPlayback(): void {
     }
     webAudio = null;
   }
-  if (nativePlayer) {
-    try {
-      nativePlayer.remove();
-    } catch {
-      // ignore
+  if (nativePlayers.size > 0) {
+    for (const p of nativePlayers) {
+      // Pause first: on a still-loading player remove() alone can let the
+      // deferred play() fire anyway, so an explicit pause guarantees silence.
+      try {
+        p.pause();
+      } catch {
+        // ignore
+      }
+      try {
+        p.remove();
+      } catch {
+        // ignore
+      }
     }
-    nativePlayer = null;
+    nativePlayers.clear();
   }
+  nativePlayer = null;
 }
 
 function cancelSynth(): void {
@@ -442,16 +459,34 @@ async function playCached(audio: CacheValue, token: number): Promise<boolean> {
       if (webAudio === el) webAudio = null;
       return false;
     }
+    // A newer tap may have landed while play() was resolving — stop this clip
+    // so two voices don't overlap.
+    if (token !== playToken) {
+      try {
+        el.pause();
+      } catch {
+        // ignore
+      }
+      if (el.src.startsWith("blob:")) URL.revokeObjectURL(el.src);
+      if (webAudio === el) webAudio = null;
+    }
     return true;
   }
 
   const player = createAudioPlayer({ uri: audio as string });
   nativePlayer = player;
+  nativePlayers.add(player);
   player.addListener("playbackStatusUpdate", (status) => {
     if (status.didJustFinish && nativePlayer === player) teardownPlayback();
   });
+  // A newer tap may have superseded this request while the clip was loading;
+  // don't even start playback in that case.
+  if (token !== playToken) {
+    teardownPlayback();
+    return true;
+  }
   player.play();
-  // Guard against a newer request that started while the player was loading.
+  // Guard once more against a request that won the race a moment ago.
   if (token !== playToken) {
     teardownPlayback();
   }
