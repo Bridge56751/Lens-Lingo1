@@ -241,6 +241,7 @@ export type TKey =
   | "history.switchAndOpen"
   | "history.keepCurrent"
   | "history.currentLangTag"
+  | "history.grade"
   | "badge.firstScan.title"
   | "badge.firstScan.desc"
   | "badge.chatty.title"
@@ -584,6 +585,7 @@ const en: Record<TKey, string> = {
   "history.switchAndOpen": "Switch to {lang}",
   "history.keepCurrent": "Cancel",
   "history.currentLangTag": "Learning now",
+  "history.grade": "Grade {score}",
   "badge.firstScan.title": "First Scan",
   "badge.firstScan.desc": "Complete your first scan",
   "badge.chatty.title": "Chatty",

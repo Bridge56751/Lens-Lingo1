@@ -107,7 +107,7 @@ function ConversationItem({
             <View style={[styles.gradeBadge, { backgroundColor: colors.primarySoft }]}>
               <Ionicons name="ribbon" size={11} color={colors.primary} />
               <Text style={[styles.gradeBadgeText, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
-                {item.gradeScore}
+                {t("history.grade", { score: item.gradeScore })}
               </Text>
             </View>
           ) : null}
@@ -365,8 +365,8 @@ const styles = StyleSheet.create({
   gradeBadge: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 3,
-    paddingHorizontal: 8,
+    gap: 4,
+    paddingHorizontal: 10,
     paddingVertical: 3,
     borderRadius: 8,
   },
