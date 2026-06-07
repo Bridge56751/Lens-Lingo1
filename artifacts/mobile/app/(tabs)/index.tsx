@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -24,8 +24,6 @@ import { usePreferences, LANGUAGES, type Language } from "@/hooks/usePreferences
 import { useT } from "@/hooks/useT";
 import { LOCALE_NATIVE_NAMES, type Locale } from "@/constants/translations";
 import { useAlphabetProgress } from "@/lib/alphabetProgress";
-import { computeStreak, computeBestStreak } from "@/lib/streak";
-import { StreakCards } from "@/components/StreakCards";
 
 type Conversation = {
   id: number;
@@ -266,21 +264,6 @@ export default function HomeScreen() {
     };
   }, [list]);
 
-  const { streak, bestStreak } = useMemo(() => {
-    const dates = list.map((c) => c.createdAt);
-    const current = computeStreak(dates);
-    const best = Math.max(computeBestStreak(dates), current, prefs.bestStreak ?? 0);
-    return { streak: current, bestStreak: best };
-  }, [list, prefs.bestStreak]);
-
-  // Best streak is a high-water mark — persist new highs from Home too so the
-  // value stays durable even if the user never opens Settings.
-  useEffect(() => {
-    if (bestStreak > (prefs.bestStreak ?? 0)) {
-      update("bestStreak", bestStreak);
-    }
-  }, [bestStreak, prefs.bestStreak, update]);
-
   const topPadding = Platform.OS === "web" ? 16 : insets.top;
   const bottomPadding = Platform.OS === "web" ? 34 + 84 : insets.bottom + 90;
 
@@ -358,9 +341,6 @@ export default function HomeScreen() {
         </View>
 
         <View style={[styles.headerDivider, { backgroundColor: colors.border }]} />
-
-        {/* Streak cards */}
-        <StreakCards streak={streak} bestStreak={bestStreak} />
 
         {/* Hero card */}
         <View style={[styles.hero, { backgroundColor: "#5B3FD9" }]}>
