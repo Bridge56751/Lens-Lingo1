@@ -322,32 +322,21 @@ export default function SettingsScreen() {
             </Text>
             <Ionicons name="chevron-down" size={14} color={colors.primary} />
           </TouchableOpacity>
-        </View>
 
-        {/* Account / Sign in */}
-        <View style={[styles.signInCard, { backgroundColor: colors.card }]}>
-          <View style={styles.signInHeadRow}>
-            <View style={[styles.rowIcon, { backgroundColor: colors.primary }]}>
-              <Ionicons name="person-circle" size={20} color="#FFFFFF" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.rowTitle, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
-                {t("settings.signIn")}
-              </Text>
-              <Text style={[styles.rowSubtitle, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-                {t("settings.signInSub")}
-              </Text>
-            </View>
-          </View>
+          <View style={[styles.profileDivider, { backgroundColor: colors.border }]} />
+
+          <Text style={[styles.profileSignInSub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+            {t("settings.signInSub")}
+          </Text>
           <TouchableOpacity
-            style={[styles.signInBtn, { backgroundColor: colors.primary }]}
+            style={[styles.profileSignIn, { backgroundColor: colors.primary }]}
             onPress={() =>
               Alert.alert(t("settings.comingSoonTitle"), t("settings.comingSoonBody"))
             }
             activeOpacity={0.85}
           >
             <Ionicons name="mail" size={16} color="#FFFFFF" />
-            <Text style={[styles.signInBtnText, { fontFamily: "Inter_600SemiBold" }]}>
+            <Text style={[styles.profileSignInText, { fontFamily: "Inter_600SemiBold" }]}>
               {t("settings.signInCta")}
             </Text>
           </TouchableOpacity>
@@ -719,17 +708,19 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   learningPillText: { fontSize: 13 },
-  signInCard: { borderRadius: 18, padding: 16, gap: 14 },
-  signInHeadRow: { flexDirection: "row", alignItems: "center", gap: 12 },
-  signInBtn: {
+  profileDivider: { alignSelf: "stretch", height: 1, marginTop: 8, marginBottom: 2 },
+  profileSignInSub: { fontSize: 12, textAlign: "center" },
+  profileSignIn: {
+    alignSelf: "stretch",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
     paddingVertical: 12,
     borderRadius: 14,
+    marginTop: 4,
   },
-  signInBtnText: { color: "#FFFFFF", fontSize: 15 },
+  profileSignInText: { color: "#FFFFFF", fontSize: 15 },
   nameInput: {
     fontSize: 20,
     borderBottomWidth: 1.5,
