@@ -29,6 +29,24 @@ session token and only finish on success.
   endpoint is idempotent so retries/double-fires are safe.
 
 Identity resolution lives in `customer.ts`: a Clerk session resolves/creates the
-`customers` row by `auth_user_id` and lazily stores the Clerk-**verified** email;
+`customers` row by `auth_user_id` and stores the Clerk-**verified** email;
 otherwise falls back to the device row. `customers.auth_user_id` (unique) + `email`
 are nullable and `device_id` is nullable.
+
+**Rule:** sync the verified email on every authenticated resolution + at link
+time, not just when the stored value is null.
+- **Why:** a user can change their primary verified email in Clerk; a
+  backfill-only-when-null policy leaves Supabase stale forever.
+- **How to apply:** call `getVerifiedEmail()` and overwrite only when it returns a
+  non-null value that differs from the stored one. `getVerifiedEmail` returns null
+  on both error and no-verified-primary, so the non-null guard keeps the prior
+  value instead of clobbering it (never null out an existing email on a transient
+  Clerk failure).
+
+**Rule:** `/account/link` must lock the device row `FOR UPDATE` inside the merge
+transaction.
+- **Why:** sequential idempotency isn't enough — two concurrent/retried link calls
+  can both read the same device counters before either delete wins, double-counting
+  scan/chat/message usage into the account.
+- **How to apply:** `tx.select()...for("update")` on the device row; the second tx
+  blocks, then re-evaluates and finds the row deleted -> clean no-op.

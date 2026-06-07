@@ -79,11 +79,15 @@ export async function resolveCustomer(
 
       req.customerId = account?.id;
 
-      // Lazily backfill the verified primary email the first time we see this
-      // account (or any time it's still missing).
-      if (account && !account.email) {
+      // Keep the account's stored email in sync with the Clerk-verified primary
+      // address (handles the user changing their primary email in Clerk). Only
+      // overwrite when we successfully read a non-null verified email that
+      // differs — getVerifiedEmail returns null both on error and when there is
+      // no verified primary, and we keep the prior value in those cases rather
+      // than clobbering it.
+      if (account) {
         const email = await getVerifiedEmail(userId);
-        if (email) {
+        if (email && email !== account.email) {
           await db
             .update(customers)
             .set({ email })

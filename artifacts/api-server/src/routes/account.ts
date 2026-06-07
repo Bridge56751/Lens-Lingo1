@@ -41,11 +41,17 @@ router.post("/account/link", requireAuth, async (req, res) => {
 
   try {
     const result = await db.transaction(async (tx) => {
+      // FOR UPDATE locks the device row so concurrent/retried link calls
+      // serialize: the second transaction blocks until the first commits, then
+      // re-evaluates the predicate and finds the row already deleted -> clean
+      // no-op. Without the lock, two callers could both read the same counters
+      // and double-count them into the account.
       const [device] = await tx
         .select()
         .from(customers)
         .where(eq(customers.deviceId, deviceId))
-        .limit(1);
+        .limit(1)
+        .for("update");
 
       // Unknown device, or the account itself: nothing to carry over.
       if (!device || device.id === accountId) {
@@ -98,8 +104,9 @@ router.post("/account/link", requireAuth, async (req, res) => {
       };
     });
 
-    // Ensure the verified primary email is on the account (middleware backfills
-    // it lazily, but make the link response authoritative).
+    // Make the link response authoritative for the verified primary email and
+    // keep it in sync: overwrite when Clerk returns a non-null verified email
+    // that differs from what's stored (keep prior on error / no verified primary).
     const [account] = await db
       .select({ email: customers.email })
       .from(customers)
@@ -107,15 +114,13 @@ router.post("/account/link", requireAuth, async (req, res) => {
       .limit(1);
 
     let email = account?.email ?? null;
-    if (!email) {
-      const verified = await getVerifiedEmail(authUserId);
-      if (verified) {
-        await db
-          .update(customers)
-          .set({ email: verified })
-          .where(eq(customers.id, accountId));
-        email = verified;
-      }
+    const verified = await getVerifiedEmail(authUserId);
+    if (verified && verified !== email) {
+      await db
+        .update(customers)
+        .set({ email: verified })
+        .where(eq(customers.id, accountId));
+      email = verified;
     }
 
     res.json({ ...result, email });
