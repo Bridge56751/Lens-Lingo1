@@ -32,6 +32,7 @@ import { useListOpenaiConversations } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth, useClerk, useUser } from "@clerk/expo";
 import { computeStreak, computeBestStreak } from "@/lib/streak";
+import { StreakCards } from "@/components/StreakCards";
 import {
   downloadOfflinePack,
   getPackState,
@@ -386,26 +387,7 @@ export default function SettingsScreen() {
         </View>
 
         {/* Activity */}
-        <View style={styles.streakRow}>
-          <View style={[styles.streakCard, { backgroundColor: "rgba(251,191,36,0.18)" }]}>
-            <Text style={{ fontSize: 22 }}>🔥</Text>
-            <Text style={[styles.streakNum, { color: "#B45309", fontFamily: "Inter_700Bold" }]}>
-              {streak}
-            </Text>
-            <Text style={[styles.streakLabel, { color: "#92400E", fontFamily: "Inter_600SemiBold" }]}>
-              {t("home.dailyStreak")}
-            </Text>
-          </View>
-          <View style={[styles.streakCard, { backgroundColor: "rgba(4,120,87,0.14)" }]}>
-            <Ionicons name="trophy" size={20} color="#047857" />
-            <Text style={[styles.streakNum, { color: "#047857", fontFamily: "Inter_700Bold" }]}>
-              {bestStreak}
-            </Text>
-            <Text style={[styles.streakLabel, { color: "#15803D", fontFamily: "Inter_600SemiBold" }]}>
-              {t("home.bestStreak")}
-            </Text>
-          </View>
-        </View>
+        <StreakCards streak={streak} bestStreak={bestStreak} />
         <Row
           icon="checkmark-circle"
           iconBg="#16A34A"
@@ -797,16 +779,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   sectionHeaderTitle: { flex: 1, fontSize: 15 },
-  streakRow: { flexDirection: "row", gap: 10 },
-  streakCard: {
-    flex: 1,
-    alignItems: "center",
-    paddingVertical: 16,
-    borderRadius: 16,
-    gap: 4,
-  },
-  streakNum: { fontSize: 26 },
-  streakLabel: { fontSize: 12 },
   row: {
     flexDirection: "row",
     alignItems: "center",
