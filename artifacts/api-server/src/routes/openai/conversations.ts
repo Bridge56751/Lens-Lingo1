@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { and, eq, desc, like, sql } from "drizzle-orm";
+import { and, eq, desc, like, or, sql } from "drizzle-orm";
 import { db } from "@workspace/db";
 import { conversations, customers, messages } from "@workspace/db";
 import { openai, toFile } from "@workspace/integrations-openai-ai-server";
@@ -19,9 +19,13 @@ import {
 
 const router = Router();
 
-// Default title prefix used for free (non-scan) chats at creation time. Once a
+// Default title prefix used for quick (non-scan) chats at creation time. Once a
 // few turns exist we replace it with a topic derived from the conversation.
-const FREE_CHAT_TITLE_PREFIX = "Free Chat";
+const QUICK_CHAT_TITLE_PREFIX = "Quick Chat";
+
+// All placeholder prefixes eligible for auto-titling. "Free Chat" is the legacy
+// name kept here so older un-titled chats still get a real topic name.
+const PLACEHOLDER_TITLE_PREFIXES = [QUICK_CHAT_TITLE_PREFIX, "Free Chat"];
 
 // Generate a short topic title for a free chat from its messages and persist it,
 // keeping the `Topic • Language` format so the language can still be parsed from
@@ -34,10 +38,15 @@ async function autoTitleFreeChat(opts: {
   transcript: { role: string; content: string }[];
   log: { error: (obj: unknown, msg: string) => void };
 }): Promise<void> {
-  // Only the default placeholder ("Free Chat • <language>") is eligible. Anchor
-  // on the separator so a real topic that merely begins with these words is not
-  // re-titled on a later turn.
-  if (!opts.currentTitle.startsWith(`${FREE_CHAT_TITLE_PREFIX} • `)) return;
+  // Only a default placeholder ("Quick Chat • <language>", or the legacy
+  // "Free Chat • <language>") is eligible. Anchor on the separator so a real
+  // topic that merely begins with these words is not re-titled on a later turn.
+  if (
+    !PLACEHOLDER_TITLE_PREFIXES.some((p) =>
+      opts.currentTitle.startsWith(`${p} • `),
+    )
+  )
+    return;
   if (!opts.targetLanguage) return;
   try {
     const convo = opts.transcript
@@ -66,7 +75,12 @@ async function autoTitleFreeChat(opts: {
     if (!topic) return;
     if (topic.length > 40) topic = topic.slice(0, 40).trim();
     // Never regenerate the placeholder itself, which would keep it eligible.
-    if (topic.toLowerCase() === FREE_CHAT_TITLE_PREFIX.toLowerCase()) return;
+    if (
+      PLACEHOLDER_TITLE_PREFIXES.some(
+        (p) => topic.toLowerCase() === p.toLowerCase(),
+      )
+    )
+      return;
 
     // Atomic + idempotent: only overwrite while the title is still a default
     // placeholder, so concurrent turns can't double-title.
@@ -76,7 +90,11 @@ async function autoTitleFreeChat(opts: {
       .where(
         and(
           eq(conversations.id, opts.conversationId),
-          like(conversations.title, `${FREE_CHAT_TITLE_PREFIX} • %`),
+          or(
+            ...PLACEHOLDER_TITLE_PREFIXES.map((p) =>
+              like(conversations.title, `${p} • %`),
+            ),
+          ),
         ),
       );
   } catch (err) {
@@ -271,7 +289,7 @@ router.post("/openai/conversations/chat", async (req, res) => {
     const [conv] = await tx
       .insert(conversations)
       .values({
-        title: `Free Chat • ${targetLanguage}`,
+        title: `${QUICK_CHAT_TITLE_PREFIX} • ${targetLanguage}`,
         targetLanguage,
         nativeLanguage,
         customerId,
