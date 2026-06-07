@@ -461,16 +461,16 @@ async function playCached(audio: CacheValue, token: number): Promise<boolean> {
  * smooth voices via the API server (cached for instant repeats); if that fails
  * (offline, server error) it falls back to the on-device voice.
  */
-export function speakWord(word: string, language: Language): void {
+export function speakWord(word: string, language: Language): Promise<void> {
   const text = word?.trim();
-  if (!text) return;
+  if (!text) return Promise.resolve();
 
   const token = ++playToken;
   activeTaps++;
   teardownPlayback();
   cancelSynth();
 
-  void (async () => {
+  return (async () => {
     try {
       const audio = await fetchAudio(text, "tap", language);
       if (token !== playToken) return; // superseded by a newer tap

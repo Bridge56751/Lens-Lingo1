@@ -8,6 +8,7 @@ import {
   Platform,
   Animated,
   Easing,
+  ActivityIndicator,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
@@ -70,14 +71,23 @@ export default function AlphabetScreen() {
     markComplete(prefs.targetLanguage, scriptKey, idx);
   };
 
-  const speak = (text: string, which: "letter" | "example" = "letter") => {
+  const [loadingKind, setLoadingKind] = useState<"letter" | "example" | null>(null);
+  const speakReq = useRef(0);
+
+  const speak = async (text: string, which: "letter" | "example" = "letter") => {
     Haptics.selectionAsync();
     const target = which === "example" ? exampleScale : scale;
     Animated.sequence([
       Animated.timing(target, { toValue: 1.08, duration: 120, useNativeDriver: true }),
       Animated.timing(target, { toValue: 1, duration: 180, useNativeDriver: true }),
     ]).start();
-    speakWord(text, prefs.targetLanguage);
+    const id = ++speakReq.current;
+    setLoadingKind(which);
+    try {
+      await speakWord(text, prefs.targetLanguage);
+    } finally {
+      if (speakReq.current === id) setLoadingKind(null);
+    }
   };
 
   const animateTo = (nextIndex: number) => {
@@ -237,7 +247,11 @@ export default function AlphabetScreen() {
                 style={[styles.letterCard, { backgroundColor: colors.card, borderColor: colors.primarySoft }]}
               >
               <View style={[styles.speakerPill, { backgroundColor: colors.primarySoft }]}>
-                <Ionicons name="volume-medium" size={14} color={colors.primary} />
+                {loadingKind === "letter" ? (
+                  <ActivityIndicator size="small" color={colors.primary} />
+                ) : (
+                  <Ionicons name="volume-medium" size={14} color={colors.primary} />
+                )}
                 <Text style={[styles.speakerText, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
                   {t("alphabet.tapToHear")}
                 </Text>
@@ -292,7 +306,11 @@ export default function AlphabetScreen() {
                   </Text>
                 </View>
                 <View style={[styles.speakerIcon, { backgroundColor: colors.primarySoft }]}>
-                  <Ionicons name="volume-medium" size={18} color={colors.primary} />
+                  {loadingKind === "example" ? (
+                    <ActivityIndicator size="small" color={colors.primary} />
+                  ) : (
+                    <Ionicons name="volume-medium" size={18} color={colors.primary} />
+                  )}
                 </View>
               </TouchableOpacity>
             </Animated.View>

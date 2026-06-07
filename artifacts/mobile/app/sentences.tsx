@@ -105,9 +105,18 @@ export default function SentencesScreen() {
     for (const s of visible) prefetchSpeech(s.phrase, target);
   }, [visible, target]);
 
-  const hear = (phrase: string) => {
+  const [loadingPhrase, setLoadingPhrase] = useState<string | null>(null);
+  const speakReq = React.useRef(0);
+
+  const hear = async (phrase: string) => {
     Haptics.selectionAsync();
-    speakWord(phrase, target);
+    const id = ++speakReq.current;
+    setLoadingPhrase(phrase);
+    try {
+      await speakWord(phrase, target);
+    } finally {
+      if (speakReq.current === id) setLoadingPhrase(null);
+    }
   };
 
   const Header = (
@@ -236,7 +245,11 @@ export default function SentencesScreen() {
               <View
                 style={[styles.speaker, { backgroundColor: colors.primarySoft }]}
               >
-                <Ionicons name="volume-high" size={20} color={colors.primary} />
+                {loadingPhrase === s.phrase ? (
+                  <ActivityIndicator size="small" color={colors.primary} />
+                ) : (
+                  <Ionicons name="volume-high" size={20} color={colors.primary} />
+                )}
               </View>
             </TouchableOpacity>
           ))

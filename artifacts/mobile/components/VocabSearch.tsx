@@ -92,9 +92,18 @@ export default function VocabSearch() {
     });
   };
 
-  const hear = (word: string) => {
+  const [loadingWord, setLoadingWord] = useState<string | null>(null);
+  const speakReq = React.useRef(0);
+
+  const hear = async (word: string) => {
     Haptics.selectionAsync();
-    speakWord(word, target);
+    const id = ++speakReq.current;
+    setLoadingWord(word);
+    try {
+      await speakWord(word, target);
+    } finally {
+      if (speakReq.current === id) setLoadingWord(null);
+    }
   };
 
   const toggle = (w: VocabBankWord) => {
@@ -200,7 +209,11 @@ export default function VocabSearch() {
                   activeOpacity={0.8}
                   hitSlop={8}
                 >
-                  <Ionicons name="volume-high" size={20} color={colors.primary} />
+                  {loadingWord === w.word ? (
+                    <ActivityIndicator size="small" color={colors.primary} />
+                  ) : (
+                    <Ionicons name="volume-high" size={20} color={colors.primary} />
+                  )}
                 </TouchableOpacity>
                 <View style={styles.wordTextWrap}>
                   <Text
