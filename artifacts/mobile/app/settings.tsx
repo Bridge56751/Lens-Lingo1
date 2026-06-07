@@ -317,23 +317,15 @@ export default function SettingsScreen() {
         </View>
 
         {/* Languages */}
-        <Section
-          title={t("settings.languages")}
+        <Row
           icon="globe"
           iconBg={colors.primarySoft}
           iconColor={colors.primary}
-          defaultOpen
-        >
-          <Row
-            icon="globe"
-            iconBg={colors.primarySoft}
-            iconColor={colors.primary}
-            title={t("settings.learning")}
-            subtitle={prefs.targetLanguage}
-            right={<Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />}
-            onPress={() => setPicker("learning")}
-          />
-        </Section>
+          title={t("settings.learning")}
+          subtitle={prefs.targetLanguage}
+          right={<Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />}
+          onPress={() => setPicker("learning")}
+        />
 
         {/* Preferences */}
         <Section
