@@ -256,10 +256,6 @@ export default function AuthScreen() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <View style={[styles.header, { paddingTop: topPadding }]}>
-        <View style={{ width: 40 }} />
-        <Text style={[styles.headerTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-          {t("auth.title")}
-        </Text>
         <TouchableOpacity
           onPress={() => (router.canGoBack() ? router.back() : router.replace("/"))}
           style={styles.iconBtn}
@@ -268,6 +264,10 @@ export default function AuthScreen() {
         >
           <Ionicons name="close" size={26} color={colors.foreground} />
         </TouchableOpacity>
+        <Text style={[styles.headerTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
+          {t("auth.title")}
+        </Text>
+        <View style={{ width: 40 }} />
       </View>
 
       <ScrollView
