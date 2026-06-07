@@ -244,7 +244,7 @@ router.post("/openai/conversations/chat", async (req, res) => {
 
 CRITICAL LANGUAGE RULES (these override everything else):
 - ALWAYS write your replies in ${targetLanguage}. Never reply primarily in ${nativeLanguage}, even if the user writes or speaks to you in ${nativeLanguage}.
-- After any ${targetLanguage} sentence that uses a new or difficult word, add a short ${nativeLanguage} translation in parentheses so a beginner can follow.
+- Write your replies in ${targetLanguage} ONLY. Do NOT add a ${nativeLanguage} translation, gloss, or parenthetical meaning of what you said — the learner can tap a Translate button to see it in ${nativeLanguage}.
 - If the user writes in ${nativeLanguage}, warmly encourage them to try in ${targetLanguage}, and still model the answer in ${targetLanguage}.
 
 Have a REAL conversation (most important):
@@ -560,7 +560,7 @@ router.post("/openai/conversations/:id/messages", async (req, res) => {
   if (targetLanguage) {
     chatMessages.push({
       role: "system",
-      content: `Reminder: reply in ${targetLanguage}, not English (unless the learner's language is English). This is a SPOKEN conversation — FIRST respond to what the learner just said like a real person talking out loud, in short, natural ${targetLanguage} (1-2 sentences) that's easy to hear and say back. No lists, headings, or long parentheses; keep any translation hint to a few words. Only fix a clear, meaningful mistake — briefly and naturally, after you've reacted to their meaning; never label correct words as wrong and never turn the reply into a grammar lesson. End with one short, easy question in ${targetLanguage} so the learner can answer aloud. ${difficultyReminder(difficulty, targetLanguage)}`,
+      content: `Reminder: reply in ${targetLanguage}, not English (unless the learner's language is English). This is a SPOKEN conversation — FIRST respond to what the learner just said like a real person talking out loud, in short, natural ${targetLanguage} (1-2 sentences) that's easy to hear and say back. No lists, headings, or parenthetical translations — reply in ${targetLanguage} only and do NOT translate or gloss what you said (the learner can tap Translate for the meaning). Only fix a clear, meaningful mistake — briefly and naturally, after you've reacted to their meaning; never label correct words as wrong and never turn the reply into a grammar lesson. End with one short, easy question in ${targetLanguage} so the learner can answer aloud. ${difficultyReminder(difficulty, targetLanguage)}`,
     });
   }
 

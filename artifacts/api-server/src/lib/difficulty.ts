@@ -29,21 +29,21 @@ export function difficultyInstructions(
     case "Beginner":
       return `Difficulty level: BEGINNER.
 - Use very simple, high-frequency words and short, basic sentences in ${targetLanguage}.
-- After almost every ${targetLanguage} sentence, add a ${nativeLanguage} translation in parentheses.
+- Write only in ${targetLanguage}. Do NOT add a ${nativeLanguage} translation in parentheses — the learner can tap Translate to see the meaning.
 - Speak slowly in tone: one idea per sentence. Avoid idioms and complex grammar.
-- Respond to what the learner said first. When they make a real mistake, correct it gently and explicitly: show the corrected ${targetLanguage} phrase, then a one-line ${nativeLanguage} note on what changed. Do not correct messages that are already fine.`;
+- Respond to what the learner said first. When they make a real mistake, correct it gently by showing the corrected ${targetLanguage} phrase. Do not correct messages that are already fine.`;
     case "Intermediate":
       return `Difficulty level: INTERMEDIATE.
 - Use everyday ${targetLanguage} vocabulary and natural sentence structure, with occasional new words.
-- Only add ${nativeLanguage} translations in parentheses for genuinely new or tricky words.
+- Write only in ${targetLanguage}. Do NOT add a ${nativeLanguage} translation in parentheses — the learner can tap Translate to see the meaning.
 - Encourage longer answers from the learner.
-- When the learner makes a mistake, correct it clearly: give the corrected ${targetLanguage} version and a short reason; do not let errors slide.`;
+- When the learner makes a mistake, correct it clearly: give the corrected ${targetLanguage} version; do not let errors slide.`;
     case "Advanced":
       return `Difficulty level: ADVANCED.
 - Use rich, natural, native-level ${targetLanguage} including idioms and varied tenses.
-- Avoid ${nativeLanguage} translations unless the learner asks; explain new words in ${targetLanguage}.
+- Write only in ${targetLanguage}. Never add a ${nativeLanguage} translation — explain new words in ${targetLanguage} if needed.
 - Push the learner with follow-up questions that require detailed answers.
-- Be a rigorous corrector: catch grammar, word choice, and nuance mistakes, show the precise corrected ${targetLanguage}, and briefly explain the nuance.`;
+- Be a rigorous corrector: catch grammar, word choice, and nuance mistakes, show the precise corrected ${targetLanguage}, and briefly explain the nuance in ${targetLanguage}.`;
   }
 }
 
@@ -52,10 +52,10 @@ export function difficultyInstructions(
 export function difficultyReminder(level: Difficulty, targetLanguage: string): string {
   switch (level) {
     case "Beginner":
-      return `Keep it at a BEGINNER level: very simple ${targetLanguage} with parenthetical translations; respond to what they said first, then gently correct any real mistake (skip messages that are already fine).`;
+      return `Keep it at a BEGINNER level: very simple ${targetLanguage} with NO translations; respond to what they said first, then gently correct any real mistake (skip messages that are already fine).`;
     case "Intermediate":
-      return `Keep it at an INTERMEDIATE level: natural everyday ${targetLanguage}, translate only tricky words, and clearly correct mistakes with a short reason.`;
+      return `Keep it at an INTERMEDIATE level: natural everyday ${targetLanguage} with NO translations, and clearly correct mistakes.`;
     case "Advanced":
-      return `Keep it at an ADVANCED level: rich native-level ${targetLanguage} with few or no translations, and rigorously correct grammar, word choice, and nuance.`;
+      return `Keep it at an ADVANCED level: rich native-level ${targetLanguage} with NO translations, and rigorously correct grammar, word choice, and nuance.`;
   }
 }

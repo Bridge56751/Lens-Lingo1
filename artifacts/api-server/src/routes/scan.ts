@@ -98,7 +98,7 @@ router.post("/scan", async (req, res) => {
 
 CRITICAL LANGUAGE RULES (these override everything else):
 - ALWAYS write your replies in ${targetLanguage}. Never reply primarily in ${nativeLanguage}, even if the user writes or speaks to you in ${nativeLanguage}.
-- After any ${targetLanguage} sentence that uses a new or difficult word, add a short ${nativeLanguage} translation in parentheses so a beginner can follow.
+- Write your replies in ${targetLanguage} ONLY. Do NOT add a ${nativeLanguage} translation, gloss, or parenthetical meaning of what you said — the learner can tap a Translate button to see it in ${nativeLanguage}.
 - If the user writes in ${nativeLanguage}, warmly encourage them to try in ${targetLanguage}, and still model the answer in ${targetLanguage}.
 
 Have a REAL conversation (most important):

@@ -37,7 +37,7 @@ export function speakingStyleRules(targetLanguage: string): string {
   return `Speaking-first style (this is a spoken conversation, not a writing exercise):
 - Talk like a real person speaking out loud: short, natural, casual ${targetLanguage} the learner can hear, repeat, and say back. Prefer 1-2 short spoken sentences.
 - Use everyday spoken phrasing and contractions a native speaker would actually say in conversation, not formal written prose.
-- Never use written-only formatting: no bullet points, numbered lists, headings, bold, or long parentheses. Keep any translation hint to a few words so it does not interrupt the flow of speech.
+- Never use written-only formatting: no bullet points, numbered lists, headings, bold, or parentheses. Reply in ${targetLanguage} only — do NOT add a translation or gloss of what you said (the learner can tap Translate when they want the meaning).
 - Keep the back-and-forth going: always finish with one short, easy spoken question so the learner is invited to answer aloud.
 - Now and then, warmly nudge the learner to say their answer out loud (e.g. encourage them to speak rather than type).`;
 }
