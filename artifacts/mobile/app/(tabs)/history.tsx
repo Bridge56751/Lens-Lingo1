@@ -26,6 +26,7 @@ type Conversation = {
   id: number;
   title: string;
   createdAt: string;
+  lastOpenedAt?: string | null;
 };
 
 function getLanguage(title: string): string {
@@ -59,7 +60,7 @@ function ConversationItem({
   const itemName = parts[0] ?? item.title;
   const language = parts[1] ?? "";
 
-  const date = new Date(item.createdAt);
+  const date = new Date(item.lastOpenedAt ?? item.createdAt);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));

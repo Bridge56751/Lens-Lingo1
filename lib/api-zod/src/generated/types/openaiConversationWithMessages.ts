@@ -12,6 +12,7 @@ export interface OpenaiConversationWithMessages {
   id: number;
   title: string;
   createdAt: Date;
+  lastOpenedAt?: Date | null;
   difficulty?: string | null;
   grade?: OpenaiConversationGrade | null;
   messages: OpenaiMessage[];

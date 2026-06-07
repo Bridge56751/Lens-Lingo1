@@ -203,7 +203,10 @@ router.get("/openai/conversations", async (req, res) => {
     .select()
     .from(conversations)
     .where(eq(conversations.customerId, req.customerId))
-    .orderBy(desc(conversations.createdAt));
+    // Most-recently-opened first; chats never reopened fall back to createdAt.
+    .orderBy(
+      sql`coalesce(${conversations.lastOpenedAt}, ${conversations.createdAt}) desc`,
+    );
   res.json(all);
 });
 
@@ -349,6 +352,24 @@ router.get("/openai/conversations/:id", async (req, res) => {
     .from(messages)
     .where(eq(messages.conversationId, id))
     .orderBy(messages.createdAt);
+
+  // Record this open so the History list can sort by most-recently-opened.
+  // Best-effort: a failure here must never block returning the conversation.
+  const openedAt = new Date();
+  try {
+    await db
+      .update(conversations)
+      .set({ lastOpenedAt: openedAt })
+      .where(
+        and(
+          eq(conversations.id, id),
+          eq(conversations.customerId, req.customerId),
+        ),
+      );
+    conv.lastOpenedAt = openedAt;
+  } catch (err) {
+    req.log.error({ err }, "failed to update lastOpenedAt");
+  }
 
   // Filter out system messages for the client
   const visibleMessages = msgs.filter((m) => m.role !== "system");

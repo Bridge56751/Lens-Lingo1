@@ -27,6 +27,9 @@ export const conversations = pgTable("conversations", {
   gradeFeedback: jsonb("grade_feedback").$type<GradeFeedback>(),
   gradedAt: timestamp("graded_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  // Last time the conversation detail was opened. Null for chats never reopened
+  // since this column was added; list ordering coalesces it to createdAt.
+  lastOpenedAt: timestamp("last_opened_at", { withTimezone: true }),
 });
 
 export const insertConversationSchema = createInsertSchema(conversations).omit({

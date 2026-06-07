@@ -482,6 +482,10 @@ components:
         createdAt:
           type: string
           format: date-time
+        lastOpenedAt:
+          type: string
+          format: date-time
+          nullable: true
       required:
         - id
         - title
@@ -585,6 +589,10 @@ components:
         createdAt:
           type: string
           format: date-time
+        lastOpenedAt:
+          type: string
+          format: date-time
+          nullable: true
         difficulty:
           type: string
           nullable: true

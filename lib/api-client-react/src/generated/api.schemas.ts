@@ -38,6 +38,7 @@ export interface OpenaiConversation {
   id: number;
   title: string;
   createdAt: string;
+  lastOpenedAt?: string | null;
 }
 
 export interface OpenaiMessage {
@@ -85,6 +86,7 @@ export interface OpenaiConversationWithMessages {
   id: number;
   title: string;
   createdAt: string;
+  lastOpenedAt?: string | null;
   difficulty?: string | null;
   grade?: OpenaiConversationGrade | null;
   messages: OpenaiMessage[];

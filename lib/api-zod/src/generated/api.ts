@@ -34,7 +34,8 @@ export const ScanItemBody = zod.object({
 export const ListOpenaiConversationsResponseItem = zod.object({
   "id": zod.number(),
   "title": zod.string(),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "lastOpenedAt": zod.coerce.date().nullish()
 })
 export const ListOpenaiConversationsResponse = zod.array(ListOpenaiConversationsResponseItem)
 
@@ -58,6 +59,7 @@ export const GetOpenaiConversationResponse = zod.object({
   "id": zod.number(),
   "title": zod.string(),
   "createdAt": zod.coerce.date(),
+  "lastOpenedAt": zod.coerce.date().nullish(),
   "difficulty": zod.string().nullish(),
   "grade": zod.object({
   "score": zod.number().describe('Overall score from 0 to 100'),

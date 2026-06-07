@@ -10,4 +10,5 @@ export interface OpenaiConversation {
   id: number;
   title: string;
   createdAt: Date;
+  lastOpenedAt?: Date | null;
 }
