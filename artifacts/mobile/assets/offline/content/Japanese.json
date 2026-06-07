@@ -1,0 +1,426 @@
+{
+  "sentences": [
+    {
+      "category": "greetings",
+      "phrase": "おはようございます",
+      "translation": "Good morning"
+    },
+    {
+      "category": "greetings",
+      "phrase": "こんにちは",
+      "translation": "Hello"
+    },
+    {
+      "category": "greetings",
+      "phrase": "こんばんは",
+      "translation": "Good evening"
+    },
+    {
+      "category": "greetings",
+      "phrase": "さようなら",
+      "translation": "Goodbye"
+    },
+    {
+      "category": "greetings",
+      "phrase": "おやすみなさい",
+      "translation": "Good night"
+    },
+    {
+      "category": "greetings",
+      "phrase": "またね",
+      "translation": "See you"
+    },
+    {
+      "category": "basics",
+      "phrase": "お願いします",
+      "translation": "Please"
+    },
+    {
+      "category": "basics",
+      "phrase": "ありがとう",
+      "translation": "Thank you"
+    },
+    {
+      "category": "basics",
+      "phrase": "すみません",
+      "translation": "Excuse me"
+    },
+    {
+      "category": "basics",
+      "phrase": "ごめんなさい",
+      "translation": "Sorry"
+    },
+    {
+      "category": "basics",
+      "phrase": "はい",
+      "translation": "Yes"
+    },
+    {
+      "category": "basics",
+      "phrase": "いいえ",
+      "translation": "No"
+    },
+    {
+      "category": "directions",
+      "phrase": "トイレはどこですか？",
+      "translation": "Where is the bathroom?"
+    },
+    {
+      "category": "directions",
+      "phrase": "駅へはどう行けばいいですか？",
+      "translation": "How do I get to the station?"
+    },
+    {
+      "category": "directions",
+      "phrase": "遠いですか？",
+      "translation": "Is it far?"
+    },
+    {
+      "category": "directions",
+      "phrase": "左に曲がってください",
+      "translation": "Turn left"
+    },
+    {
+      "category": "directions",
+      "phrase": "右に曲がってください",
+      "translation": "Turn right"
+    },
+    {
+      "category": "directions",
+      "phrase": "まっすぐ行ってください",
+      "translation": "Go straight"
+    },
+    {
+      "category": "dining",
+      "phrase": "二人用のテーブルをお願いします",
+      "translation": "A table for two, please"
+    },
+    {
+      "category": "dining",
+      "phrase": "メニューをください",
+      "translation": "The menu, please"
+    },
+    {
+      "category": "dining",
+      "phrase": "お水をください",
+      "translation": "Water, please"
+    },
+    {
+      "category": "dining",
+      "phrase": "お会計をお願いします",
+      "translation": "The check, please"
+    },
+    {
+      "category": "dining",
+      "phrase": "おすすめは何ですか？",
+      "translation": "What do you recommend?"
+    },
+    {
+      "category": "dining",
+      "phrase": "〜はありますか？",
+      "translation": "Do you have ~?"
+    },
+    {
+      "category": "shopping",
+      "phrase": "これはいくらですか？",
+      "translation": "How much is this?"
+    },
+    {
+      "category": "shopping",
+      "phrase": "高すぎます",
+      "translation": "Too expensive"
+    },
+    {
+      "category": "shopping",
+      "phrase": "これをください",
+      "translation": "I'll take it"
+    },
+    {
+      "category": "shopping",
+      "phrase": "カードは使えますか？",
+      "translation": "Do you accept cards?"
+    },
+    {
+      "category": "shopping",
+      "phrase": "安くなりますか？",
+      "translation": "Can you make it cheaper?"
+    },
+    {
+      "category": "shopping",
+      "phrase": "他の色はありますか？",
+      "translation": "Do you have another color?"
+    },
+    {
+      "category": "emergency",
+      "phrase": "助けてください",
+      "translation": "I need help"
+    },
+    {
+      "category": "emergency",
+      "phrase": "医者を呼んでください",
+      "translation": "Call a doctor"
+    },
+    {
+      "category": "emergency",
+      "phrase": "道に迷いました",
+      "translation": "I'm lost"
+    },
+    {
+      "category": "emergency",
+      "phrase": "病院はどこですか？",
+      "translation": "Where is the hospital?"
+    },
+    {
+      "category": "emergency",
+      "phrase": "警察を呼んでください",
+      "translation": "Call the police"
+    },
+    {
+      "category": "emergency",
+      "phrase": "火事です！",
+      "translation": "Fire!"
+    }
+  ],
+  "words": [
+    {
+      "word": "こんにちは",
+      "translation": "Hello",
+      "level": "beginner"
+    },
+    {
+      "word": "ありがとう",
+      "translation": "Thank you",
+      "level": "beginner"
+    },
+    {
+      "word": "さようなら",
+      "translation": "Goodbye",
+      "level": "beginner"
+    },
+    {
+      "word": "はい",
+      "translation": "Yes",
+      "level": "beginner"
+    },
+    {
+      "word": "いいえ",
+      "translation": "No",
+      "level": "beginner"
+    },
+    {
+      "word": "すみません",
+      "translation": "Excuse me",
+      "level": "beginner"
+    },
+    {
+      "word": "おはよう",
+      "translation": "Good morning",
+      "level": "beginner"
+    },
+    {
+      "word": "こんばんは",
+      "translation": "Good evening",
+      "level": "beginner"
+    },
+    {
+      "word": "おやすみ",
+      "translation": "Good night",
+      "level": "beginner"
+    },
+    {
+      "word": "ごめんなさい",
+      "translation": "I'm sorry",
+      "level": "beginner"
+    },
+    {
+      "word": "いくら",
+      "translation": "How much",
+      "level": "beginner"
+    },
+    {
+      "word": "食べる",
+      "translation": "Eat",
+      "level": "beginner"
+    },
+    {
+      "word": "友達",
+      "translation": "Friend",
+      "level": "intermediate"
+    },
+    {
+      "word": "大丈夫",
+      "translation": "Okay",
+      "level": "intermediate"
+    },
+    {
+      "word": "料理",
+      "translation": "Cooking",
+      "level": "intermediate"
+    },
+    {
+      "word": "飲む",
+      "translation": "Drink",
+      "level": "intermediate"
+    },
+    {
+      "word": "駅",
+      "translation": "Station",
+      "level": "intermediate"
+    },
+    {
+      "word": "趣味",
+      "translation": "Hobby",
+      "level": "intermediate"
+    },
+    {
+      "word": "買い物",
+      "translation": "Shopping",
+      "level": "intermediate"
+    },
+    {
+      "word": "旅行",
+      "translation": "Travel",
+      "level": "intermediate"
+    },
+    {
+      "word": "運転",
+      "translation": "Driving",
+      "level": "intermediate"
+    },
+    {
+      "word": "病院",
+      "translation": "Hospital",
+      "level": "intermediate"
+    },
+    {
+      "word": "音楽",
+      "translation": "Music",
+      "level": "intermediate"
+    },
+    {
+      "word": "図書館",
+      "translation": "Library",
+      "level": "intermediate"
+    },
+    {
+      "word": "環境",
+      "translation": "Environment",
+      "level": "advanced"
+    },
+    {
+      "word": "技術",
+      "translation": "Technology",
+      "level": "advanced"
+    },
+    {
+      "word": "経済",
+      "translation": "Economy",
+      "level": "advanced"
+    },
+    {
+      "word": "科学",
+      "translation": "Science",
+      "level": "advanced"
+    },
+    {
+      "word": "政治",
+      "translation": "Politics",
+      "level": "advanced"
+    },
+    {
+      "word": "教育",
+      "translation": "Education",
+      "level": "advanced"
+    },
+    {
+      "word": "文化",
+      "translation": "Culture",
+      "level": "advanced"
+    },
+    {
+      "word": "報告",
+      "translation": "Report",
+      "level": "advanced"
+    },
+    {
+      "word": "人生",
+      "translation": "Life",
+      "level": "advanced"
+    },
+    {
+      "word": "将来",
+      "translation": "Future",
+      "level": "advanced"
+    },
+    {
+      "word": "責任",
+      "translation": "Responsibility",
+      "level": "advanced"
+    },
+    {
+      "word": "経験",
+      "translation": "Experience",
+      "level": "advanced"
+    },
+    {
+      "word": "抽象的",
+      "translation": "Abstract",
+      "level": "expert"
+    },
+    {
+      "word": "微妙",
+      "translation": "Subtle",
+      "level": "expert"
+    },
+    {
+      "word": "複雑",
+      "translation": "Complex",
+      "level": "expert"
+    },
+    {
+      "word": "哲学",
+      "translation": "Philosophy",
+      "level": "expert"
+    },
+    {
+      "word": "心理学",
+      "translation": "Psychology",
+      "level": "expert"
+    },
+    {
+      "word": "永遠",
+      "translation": "Eternal",
+      "level": "expert"
+    },
+    {
+      "word": "自律",
+      "translation": "Autonomy",
+      "level": "expert"
+    },
+    {
+      "word": "創造性",
+      "translation": "Creativity",
+      "level": "expert"
+    },
+    {
+      "word": "革新",
+      "translation": "Innovation",
+      "level": "expert"
+    },
+    {
+      "word": "倫理",
+      "translation": "Ethics",
+      "level": "expert"
+    },
+    {
+      "word": "多様性",
+      "translation": "Diversity",
+      "level": "expert"
+    },
+    {
+      "word": "仮説",
+      "translation": "Hypothesis",
+      "level": "expert"
+    }
+  ]
+}

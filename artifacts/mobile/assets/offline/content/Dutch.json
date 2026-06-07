@@ -1,0 +1,426 @@
+{
+  "sentences": [
+    {
+      "category": "greetings",
+      "phrase": "Goedemorgen",
+      "translation": "Good morning"
+    },
+    {
+      "category": "greetings",
+      "phrase": "Hallo",
+      "translation": "Hello"
+    },
+    {
+      "category": "greetings",
+      "phrase": "Goedemiddag",
+      "translation": "Good afternoon"
+    },
+    {
+      "category": "greetings",
+      "phrase": "Goedenavond",
+      "translation": "Good evening"
+    },
+    {
+      "category": "greetings",
+      "phrase": "Dag",
+      "translation": "Goodbye"
+    },
+    {
+      "category": "greetings",
+      "phrase": "Welterusten",
+      "translation": "Good night"
+    },
+    {
+      "category": "basics",
+      "phrase": "Alsjeblieft",
+      "translation": "Please"
+    },
+    {
+      "category": "basics",
+      "phrase": "Dank u wel",
+      "translation": "Thank you"
+    },
+    {
+      "category": "basics",
+      "phrase": "Pardon",
+      "translation": "Excuse me"
+    },
+    {
+      "category": "basics",
+      "phrase": "Sorry",
+      "translation": "Sorry"
+    },
+    {
+      "category": "basics",
+      "phrase": "Ja",
+      "translation": "Yes"
+    },
+    {
+      "category": "basics",
+      "phrase": "Nee",
+      "translation": "No"
+    },
+    {
+      "category": "directions",
+      "phrase": "Waar is de wc?",
+      "translation": "Where is the bathroom?"
+    },
+    {
+      "category": "directions",
+      "phrase": "Hoe kom ik bij het station?",
+      "translation": "How do I get to the station?"
+    },
+    {
+      "category": "directions",
+      "phrase": "Is het ver?",
+      "translation": "Is it far?"
+    },
+    {
+      "category": "directions",
+      "phrase": "Sla linksaf",
+      "translation": "Turn left"
+    },
+    {
+      "category": "directions",
+      "phrase": "Rechtdoor",
+      "translation": "Straight ahead"
+    },
+    {
+      "category": "directions",
+      "phrase": "Sla rechtsaf",
+      "translation": "Turn right"
+    },
+    {
+      "category": "dining",
+      "phrase": "Een tafel voor twee alstublieft",
+      "translation": "A table for two, please"
+    },
+    {
+      "category": "dining",
+      "phrase": "De menukaart, alstublieft",
+      "translation": "The menu, please"
+    },
+    {
+      "category": "dining",
+      "phrase": "Water, alstublieft",
+      "translation": "Water, please"
+    },
+    {
+      "category": "dining",
+      "phrase": "De rekening, alstublieft",
+      "translation": "The check, please"
+    },
+    {
+      "category": "dining",
+      "phrase": "Ik heb een allergie",
+      "translation": "I have an allergy"
+    },
+    {
+      "category": "dining",
+      "phrase": "Nog een alstublieft",
+      "translation": "Another one, please"
+    },
+    {
+      "category": "shopping",
+      "phrase": "Hoeveel kost dit?",
+      "translation": "How much is this?"
+    },
+    {
+      "category": "shopping",
+      "phrase": "Te duur",
+      "translation": "Too expensive"
+    },
+    {
+      "category": "shopping",
+      "phrase": "Ik neem het",
+      "translation": "I'll take it"
+    },
+    {
+      "category": "shopping",
+      "phrase": "Accepteert u kaarten?",
+      "translation": "Do you accept cards?"
+    },
+    {
+      "category": "shopping",
+      "phrase": "Heeft u dit in een andere maat?",
+      "translation": "Do you have this in another size?"
+    },
+    {
+      "category": "shopping",
+      "phrase": "Kan ik dit ruilen?",
+      "translation": "Can I exchange this?"
+    },
+    {
+      "category": "emergency",
+      "phrase": "Ik heb hulp nodig",
+      "translation": "I need help"
+    },
+    {
+      "category": "emergency",
+      "phrase": "Bel een dokter",
+      "translation": "Call a doctor"
+    },
+    {
+      "category": "emergency",
+      "phrase": "Ik ben verdwaald",
+      "translation": "I'm lost"
+    },
+    {
+      "category": "emergency",
+      "phrase": "Waar is het ziekenhuis?",
+      "translation": "Where is the hospital?"
+    },
+    {
+      "category": "emergency",
+      "phrase": "Ik ben ziek",
+      "translation": "I am sick"
+    },
+    {
+      "category": "emergency",
+      "phrase": "Bel de politie",
+      "translation": "Call the police"
+    }
+  ],
+  "words": [
+    {
+      "word": "hallo",
+      "translation": "hello",
+      "level": "beginner"
+    },
+    {
+      "word": "alsjeblieft",
+      "translation": "please",
+      "level": "beginner"
+    },
+    {
+      "word": "dank u",
+      "translation": "thank you",
+      "level": "beginner"
+    },
+    {
+      "word": "ja",
+      "translation": "yes",
+      "level": "beginner"
+    },
+    {
+      "word": "nee",
+      "translation": "no",
+      "level": "beginner"
+    },
+    {
+      "word": "huis",
+      "translation": "house",
+      "level": "beginner"
+    },
+    {
+      "word": "eten",
+      "translation": "food",
+      "level": "beginner"
+    },
+    {
+      "word": "water",
+      "translation": "water",
+      "level": "beginner"
+    },
+    {
+      "word": "winkel",
+      "translation": "store",
+      "level": "beginner"
+    },
+    {
+      "word": "fiets",
+      "translation": "bicycle",
+      "level": "beginner"
+    },
+    {
+      "word": "kat",
+      "translation": "cat",
+      "level": "beginner"
+    },
+    {
+      "word": "hond",
+      "translation": "dog",
+      "level": "beginner"
+    },
+    {
+      "word": "vriend",
+      "translation": "friend",
+      "level": "intermediate"
+    },
+    {
+      "word": "vakantie",
+      "translation": "holiday",
+      "level": "intermediate"
+    },
+    {
+      "word": "werk",
+      "translation": "work",
+      "level": "intermediate"
+    },
+    {
+      "word": "lezen",
+      "translation": "read",
+      "level": "intermediate"
+    },
+    {
+      "word": "schrijven",
+      "translation": "write",
+      "level": "intermediate"
+    },
+    {
+      "word": "tijd",
+      "translation": "time",
+      "level": "intermediate"
+    },
+    {
+      "word": "mooi",
+      "translation": "beautiful",
+      "level": "intermediate"
+    },
+    {
+      "word": "taal",
+      "translation": "language",
+      "level": "intermediate"
+    },
+    {
+      "word": "zomer",
+      "translation": "summer",
+      "level": "intermediate"
+    },
+    {
+      "word": "herfst",
+      "translation": "autumn",
+      "level": "intermediate"
+    },
+    {
+      "word": "lente",
+      "translation": "spring",
+      "level": "intermediate"
+    },
+    {
+      "word": "winter",
+      "translation": "winter",
+      "level": "intermediate"
+    },
+    {
+      "word": "ondernemen",
+      "translation": "undertake",
+      "level": "advanced"
+    },
+    {
+      "word": "vergaderen",
+      "translation": "meet",
+      "level": "advanced"
+    },
+    {
+      "word": "vertrouwen",
+      "translation": "trust",
+      "level": "advanced"
+    },
+    {
+      "word": "economie",
+      "translation": "economy",
+      "level": "advanced"
+    },
+    {
+      "word": "opvoeding",
+      "translation": "education",
+      "level": "advanced"
+    },
+    {
+      "word": "samenleving",
+      "translation": "society",
+      "level": "advanced"
+    },
+    {
+      "word": "omgeving",
+      "translation": "environment",
+      "level": "advanced"
+    },
+    {
+      "word": "wetenschap",
+      "translation": "science",
+      "level": "advanced"
+    },
+    {
+      "word": "kunst",
+      "translation": "art",
+      "level": "advanced"
+    },
+    {
+      "word": "geschiedenis",
+      "translation": "history",
+      "level": "advanced"
+    },
+    {
+      "word": "politiek",
+      "translation": "politics",
+      "level": "advanced"
+    },
+    {
+      "word": "religie",
+      "translation": "religion",
+      "level": "advanced"
+    },
+    {
+      "word": "verantwoordelijkheid",
+      "translation": "responsibility",
+      "level": "expert"
+    },
+    {
+      "word": "maatschappelijk",
+      "translation": "societal",
+      "level": "expert"
+    },
+    {
+      "word": "ontwikkelingssamenwerking",
+      "translation": "development cooperation",
+      "level": "expert"
+    },
+    {
+      "word": "communicatievermogen",
+      "translation": "communication ability",
+      "level": "expert"
+    },
+    {
+      "word": "onverenigbaarheid",
+      "translation": "incompatibility",
+      "level": "expert"
+    },
+    {
+      "word": "ontplooiingsmogelijkheden",
+      "translation": "development opportunities",
+      "level": "expert"
+    },
+    {
+      "word": "arbeidsongeschiktheidsverzekering",
+      "translation": "disability insurance",
+      "level": "expert"
+    },
+    {
+      "word": "onderwijskunde",
+      "translation": "didactics",
+      "level": "expert"
+    },
+    {
+      "word": "natuurbescherming",
+      "translation": "conservation",
+      "level": "expert"
+    },
+    {
+      "word": "mededogen",
+      "translation": "compassion",
+      "level": "expert"
+    },
+    {
+      "word": "zelfontplooiing",
+      "translation": "self-development",
+      "level": "expert"
+    },
+    {
+      "word": "uitvoeringsinstantie",
+      "translation": "implementing body",
+      "level": "expert"
+    }
+  ]
+}

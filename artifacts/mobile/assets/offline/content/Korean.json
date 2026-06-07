@@ -1,0 +1,426 @@
+{
+  "sentences": [
+    {
+      "category": "greetings",
+      "phrase": "안녕하세요",
+      "translation": "Hello"
+    },
+    {
+      "category": "greetings",
+      "phrase": "안녕히 가세요",
+      "translation": "Goodbye (to someone leaving)"
+    },
+    {
+      "category": "greetings",
+      "phrase": "안녕히 계세요",
+      "translation": "Goodbye (to someone staying)"
+    },
+    {
+      "category": "greetings",
+      "phrase": "좋은 아침이에요",
+      "translation": "Good morning"
+    },
+    {
+      "category": "greetings",
+      "phrase": "안녕히 주무세요",
+      "translation": "Good night"
+    },
+    {
+      "category": "greetings",
+      "phrase": "잘가",
+      "translation": "Bye"
+    },
+    {
+      "category": "basics",
+      "phrase": "제발",
+      "translation": "Please"
+    },
+    {
+      "category": "basics",
+      "phrase": "감사합니다",
+      "translation": "Thank you"
+    },
+    {
+      "category": "basics",
+      "phrase": "실례합니다",
+      "translation": "Excuse me"
+    },
+    {
+      "category": "basics",
+      "phrase": "죄송합니다",
+      "translation": "Sorry"
+    },
+    {
+      "category": "basics",
+      "phrase": "네",
+      "translation": "Yes"
+    },
+    {
+      "category": "basics",
+      "phrase": "아니요",
+      "translation": "No"
+    },
+    {
+      "category": "directions",
+      "phrase": "화장실이 어디에 있어요?",
+      "translation": "Where is the bathroom?"
+    },
+    {
+      "category": "directions",
+      "phrase": "역에 어떻게 가나요?",
+      "translation": "How do I get to the station?"
+    },
+    {
+      "category": "directions",
+      "phrase": "멀어요?",
+      "translation": "Is it far?"
+    },
+    {
+      "category": "directions",
+      "phrase": "왼쪽으로 도세요",
+      "translation": "Turn left"
+    },
+    {
+      "category": "directions",
+      "phrase": "오른쪽으로 도세요",
+      "translation": "Turn right"
+    },
+    {
+      "category": "directions",
+      "phrase": "곧장 가세요",
+      "translation": "Go straight"
+    },
+    {
+      "category": "dining",
+      "phrase": "두 명 자리 주세요",
+      "translation": "A table for two, please"
+    },
+    {
+      "category": "dining",
+      "phrase": "메뉴 주세요",
+      "translation": "The menu, please"
+    },
+    {
+      "category": "dining",
+      "phrase": "물 주세요",
+      "translation": "Water, please"
+    },
+    {
+      "category": "dining",
+      "phrase": "계산서 주세요",
+      "translation": "The check, please"
+    },
+    {
+      "category": "dining",
+      "phrase": "추천해 주세요",
+      "translation": "Please recommend something"
+    },
+    {
+      "category": "dining",
+      "phrase": "덜 매운 걸로 주세요",
+      "translation": "Please make it less spicy"
+    },
+    {
+      "category": "shopping",
+      "phrase": "이거 얼마예요?",
+      "translation": "How much is this?"
+    },
+    {
+      "category": "shopping",
+      "phrase": "너무 비싸요",
+      "translation": "Too expensive"
+    },
+    {
+      "category": "shopping",
+      "phrase": "이거 주세요",
+      "translation": "I'll take it"
+    },
+    {
+      "category": "shopping",
+      "phrase": "카드 돼요?",
+      "translation": "Do you accept cards?"
+    },
+    {
+      "category": "shopping",
+      "phrase": "다른 색 있어요?",
+      "translation": "Do you have another color?"
+    },
+    {
+      "category": "shopping",
+      "phrase": "환불 돼요?",
+      "translation": "Can I get a refund?"
+    },
+    {
+      "category": "emergency",
+      "phrase": "도와주세요",
+      "translation": "I need help"
+    },
+    {
+      "category": "emergency",
+      "phrase": "의사를 불러 주세요",
+      "translation": "Call a doctor"
+    },
+    {
+      "category": "emergency",
+      "phrase": "길을 잃었어요",
+      "translation": "I'm lost"
+    },
+    {
+      "category": "emergency",
+      "phrase": "병원이 어디예요?",
+      "translation": "Where is the hospital?"
+    },
+    {
+      "category": "emergency",
+      "phrase": "경찰을 불러 주세요",
+      "translation": "Call the police"
+    },
+    {
+      "category": "emergency",
+      "phrase": "응급실이 어디예요?",
+      "translation": "Where is the emergency room?"
+    }
+  ],
+  "words": [
+    {
+      "word": "안녕하세요",
+      "translation": "Hello",
+      "level": "beginner"
+    },
+    {
+      "word": "감사합니다",
+      "translation": "Thank you",
+      "level": "beginner"
+    },
+    {
+      "word": "사랑",
+      "translation": "Love",
+      "level": "beginner"
+    },
+    {
+      "word": "물",
+      "translation": "Water",
+      "level": "beginner"
+    },
+    {
+      "word": "밥",
+      "translation": "Rice/Meal",
+      "level": "beginner"
+    },
+    {
+      "word": "집",
+      "translation": "House",
+      "level": "beginner"
+    },
+    {
+      "word": "이름",
+      "translation": "Name",
+      "level": "beginner"
+    },
+    {
+      "word": "네",
+      "translation": "Yes",
+      "level": "beginner"
+    },
+    {
+      "word": "아니요",
+      "translation": "No",
+      "level": "beginner"
+    },
+    {
+      "word": "친구",
+      "translation": "Friend",
+      "level": "beginner"
+    },
+    {
+      "word": "학교",
+      "translation": "School",
+      "level": "beginner"
+    },
+    {
+      "word": "고양이",
+      "translation": "Cat",
+      "level": "beginner"
+    },
+    {
+      "word": "생각하다",
+      "translation": "To think",
+      "level": "intermediate"
+    },
+    {
+      "word": "읽다",
+      "translation": "To read",
+      "level": "intermediate"
+    },
+    {
+      "word": "공부하다",
+      "translation": "To study",
+      "level": "intermediate"
+    },
+    {
+      "word": "시간",
+      "translation": "Time",
+      "level": "intermediate"
+    },
+    {
+      "word": "사람",
+      "translation": "Person",
+      "level": "intermediate"
+    },
+    {
+      "word": "보다",
+      "translation": "To see",
+      "level": "intermediate"
+    },
+    {
+      "word": "맛있다",
+      "translation": "Delicious",
+      "level": "intermediate"
+    },
+    {
+      "word": "도와주다",
+      "translation": "To help",
+      "level": "intermediate"
+    },
+    {
+      "word": "자동차",
+      "translation": "Car",
+      "level": "intermediate"
+    },
+    {
+      "word": "컴퓨터",
+      "translation": "Computer",
+      "level": "intermediate"
+    },
+    {
+      "word": "운동하다",
+      "translation": "To exercise",
+      "level": "intermediate"
+    },
+    {
+      "word": "친절하다",
+      "translation": "Kind",
+      "level": "intermediate"
+    },
+    {
+      "word": "경험",
+      "translation": "Experience",
+      "level": "advanced"
+    },
+    {
+      "word": "발전",
+      "translation": "Development",
+      "level": "advanced"
+    },
+    {
+      "word": "환경",
+      "translation": "Environment",
+      "level": "advanced"
+    },
+    {
+      "word": "의미",
+      "translation": "Meaning",
+      "level": "advanced"
+    },
+    {
+      "word": "문제",
+      "translation": "Problem",
+      "level": "advanced"
+    },
+    {
+      "word": "결정하다",
+      "translation": "To decide",
+      "level": "advanced"
+    },
+    {
+      "word": "기회",
+      "translation": "Opportunity",
+      "level": "advanced"
+    },
+    {
+      "word": "상황",
+      "translation": "Situation",
+      "level": "advanced"
+    },
+    {
+      "word": "기술",
+      "translation": "Technology/Skill",
+      "level": "advanced"
+    },
+    {
+      "word": "학습하다",
+      "translation": "To learn",
+      "level": "advanced"
+    },
+    {
+      "word": "휴가",
+      "translation": "Vacation",
+      "level": "advanced"
+    },
+    {
+      "word": "이해하다",
+      "translation": "To understand",
+      "level": "advanced"
+    },
+    {
+      "word": "철학",
+      "translation": "Philosophy",
+      "level": "expert"
+    },
+    {
+      "word": "협상",
+      "translation": "Negotiation",
+      "level": "expert"
+    },
+    {
+      "word": "복잡하다",
+      "translation": "Complex",
+      "level": "expert"
+    },
+    {
+      "word": "조화",
+      "translation": "Harmony",
+      "level": "expert"
+    },
+    {
+      "word": "추상적",
+      "translation": "Abstract",
+      "level": "expert"
+    },
+    {
+      "word": "동기",
+      "translation": "Motivation",
+      "level": "expert"
+    },
+    {
+      "word": "분석하다",
+      "translation": "To analyze",
+      "level": "expert"
+    },
+    {
+      "word": "포괄적",
+      "translation": "Comprehensive",
+      "level": "expert"
+    },
+    {
+      "word": "객관적",
+      "translation": "Objective",
+      "level": "expert"
+    },
+    {
+      "word": "주관적",
+      "translation": "Subjective",
+      "level": "expert"
+    },
+    {
+      "word": "교향곡",
+      "translation": "Symphony",
+      "level": "expert"
+    },
+    {
+      "word": "합리적",
+      "translation": "Rational",
+      "level": "expert"
+    }
+  ]
+}

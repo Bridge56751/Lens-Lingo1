@@ -1,0 +1,426 @@
+{
+  "sentences": [
+    {
+      "category": "greetings",
+      "phrase": "Buongiorno",
+      "translation": "Good morning"
+    },
+    {
+      "category": "greetings",
+      "phrase": "Ciao",
+      "translation": "Hello"
+    },
+    {
+      "category": "greetings",
+      "phrase": "Arrivederci",
+      "translation": "Goodbye"
+    },
+    {
+      "category": "greetings",
+      "phrase": "Buonanotte",
+      "translation": "Good night"
+    },
+    {
+      "category": "greetings",
+      "phrase": "Buonasera",
+      "translation": "Good evening"
+    },
+    {
+      "category": "greetings",
+      "phrase": "A presto",
+      "translation": "See you soon"
+    },
+    {
+      "category": "basics",
+      "phrase": "Per favore",
+      "translation": "Please"
+    },
+    {
+      "category": "basics",
+      "phrase": "Grazie",
+      "translation": "Thank you"
+    },
+    {
+      "category": "basics",
+      "phrase": "Scusami",
+      "translation": "Excuse me"
+    },
+    {
+      "category": "basics",
+      "phrase": "Mi dispiace",
+      "translation": "I'm sorry"
+    },
+    {
+      "category": "basics",
+      "phrase": "Sì",
+      "translation": "Yes"
+    },
+    {
+      "category": "basics",
+      "phrase": "No",
+      "translation": "No"
+    },
+    {
+      "category": "directions",
+      "phrase": "Dov'è il bagno?",
+      "translation": "Where is the bathroom?"
+    },
+    {
+      "category": "directions",
+      "phrase": "Come arrivo alla stazione?",
+      "translation": "How do I get to the station?"
+    },
+    {
+      "category": "directions",
+      "phrase": "È lontano?",
+      "translation": "Is it far?"
+    },
+    {
+      "category": "directions",
+      "phrase": "Gira a sinistra",
+      "translation": "Turn left"
+    },
+    {
+      "category": "directions",
+      "phrase": "Gira a destra",
+      "translation": "Turn right"
+    },
+    {
+      "category": "directions",
+      "phrase": "Sto cercando l'albergo",
+      "translation": "I'm looking for the hotel"
+    },
+    {
+      "category": "dining",
+      "phrase": "Un tavolo per due, per favore",
+      "translation": "A table for two, please"
+    },
+    {
+      "category": "dining",
+      "phrase": "Il menu, per favore",
+      "translation": "The menu, please"
+    },
+    {
+      "category": "dining",
+      "phrase": "Acqua, per favore",
+      "translation": "Water, please"
+    },
+    {
+      "category": "dining",
+      "phrase": "Il conto, per favore",
+      "translation": "The check, please"
+    },
+    {
+      "category": "dining",
+      "phrase": "C'è un piatto vegetariano?",
+      "translation": "Is there a vegetarian dish?"
+    },
+    {
+      "category": "dining",
+      "phrase": "Posso avere il vino?",
+      "translation": "Can I have the wine?"
+    },
+    {
+      "category": "shopping",
+      "phrase": "Quanto costa questo?",
+      "translation": "How much is this?"
+    },
+    {
+      "category": "shopping",
+      "phrase": "È troppo caro",
+      "translation": "It's too expensive"
+    },
+    {
+      "category": "shopping",
+      "phrase": "Lo prendo",
+      "translation": "I'll take it"
+    },
+    {
+      "category": "shopping",
+      "phrase": "Accettate carte?",
+      "translation": "Do you accept cards?"
+    },
+    {
+      "category": "shopping",
+      "phrase": "Posso avere uno sconto?",
+      "translation": "Can I have a discount?"
+    },
+    {
+      "category": "shopping",
+      "phrase": "Sto solo guardando",
+      "translation": "I'm just looking"
+    },
+    {
+      "category": "emergency",
+      "phrase": "Ho bisogno di aiuto",
+      "translation": "I need help"
+    },
+    {
+      "category": "emergency",
+      "phrase": "Chiama un medico",
+      "translation": "Call a doctor"
+    },
+    {
+      "category": "emergency",
+      "phrase": "Mi sono perso",
+      "translation": "I'm lost"
+    },
+    {
+      "category": "emergency",
+      "phrase": "Dov'è l'ospedale?",
+      "translation": "Where is the hospital?"
+    },
+    {
+      "category": "emergency",
+      "phrase": "C'è un'emergenza",
+      "translation": "There is an emergency"
+    },
+    {
+      "category": "emergency",
+      "phrase": "Chiamate la polizia",
+      "translation": "Call the police"
+    }
+  ],
+  "words": [
+    {
+      "word": "ciao",
+      "translation": "hello",
+      "level": "beginner"
+    },
+    {
+      "word": "grazie",
+      "translation": "thank you",
+      "level": "beginner"
+    },
+    {
+      "word": "per favore",
+      "translation": "please",
+      "level": "beginner"
+    },
+    {
+      "word": "sì",
+      "translation": "yes",
+      "level": "beginner"
+    },
+    {
+      "word": "no",
+      "translation": "no",
+      "level": "beginner"
+    },
+    {
+      "word": "scusa",
+      "translation": "excuse me",
+      "level": "beginner"
+    },
+    {
+      "word": "buongiorno",
+      "translation": "good morning",
+      "level": "beginner"
+    },
+    {
+      "word": "buonasera",
+      "translation": "good evening",
+      "level": "beginner"
+    },
+    {
+      "word": "acqua",
+      "translation": "water",
+      "level": "beginner"
+    },
+    {
+      "word": "pane",
+      "translation": "bread",
+      "level": "beginner"
+    },
+    {
+      "word": "amico",
+      "translation": "friend",
+      "level": "beginner"
+    },
+    {
+      "word": "casa",
+      "translation": "house",
+      "level": "beginner"
+    },
+    {
+      "word": "davvero",
+      "translation": "really",
+      "level": "intermediate"
+    },
+    {
+      "word": "perché",
+      "translation": "why",
+      "level": "intermediate"
+    },
+    {
+      "word": "ancora",
+      "translation": "still",
+      "level": "intermediate"
+    },
+    {
+      "word": "subito",
+      "translation": "immediately",
+      "level": "intermediate"
+    },
+    {
+      "word": "viaggio",
+      "translation": "trip",
+      "level": "intermediate"
+    },
+    {
+      "word": "lavorare",
+      "translation": "to work",
+      "level": "intermediate"
+    },
+    {
+      "word": "studiare",
+      "translation": "to study",
+      "level": "intermediate"
+    },
+    {
+      "word": "giocare",
+      "translation": "to play",
+      "level": "intermediate"
+    },
+    {
+      "word": "felice",
+      "translation": "happy",
+      "level": "intermediate"
+    },
+    {
+      "word": "triste",
+      "translation": "sad",
+      "level": "intermediate"
+    },
+    {
+      "word": "nuovo",
+      "translation": "new",
+      "level": "intermediate"
+    },
+    {
+      "word": "vecchio",
+      "translation": "old",
+      "level": "intermediate"
+    },
+    {
+      "word": "speranza",
+      "translation": "hope",
+      "level": "advanced"
+    },
+    {
+      "word": "improvvisamente",
+      "translation": "suddenly",
+      "level": "advanced"
+    },
+    {
+      "word": "sconfiggere",
+      "translation": "to defeat",
+      "level": "advanced"
+    },
+    {
+      "word": "accadere",
+      "translation": "to happen",
+      "level": "advanced"
+    },
+    {
+      "word": "ricordare",
+      "translation": "to remember",
+      "level": "advanced"
+    },
+    {
+      "word": "incredibile",
+      "translation": "incredible",
+      "level": "advanced"
+    },
+    {
+      "word": "meraviglioso",
+      "translation": "wonderful",
+      "level": "advanced"
+    },
+    {
+      "word": "presuntuoso",
+      "translation": "arrogant",
+      "level": "advanced"
+    },
+    {
+      "word": "interessante",
+      "translation": "interesting",
+      "level": "advanced"
+    },
+    {
+      "word": "rivelare",
+      "translation": "to reveal",
+      "level": "advanced"
+    },
+    {
+      "word": "comunicare",
+      "translation": "to communicate",
+      "level": "advanced"
+    },
+    {
+      "word": "sorprendente",
+      "translation": "surprising",
+      "level": "advanced"
+    },
+    {
+      "word": "ostinatamente",
+      "translation": "stubbornly",
+      "level": "expert"
+    },
+    {
+      "word": "incommensurabile",
+      "translation": "immeasurable",
+      "level": "expert"
+    },
+    {
+      "word": "ineffabile",
+      "translation": "ineffable",
+      "level": "expert"
+    },
+    {
+      "word": "pragmatico",
+      "translation": "pragmatic",
+      "level": "expert"
+    },
+    {
+      "word": "tempestivamente",
+      "translation": "timely",
+      "level": "expert"
+    },
+    {
+      "word": "controversia",
+      "translation": "controversy",
+      "level": "expert"
+    },
+    {
+      "word": "transitorio",
+      "translation": "transitory",
+      "level": "expert"
+    },
+    {
+      "word": "evocativo",
+      "translation": "evocative",
+      "level": "expert"
+    },
+    {
+      "word": "perspicace",
+      "translation": "perceptive",
+      "level": "expert"
+    },
+    {
+      "word": "obliato",
+      "translation": "forgotten",
+      "level": "expert"
+    },
+    {
+      "word": "raffinato",
+      "translation": "refined",
+      "level": "expert"
+    },
+    {
+      "word": "stravolgente",
+      "translation": "shattering",
+      "level": "expert"
+    }
+  ]
+}

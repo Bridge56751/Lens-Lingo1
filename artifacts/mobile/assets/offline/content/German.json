@@ -1,0 +1,426 @@
+{
+  "sentences": [
+    {
+      "category": "greetings",
+      "phrase": "Guten Morgen",
+      "translation": "Good morning"
+    },
+    {
+      "category": "greetings",
+      "phrase": "Hallo",
+      "translation": "Hello"
+    },
+    {
+      "category": "greetings",
+      "phrase": "Guten Tag",
+      "translation": "Good day"
+    },
+    {
+      "category": "greetings",
+      "phrase": "Guten Abend",
+      "translation": "Good evening"
+    },
+    {
+      "category": "greetings",
+      "phrase": "Auf Wiedersehen",
+      "translation": "Goodbye"
+    },
+    {
+      "category": "greetings",
+      "phrase": "Gute Nacht",
+      "translation": "Good night"
+    },
+    {
+      "category": "basics",
+      "phrase": "Bitte",
+      "translation": "Please"
+    },
+    {
+      "category": "basics",
+      "phrase": "Danke",
+      "translation": "Thank you"
+    },
+    {
+      "category": "basics",
+      "phrase": "Entschuldigung",
+      "translation": "Excuse me"
+    },
+    {
+      "category": "basics",
+      "phrase": "Es tut mir leid",
+      "translation": "Sorry"
+    },
+    {
+      "category": "basics",
+      "phrase": "Ja",
+      "translation": "Yes"
+    },
+    {
+      "category": "basics",
+      "phrase": "Nein",
+      "translation": "No"
+    },
+    {
+      "category": "directions",
+      "phrase": "Wo ist die Toilette?",
+      "translation": "Where is the bathroom?"
+    },
+    {
+      "category": "directions",
+      "phrase": "Wie komme ich zum Bahnhof?",
+      "translation": "How do I get to the station?"
+    },
+    {
+      "category": "directions",
+      "phrase": "Ist es weit?",
+      "translation": "Is it far?"
+    },
+    {
+      "category": "directions",
+      "phrase": "Gehen Sie links",
+      "translation": "Turn left"
+    },
+    {
+      "category": "directions",
+      "phrase": "Gehen Sie rechts",
+      "translation": "Turn right"
+    },
+    {
+      "category": "directions",
+      "phrase": "Geradeaus",
+      "translation": "Straight ahead"
+    },
+    {
+      "category": "dining",
+      "phrase": "Ein Tisch für zwei, bitte",
+      "translation": "A table for two, please"
+    },
+    {
+      "category": "dining",
+      "phrase": "Die Speisekarte, bitte",
+      "translation": "The menu, please"
+    },
+    {
+      "category": "dining",
+      "phrase": "Wasser, bitte",
+      "translation": "Water, please"
+    },
+    {
+      "category": "dining",
+      "phrase": "Die Rechnung, bitte",
+      "translation": "The check, please"
+    },
+    {
+      "category": "dining",
+      "phrase": "Ich hätte gern...",
+      "translation": "I would like..."
+    },
+    {
+      "category": "dining",
+      "phrase": "Ist das vegetarisch?",
+      "translation": "Is this vegetarian?"
+    },
+    {
+      "category": "shopping",
+      "phrase": "Wie viel kostet das?",
+      "translation": "How much is this?"
+    },
+    {
+      "category": "shopping",
+      "phrase": "Zu teuer",
+      "translation": "Too expensive"
+    },
+    {
+      "category": "shopping",
+      "phrase": "Ich nehme es",
+      "translation": "I'll take it"
+    },
+    {
+      "category": "shopping",
+      "phrase": "Akzeptieren Sie Karten?",
+      "translation": "Do you accept cards?"
+    },
+    {
+      "category": "shopping",
+      "phrase": "Brauchen Sie eine Tüte?",
+      "translation": "Do you need a bag?"
+    },
+    {
+      "category": "shopping",
+      "phrase": "Könnte ich einen Rabatt bekommen?",
+      "translation": "Could I get a discount?"
+    },
+    {
+      "category": "emergency",
+      "phrase": "Ich brauche Hilfe",
+      "translation": "I need help"
+    },
+    {
+      "category": "emergency",
+      "phrase": "Rufen Sie einen Arzt",
+      "translation": "Call a doctor"
+    },
+    {
+      "category": "emergency",
+      "phrase": "Ich habe mich verlaufen",
+      "translation": "I'm lost"
+    },
+    {
+      "category": "emergency",
+      "phrase": "Wo ist das Krankenhaus?",
+      "translation": "Where is the hospital?"
+    },
+    {
+      "category": "emergency",
+      "phrase": "Rufen Sie die Polizei",
+      "translation": "Call the police"
+    },
+    {
+      "category": "emergency",
+      "phrase": "Ich habe einen Unfall gehabt",
+      "translation": "I had an accident"
+    }
+  ],
+  "words": [
+    {
+      "word": "Hallo",
+      "translation": "Hello",
+      "level": "beginner"
+    },
+    {
+      "word": "Danke",
+      "translation": "Thank you",
+      "level": "beginner"
+    },
+    {
+      "word": "Bitte",
+      "translation": "Please/You're welcome",
+      "level": "beginner"
+    },
+    {
+      "word": "Entschuldigung",
+      "translation": "Sorry/Excuse me",
+      "level": "beginner"
+    },
+    {
+      "word": "Ja",
+      "translation": "Yes",
+      "level": "beginner"
+    },
+    {
+      "word": "Nein",
+      "translation": "No",
+      "level": "beginner"
+    },
+    {
+      "word": "Hilfe",
+      "translation": "Help",
+      "level": "beginner"
+    },
+    {
+      "word": "Guten Morgen",
+      "translation": "Good morning",
+      "level": "beginner"
+    },
+    {
+      "word": "Gute Nacht",
+      "translation": "Good night",
+      "level": "beginner"
+    },
+    {
+      "word": "Auf Wiedersehen",
+      "translation": "Goodbye",
+      "level": "beginner"
+    },
+    {
+      "word": "Wie geht's?",
+      "translation": "How are you?",
+      "level": "beginner"
+    },
+    {
+      "word": "Ich heiße",
+      "translation": "My name is",
+      "level": "beginner"
+    },
+    {
+      "word": "Vielleicht",
+      "translation": "Maybe",
+      "level": "intermediate"
+    },
+    {
+      "word": "Sofort",
+      "translation": "Immediately",
+      "level": "intermediate"
+    },
+    {
+      "word": "Wirklich",
+      "translation": "Really",
+      "level": "intermediate"
+    },
+    {
+      "word": "Leider",
+      "translation": "Unfortunately",
+      "level": "intermediate"
+    },
+    {
+      "word": "Manchmal",
+      "translation": "Sometimes",
+      "level": "intermediate"
+    },
+    {
+      "word": "Bereit",
+      "translation": "Ready",
+      "level": "intermediate"
+    },
+    {
+      "word": "Wichtig",
+      "translation": "Important",
+      "level": "intermediate"
+    },
+    {
+      "word": "Sicher",
+      "translation": "Sure",
+      "level": "intermediate"
+    },
+    {
+      "word": "Zufrieden",
+      "translation": "Satisfied",
+      "level": "intermediate"
+    },
+    {
+      "word": "Versuchen",
+      "translation": "To try",
+      "level": "intermediate"
+    },
+    {
+      "word": "Erklären",
+      "translation": "To explain",
+      "level": "intermediate"
+    },
+    {
+      "word": "Entwickeln",
+      "translation": "To develop",
+      "level": "intermediate"
+    },
+    {
+      "word": "Herausforderung",
+      "translation": "Challenge",
+      "level": "advanced"
+    },
+    {
+      "word": "Fortschritt",
+      "translation": "Progress",
+      "level": "advanced"
+    },
+    {
+      "word": "Enttäuschung",
+      "translation": "Disappointment",
+      "level": "advanced"
+    },
+    {
+      "word": "Verantwortung",
+      "translation": "Responsibility",
+      "level": "advanced"
+    },
+    {
+      "word": "Erstaunlich",
+      "translation": "Amazing",
+      "level": "advanced"
+    },
+    {
+      "word": "Besonders",
+      "translation": "Especially",
+      "level": "advanced"
+    },
+    {
+      "word": "Begeistert",
+      "translation": "Enthusiastic",
+      "level": "advanced"
+    },
+    {
+      "word": "Unterstützen",
+      "translation": "To support",
+      "level": "advanced"
+    },
+    {
+      "word": "Vermeiden",
+      "translation": "To avoid",
+      "level": "advanced"
+    },
+    {
+      "word": "Unabhängig",
+      "translation": "Independent",
+      "level": "advanced"
+    },
+    {
+      "word": "Vereinbaren",
+      "translation": "To arrange",
+      "level": "advanced"
+    },
+    {
+      "word": "Erleichtern",
+      "translation": "To facilitate",
+      "level": "advanced"
+    },
+    {
+      "word": "Bedeutend",
+      "translation": "Significant",
+      "level": "expert"
+    },
+    {
+      "word": "Unvorhersehbar",
+      "translation": "Unpredictable",
+      "level": "expert"
+    },
+    {
+      "word": "Hervorragend",
+      "translation": "Outstanding",
+      "level": "expert"
+    },
+    {
+      "word": "Voraussichtlich",
+      "translation": "Expected",
+      "level": "expert"
+    },
+    {
+      "word": "Gewissenhaft",
+      "translation": "Conscientious",
+      "level": "expert"
+    },
+    {
+      "word": "Einfühlsam",
+      "translation": "Empathetic",
+      "level": "expert"
+    },
+    {
+      "word": "Widersprüchlich",
+      "translation": "Contradictory",
+      "level": "expert"
+    },
+    {
+      "word": "Unentbehrlich",
+      "translation": "Indispensable",
+      "level": "expert"
+    },
+    {
+      "word": "Nachhaltigkeit",
+      "translation": "Sustainability",
+      "level": "expert"
+    },
+    {
+      "word": "Zuverlässigkeit",
+      "translation": "Reliability",
+      "level": "expert"
+    },
+    {
+      "word": "Aufrichtigkeit",
+      "translation": "Sincerity",
+      "level": "expert"
+    },
+    {
+      "word": "Einzigartig",
+      "translation": "Unique",
+      "level": "expert"
+    }
+  ]
+}

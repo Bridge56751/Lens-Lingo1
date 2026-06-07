@@ -224,6 +224,9 @@ importers:
       '@tanstack/react-query-persist-client':
         specifier: ^5.100.9
         version: 5.100.9(@tanstack/react-query@5.100.9(react@19.1.0))(react@19.1.0)
+      expo-asset:
+        specifier: ~12.0.13
+        version: 12.0.13(expo@54.0.34)(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)(typescript@5.9.3)
       expo-audio:
         specifier: ~1.1.1
         version: 1.1.1(expo-asset@12.0.13(expo@54.0.34)(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)(typescript@5.9.3))(expo@54.0.34)(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
@@ -612,6 +615,10 @@ importers:
         version: 25.6.2
 
   scripts:
+    dependencies:
+      '@workspace/integrations-openai-ai-server':
+        specifier: workspace:*
+        version: link:../lib/integrations-openai-ai-server
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -6898,7 +6905,7 @@ snapshots:
 
   '@expo/require-utils@55.0.5(typescript@5.9.3)':
     dependencies:
-      '@babel/code-frame': 7.29.0
+      '@babel/code-frame': 7.29.7
       '@babel/core': 7.29.0
       '@babel/plugin-transform-modules-commonjs': 7.29.7(@babel/core@7.29.0)
     optionalDependencies:

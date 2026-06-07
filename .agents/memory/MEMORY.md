@@ -9,5 +9,6 @@
 - [Vocab bank cache](vocab-bank-cache.md) — Word Bank is a shared per-language-pair cache; adding a difficulty level needs a missing-level top-up or cached pairs never get it.
 - [Conversation seeding rule](conversation-seeding.md) — every conversation-creation path must seed ≥1 message + set target/native lang columns, else send-message route 404s / loses language anchor.
 - [Scan overlay touch](scan-overlay-touch.md) — a later full-width absolute sibling steals a floating control's taps even with a gap; merge into one box-none container; full-bleed frame avoids grey banding.
+- [Pre-bundled offline](prebundled-offline.md) — all 12 langs' content+TTS ship in-app (no Download tap); generate FOREGROUND chunked (env SIGKILLs bg procs), atomic writes, enforce 6/12 cardinality, gate error UI on isError&&!data.
 - [Offline learning pack](offline-pack.md) — Settings Download caches text (persisted RQ cache) + audio (cacheAudioClips); content screens MUST gate errors on isError&&!data; download is run-token guarded.
 - [Expo iOS permissions](expo-ios-permissions.md) — app uses camera/mic/photo only; declare iOS strings in ios.infoPlist; image-picker cameraPermission:false BLOCKS perms; don't ship unused expo-* deps (auto-inject usage strings).

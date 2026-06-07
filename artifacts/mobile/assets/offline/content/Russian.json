@@ -1,0 +1,426 @@
+{
+  "sentences": [
+    {
+      "category": "greetings",
+      "phrase": "Доброе утро",
+      "translation": "Good morning"
+    },
+    {
+      "category": "greetings",
+      "phrase": "Здравствуйте",
+      "translation": "Hello"
+    },
+    {
+      "category": "greetings",
+      "phrase": "Привет",
+      "translation": "Hi"
+    },
+    {
+      "category": "greetings",
+      "phrase": "До свидания",
+      "translation": "Goodbye"
+    },
+    {
+      "category": "greetings",
+      "phrase": "Пока",
+      "translation": "Bye"
+    },
+    {
+      "category": "greetings",
+      "phrase": "Спокойной ночи",
+      "translation": "Good night"
+    },
+    {
+      "category": "basics",
+      "phrase": "Пожалуйста",
+      "translation": "Please"
+    },
+    {
+      "category": "basics",
+      "phrase": "Спасибо",
+      "translation": "Thank you"
+    },
+    {
+      "category": "basics",
+      "phrase": "Извините",
+      "translation": "Excuse me/Sorry"
+    },
+    {
+      "category": "basics",
+      "phrase": "Извините",
+      "translation": "Sorry"
+    },
+    {
+      "category": "basics",
+      "phrase": "Да",
+      "translation": "Yes"
+    },
+    {
+      "category": "basics",
+      "phrase": "Нет",
+      "translation": "No"
+    },
+    {
+      "category": "directions",
+      "phrase": "Где находится туалет?",
+      "translation": "Where is the bathroom?"
+    },
+    {
+      "category": "directions",
+      "phrase": "Как добраться до вокзала?",
+      "translation": "How do I get to the station?"
+    },
+    {
+      "category": "directions",
+      "phrase": "Это далеко?",
+      "translation": "Is it far?"
+    },
+    {
+      "category": "directions",
+      "phrase": "Поверните налево",
+      "translation": "Turn left"
+    },
+    {
+      "category": "directions",
+      "phrase": "Поверните направо",
+      "translation": "Turn right"
+    },
+    {
+      "category": "directions",
+      "phrase": "Идите прямо",
+      "translation": "Go straight"
+    },
+    {
+      "category": "dining",
+      "phrase": "Столик на двоих, пожалуйста",
+      "translation": "A table for two, please"
+    },
+    {
+      "category": "dining",
+      "phrase": "Меню, пожалуйста",
+      "translation": "The menu, please"
+    },
+    {
+      "category": "dining",
+      "phrase": "Воду, пожалуйста",
+      "translation": "Water, please"
+    },
+    {
+      "category": "dining",
+      "phrase": "Счёт, пожалуйста",
+      "translation": "The check, please"
+    },
+    {
+      "category": "dining",
+      "phrase": "Я вегетарианец",
+      "translation": "I am vegetarian"
+    },
+    {
+      "category": "dining",
+      "phrase": "Можно мне ещё?",
+      "translation": "Can I have some more?"
+    },
+    {
+      "category": "shopping",
+      "phrase": "Сколько это стоит?",
+      "translation": "How much is this?"
+    },
+    {
+      "category": "shopping",
+      "phrase": "Это слишком дорого",
+      "translation": "It's too expensive"
+    },
+    {
+      "category": "shopping",
+      "phrase": "Я беру это",
+      "translation": "I'll take it"
+    },
+    {
+      "category": "shopping",
+      "phrase": "У вас принимают карты?",
+      "translation": "Do you accept cards?"
+    },
+    {
+      "category": "shopping",
+      "phrase": "У вас есть другой размер?",
+      "translation": "Do you have another size?"
+    },
+    {
+      "category": "shopping",
+      "phrase": "Где примерочная?",
+      "translation": "Where is the fitting room?"
+    },
+    {
+      "category": "emergency",
+      "phrase": "Мне нужна помощь",
+      "translation": "I need help"
+    },
+    {
+      "category": "emergency",
+      "phrase": "Вызовите доктора",
+      "translation": "Call a doctor"
+    },
+    {
+      "category": "emergency",
+      "phrase": "Я потерялся",
+      "translation": "I'm lost"
+    },
+    {
+      "category": "emergency",
+      "phrase": "Где находится больница?",
+      "translation": "Where is the hospital?"
+    },
+    {
+      "category": "emergency",
+      "phrase": "У меня аллергия",
+      "translation": "I have an allergy"
+    },
+    {
+      "category": "emergency",
+      "phrase": "Позвоните в полицию",
+      "translation": "Call the police"
+    }
+  ],
+  "words": [
+    {
+      "word": "привет",
+      "translation": "hello",
+      "level": "beginner"
+    },
+    {
+      "word": "спасибо",
+      "translation": "thank you",
+      "level": "beginner"
+    },
+    {
+      "word": "да",
+      "translation": "yes",
+      "level": "beginner"
+    },
+    {
+      "word": "нет",
+      "translation": "no",
+      "level": "beginner"
+    },
+    {
+      "word": "пожалуйста",
+      "translation": "please",
+      "level": "beginner"
+    },
+    {
+      "word": "извините",
+      "translation": "excuse me/sorry",
+      "level": "beginner"
+    },
+    {
+      "word": "до свидания",
+      "translation": "goodbye",
+      "level": "beginner"
+    },
+    {
+      "word": "хорошо",
+      "translation": "good",
+      "level": "beginner"
+    },
+    {
+      "word": "плохо",
+      "translation": "bad",
+      "level": "beginner"
+    },
+    {
+      "word": "друг",
+      "translation": "friend",
+      "level": "beginner"
+    },
+    {
+      "word": "вода",
+      "translation": "water",
+      "level": "beginner"
+    },
+    {
+      "word": "еда",
+      "translation": "food",
+      "level": "beginner"
+    },
+    {
+      "word": "время",
+      "translation": "time",
+      "level": "intermediate"
+    },
+    {
+      "word": "работа",
+      "translation": "work",
+      "level": "intermediate"
+    },
+    {
+      "word": "город",
+      "translation": "city",
+      "level": "intermediate"
+    },
+    {
+      "word": "семья",
+      "translation": "family",
+      "level": "intermediate"
+    },
+    {
+      "word": "ночь",
+      "translation": "night",
+      "level": "intermediate"
+    },
+    {
+      "word": "деньги",
+      "translation": "money",
+      "level": "intermediate"
+    },
+    {
+      "word": "проблема",
+      "translation": "problem",
+      "level": "intermediate"
+    },
+    {
+      "word": "решение",
+      "translation": "solution",
+      "level": "intermediate"
+    },
+    {
+      "word": "вопрос",
+      "translation": "question",
+      "level": "intermediate"
+    },
+    {
+      "word": "ответ",
+      "translation": "answer",
+      "level": "intermediate"
+    },
+    {
+      "word": "счастье",
+      "translation": "happiness",
+      "level": "intermediate"
+    },
+    {
+      "word": "здоровье",
+      "translation": "health",
+      "level": "intermediate"
+    },
+    {
+      "word": "опасность",
+      "translation": "danger",
+      "level": "advanced"
+    },
+    {
+      "word": "успех",
+      "translation": "success",
+      "level": "advanced"
+    },
+    {
+      "word": "свобода",
+      "translation": "freedom",
+      "level": "advanced"
+    },
+    {
+      "word": "терпение",
+      "translation": "patience",
+      "level": "advanced"
+    },
+    {
+      "word": "вдохновение",
+      "translation": "inspiration",
+      "level": "advanced"
+    },
+    {
+      "word": "разочарование",
+      "translation": "disappointment",
+      "level": "advanced"
+    },
+    {
+      "word": "развитие",
+      "translation": "development",
+      "level": "advanced"
+    },
+    {
+      "word": "усталость",
+      "translation": "fatigue",
+      "level": "advanced"
+    },
+    {
+      "word": "восхищение",
+      "translation": "admiration",
+      "level": "advanced"
+    },
+    {
+      "word": "размышление",
+      "translation": "reflection",
+      "level": "advanced"
+    },
+    {
+      "word": "внимание",
+      "translation": "attention",
+      "level": "advanced"
+    },
+    {
+      "word": "удивление",
+      "translation": "amazement",
+      "level": "advanced"
+    },
+    {
+      "word": "энтропия",
+      "translation": "entropy",
+      "level": "expert"
+    },
+    {
+      "word": "экзистенциализм",
+      "translation": "existentialism",
+      "level": "expert"
+    },
+    {
+      "word": "метафора",
+      "translation": "metaphor",
+      "level": "expert"
+    },
+    {
+      "word": "апатия",
+      "translation": "apathy",
+      "level": "expert"
+    },
+    {
+      "word": "перцепция",
+      "translation": "perception",
+      "level": "expert"
+    },
+    {
+      "word": "альтруизм",
+      "translation": "altruism",
+      "level": "expert"
+    },
+    {
+      "word": "субординация",
+      "translation": "subordination",
+      "level": "expert"
+    },
+    {
+      "word": "концептуализация",
+      "translation": "conceptualization",
+      "level": "expert"
+    },
+    {
+      "word": "эмпирика",
+      "translation": "empiricism",
+      "level": "expert"
+    },
+    {
+      "word": "экспозиция",
+      "translation": "exposition",
+      "level": "expert"
+    },
+    {
+      "word": "филантропия",
+      "translation": "philanthropy",
+      "level": "expert"
+    },
+    {
+      "word": "синергия",
+      "translation": "synergy",
+      "level": "expert"
+    }
+  ]
+}

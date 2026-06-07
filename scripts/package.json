@@ -5,7 +5,11 @@
   "type": "module",
   "scripts": {
     "hello": "tsx ./src/hello.ts",
+    "gen-offline": "tsx ./src/generate-offline.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@workspace/integrations-openai-ai-server": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "catalog:",

@@ -1,0 +1,426 @@
+{
+  "sentences": [
+    {
+      "category": "greetings",
+      "phrase": "صباح الخير",
+      "translation": "Good morning"
+    },
+    {
+      "category": "greetings",
+      "phrase": "مساء الخير",
+      "translation": "Good evening"
+    },
+    {
+      "category": "greetings",
+      "phrase": "مرحبًا",
+      "translation": "Hello"
+    },
+    {
+      "category": "greetings",
+      "phrase": "مع السلامة",
+      "translation": "Goodbye"
+    },
+    {
+      "category": "greetings",
+      "phrase": "تصبح على خير",
+      "translation": "Good night"
+    },
+    {
+      "category": "greetings",
+      "phrase": "إلى اللقاء",
+      "translation": "See you"
+    },
+    {
+      "category": "basics",
+      "phrase": "من فضلك",
+      "translation": "Please"
+    },
+    {
+      "category": "basics",
+      "phrase": "شكرًا",
+      "translation": "Thank you"
+    },
+    {
+      "category": "basics",
+      "phrase": "عفوًا",
+      "translation": "Excuse me"
+    },
+    {
+      "category": "basics",
+      "phrase": "آسف",
+      "translation": "Sorry"
+    },
+    {
+      "category": "basics",
+      "phrase": "نعم",
+      "translation": "Yes"
+    },
+    {
+      "category": "basics",
+      "phrase": "لا",
+      "translation": "No"
+    },
+    {
+      "category": "directions",
+      "phrase": "أين المرحاض؟",
+      "translation": "Where is the bathroom?"
+    },
+    {
+      "category": "directions",
+      "phrase": "كيف أصل إلى المحطة؟",
+      "translation": "How do I get to the station?"
+    },
+    {
+      "category": "directions",
+      "phrase": "هل هو بعيد؟",
+      "translation": "Is it far?"
+    },
+    {
+      "category": "directions",
+      "phrase": "انعطف يسارًا",
+      "translation": "Turn left"
+    },
+    {
+      "category": "directions",
+      "phrase": "انعطف يمينًا",
+      "translation": "Turn right"
+    },
+    {
+      "category": "directions",
+      "phrase": "أين أقرب بنك؟",
+      "translation": "Where is the nearest bank?"
+    },
+    {
+      "category": "dining",
+      "phrase": "طاولة لشخصين",
+      "translation": "A table for two"
+    },
+    {
+      "category": "dining",
+      "phrase": "القائمة من فضلك",
+      "translation": "The menu, please"
+    },
+    {
+      "category": "dining",
+      "phrase": "ماء من فضلك",
+      "translation": "Water, please"
+    },
+    {
+      "category": "dining",
+      "phrase": "الحساب من فضلك",
+      "translation": "The check, please"
+    },
+    {
+      "category": "dining",
+      "phrase": "أنا نباتي",
+      "translation": "I am vegetarian"
+    },
+    {
+      "category": "dining",
+      "phrase": "هل تُقدِّمون أطباق نباتية؟",
+      "translation": "Do you serve vegetarian dishes?"
+    },
+    {
+      "category": "shopping",
+      "phrase": "كم سعر هذا؟",
+      "translation": "How much is this?"
+    },
+    {
+      "category": "shopping",
+      "phrase": "غالي جدًا",
+      "translation": "Too expensive"
+    },
+    {
+      "category": "shopping",
+      "phrase": "سآخذه",
+      "translation": "I'll take it"
+    },
+    {
+      "category": "shopping",
+      "phrase": "هل تقبلون البطاقات؟",
+      "translation": "Do you accept cards?"
+    },
+    {
+      "category": "shopping",
+      "phrase": "هل لديكم مقاسات أخرى؟",
+      "translation": "Do you have other sizes?"
+    },
+    {
+      "category": "shopping",
+      "phrase": "أريد استرداد",
+      "translation": "I want a refund"
+    },
+    {
+      "category": "emergency",
+      "phrase": "أحتاج لمساعدة",
+      "translation": "I need help"
+    },
+    {
+      "category": "emergency",
+      "phrase": "اتصل بطبيب",
+      "translation": "Call a doctor"
+    },
+    {
+      "category": "emergency",
+      "phrase": "أنا ضائع",
+      "translation": "I'm lost"
+    },
+    {
+      "category": "emergency",
+      "phrase": "أين المستشفى؟",
+      "translation": "Where is the hospital?"
+    },
+    {
+      "category": "emergency",
+      "phrase": "أنا في مشكلة",
+      "translation": "I am in trouble"
+    },
+    {
+      "category": "emergency",
+      "phrase": "هل يمكنك مساعدتي؟",
+      "translation": "Can you help me?"
+    }
+  ],
+  "words": [
+    {
+      "word": "مرحبا",
+      "translation": "hello",
+      "level": "beginner"
+    },
+    {
+      "word": "نعم",
+      "translation": "yes",
+      "level": "beginner"
+    },
+    {
+      "word": "لا",
+      "translation": "no",
+      "level": "beginner"
+    },
+    {
+      "word": "شكرا",
+      "translation": "thank you",
+      "level": "beginner"
+    },
+    {
+      "word": "من فضلك",
+      "translation": "please",
+      "level": "beginner"
+    },
+    {
+      "word": "عفوا",
+      "translation": "you're welcome",
+      "level": "beginner"
+    },
+    {
+      "word": "كيف حالك؟",
+      "translation": "how are you?",
+      "level": "beginner"
+    },
+    {
+      "word": "جيد",
+      "translation": "good",
+      "level": "beginner"
+    },
+    {
+      "word": "صباح الخير",
+      "translation": "good morning",
+      "level": "beginner"
+    },
+    {
+      "word": "مساء الخير",
+      "translation": "good evening",
+      "level": "beginner"
+    },
+    {
+      "word": "وداعا",
+      "translation": "goodbye",
+      "level": "beginner"
+    },
+    {
+      "word": "أنا",
+      "translation": "I",
+      "level": "beginner"
+    },
+    {
+      "word": "عائلة",
+      "translation": "family",
+      "level": "intermediate"
+    },
+    {
+      "word": "مدينة",
+      "translation": "city",
+      "level": "intermediate"
+    },
+    {
+      "word": "طعام",
+      "translation": "food",
+      "level": "intermediate"
+    },
+    {
+      "word": "كتاب",
+      "translation": "book",
+      "level": "intermediate"
+    },
+    {
+      "word": "عمل",
+      "translation": "work",
+      "level": "intermediate"
+    },
+    {
+      "word": "دراسة",
+      "translation": "study",
+      "level": "intermediate"
+    },
+    {
+      "word": "صديق",
+      "translation": "friend",
+      "level": "intermediate"
+    },
+    {
+      "word": "ساعة",
+      "translation": "hour",
+      "level": "intermediate"
+    },
+    {
+      "word": "مدرسة",
+      "translation": "school",
+      "level": "intermediate"
+    },
+    {
+      "word": "غرفة",
+      "translation": "room",
+      "level": "intermediate"
+    },
+    {
+      "word": "سفر",
+      "translation": "travel",
+      "level": "intermediate"
+    },
+    {
+      "word": "سعيد",
+      "translation": "happy",
+      "level": "intermediate"
+    },
+    {
+      "word": "مغامرة",
+      "translation": "adventure",
+      "level": "advanced"
+    },
+    {
+      "word": "استراتيجية",
+      "translation": "strategy",
+      "level": "advanced"
+    },
+    {
+      "word": "ثقافة",
+      "translation": "culture",
+      "level": "advanced"
+    },
+    {
+      "word": "اقتصاد",
+      "translation": "economy",
+      "level": "advanced"
+    },
+    {
+      "word": "فلسفة",
+      "translation": "philosophy",
+      "level": "advanced"
+    },
+    {
+      "word": "مؤتمر",
+      "translation": "conference",
+      "level": "advanced"
+    },
+    {
+      "word": "تكنولوجيا",
+      "translation": "technology",
+      "level": "advanced"
+    },
+    {
+      "word": "رائع",
+      "translation": "wonderful",
+      "level": "advanced"
+    },
+    {
+      "word": "مجتمع",
+      "translation": "society",
+      "level": "advanced"
+    },
+    {
+      "word": "رؤية",
+      "translation": "vision",
+      "level": "advanced"
+    },
+    {
+      "word": "بناء",
+      "translation": "construction",
+      "level": "advanced"
+    },
+    {
+      "word": "تحدي",
+      "translation": "challenge",
+      "level": "advanced"
+    },
+    {
+      "word": "تناقض",
+      "translation": "paradox",
+      "level": "expert"
+    },
+    {
+      "word": "إيحاء",
+      "translation": "implication",
+      "level": "expert"
+    },
+    {
+      "word": "معضلة",
+      "translation": "dilemma",
+      "level": "expert"
+    },
+    {
+      "word": "توقعات",
+      "translation": "expectations",
+      "level": "expert"
+    },
+    {
+      "word": "فحوى",
+      "translation": "essence",
+      "level": "expert"
+    },
+    {
+      "word": "تصور",
+      "translation": "conceptualization",
+      "level": "expert"
+    },
+    {
+      "word": "استنباط",
+      "translation": "deduction",
+      "level": "expert"
+    },
+    {
+      "word": "تجريد",
+      "translation": "abstraction",
+      "level": "expert"
+    },
+    {
+      "word": "سيادة",
+      "translation": "sovereignty",
+      "level": "expert"
+    },
+    {
+      "word": "تآزر",
+      "translation": "synergy",
+      "level": "expert"
+    },
+    {
+      "word": "نسبي",
+      "translation": "relative",
+      "level": "expert"
+    },
+    {
+      "word": "حصافة",
+      "translation": "prudence",
+      "level": "expert"
+    }
+  ]
+}

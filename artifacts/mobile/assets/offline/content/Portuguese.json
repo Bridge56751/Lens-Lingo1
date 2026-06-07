@@ -1,0 +1,426 @@
+{
+  "sentences": [
+    {
+      "category": "greetings",
+      "phrase": "Bom dia",
+      "translation": "Good morning"
+    },
+    {
+      "category": "greetings",
+      "phrase": "Olá",
+      "translation": "Hello"
+    },
+    {
+      "category": "greetings",
+      "phrase": "Boa tarde",
+      "translation": "Good afternoon"
+    },
+    {
+      "category": "greetings",
+      "phrase": "Boa noite",
+      "translation": "Good night"
+    },
+    {
+      "category": "greetings",
+      "phrase": "Tchau",
+      "translation": "Goodbye"
+    },
+    {
+      "category": "greetings",
+      "phrase": "Até logo",
+      "translation": "See you later"
+    },
+    {
+      "category": "basics",
+      "phrase": "Por favor",
+      "translation": "Please"
+    },
+    {
+      "category": "basics",
+      "phrase": "Obrigado",
+      "translation": "Thank you"
+    },
+    {
+      "category": "basics",
+      "phrase": "Com licença",
+      "translation": "Excuse me"
+    },
+    {
+      "category": "basics",
+      "phrase": "Desculpe",
+      "translation": "Sorry"
+    },
+    {
+      "category": "basics",
+      "phrase": "Sim",
+      "translation": "Yes"
+    },
+    {
+      "category": "basics",
+      "phrase": "Não",
+      "translation": "No"
+    },
+    {
+      "category": "directions",
+      "phrase": "Onde fica o banheiro?",
+      "translation": "Where is the bathroom?"
+    },
+    {
+      "category": "directions",
+      "phrase": "Como chego à estação?",
+      "translation": "How do I get to the station?"
+    },
+    {
+      "category": "directions",
+      "phrase": "É longe?",
+      "translation": "Is it far?"
+    },
+    {
+      "category": "directions",
+      "phrase": "Vire à esquerda",
+      "translation": "Turn left"
+    },
+    {
+      "category": "directions",
+      "phrase": "Vire à direita",
+      "translation": "Turn right"
+    },
+    {
+      "category": "directions",
+      "phrase": "Estou perdido/a",
+      "translation": "I am lost"
+    },
+    {
+      "category": "dining",
+      "phrase": "Uma mesa para dois",
+      "translation": "A table for two"
+    },
+    {
+      "category": "dining",
+      "phrase": "O cardápio, por favor",
+      "translation": "The menu, please"
+    },
+    {
+      "category": "dining",
+      "phrase": "Água, por favor",
+      "translation": "Water, please"
+    },
+    {
+      "category": "dining",
+      "phrase": "A conta, por favor",
+      "translation": "The check, please"
+    },
+    {
+      "category": "dining",
+      "phrase": "Sem gelo",
+      "translation": "No ice"
+    },
+    {
+      "category": "dining",
+      "phrase": "Está delicioso",
+      "translation": "It's delicious"
+    },
+    {
+      "category": "shopping",
+      "phrase": "Quanto custa?",
+      "translation": "How much is this?"
+    },
+    {
+      "category": "shopping",
+      "phrase": "Muito caro",
+      "translation": "Too expensive"
+    },
+    {
+      "category": "shopping",
+      "phrase": "Eu vou levar",
+      "translation": "I'll take it"
+    },
+    {
+      "category": "shopping",
+      "phrase": "Você aceita cartão?",
+      "translation": "Do you accept cards?"
+    },
+    {
+      "category": "shopping",
+      "phrase": "Posso experimentar?",
+      "translation": "Can I try it on?"
+    },
+    {
+      "category": "shopping",
+      "phrase": "Tem desconto?",
+      "translation": "Is there a discount?"
+    },
+    {
+      "category": "emergency",
+      "phrase": "Preciso de ajuda",
+      "translation": "I need help"
+    },
+    {
+      "category": "emergency",
+      "phrase": "Chame um médico",
+      "translation": "Call a doctor"
+    },
+    {
+      "category": "emergency",
+      "phrase": "Estou perdido/a",
+      "translation": "I'm lost"
+    },
+    {
+      "category": "emergency",
+      "phrase": "Onde fica o hospital?",
+      "translation": "Where is the hospital?"
+    },
+    {
+      "category": "emergency",
+      "phrase": "Emergência",
+      "translation": "Emergency"
+    },
+    {
+      "category": "emergency",
+      "phrase": "Perdi meus documentos",
+      "translation": "I lost my documents"
+    }
+  ],
+  "words": [
+    {
+      "word": "olá",
+      "translation": "hello",
+      "level": "beginner"
+    },
+    {
+      "word": "obrigado",
+      "translation": "thank you",
+      "level": "beginner"
+    },
+    {
+      "word": "por favor",
+      "translation": "please",
+      "level": "beginner"
+    },
+    {
+      "word": "desculpa",
+      "translation": "sorry",
+      "level": "beginner"
+    },
+    {
+      "word": "sim",
+      "translation": "yes",
+      "level": "beginner"
+    },
+    {
+      "word": "não",
+      "translation": "no",
+      "level": "beginner"
+    },
+    {
+      "word": "comida",
+      "translation": "food",
+      "level": "beginner"
+    },
+    {
+      "word": "água",
+      "translation": "water",
+      "level": "beginner"
+    },
+    {
+      "word": "hoje",
+      "translation": "today",
+      "level": "beginner"
+    },
+    {
+      "word": "casa",
+      "translation": "house",
+      "level": "beginner"
+    },
+    {
+      "word": "amigo",
+      "translation": "friend",
+      "level": "beginner"
+    },
+    {
+      "word": "família",
+      "translation": "family",
+      "level": "beginner"
+    },
+    {
+      "word": "viagem",
+      "translation": "trip",
+      "level": "intermediate"
+    },
+    {
+      "word": "trabalho",
+      "translation": "work",
+      "level": "intermediate"
+    },
+    {
+      "word": "perigoso",
+      "translation": "dangerous",
+      "level": "intermediate"
+    },
+    {
+      "word": "barulhento",
+      "translation": "noisy",
+      "level": "intermediate"
+    },
+    {
+      "word": "feliz",
+      "translation": "happy",
+      "level": "intermediate"
+    },
+    {
+      "word": "razoável",
+      "translation": "reasonable",
+      "level": "intermediate"
+    },
+    {
+      "word": "manhã",
+      "translation": "morning",
+      "level": "intermediate"
+    },
+    {
+      "word": "medo",
+      "translation": "fear",
+      "level": "intermediate"
+    },
+    {
+      "word": "amável",
+      "translation": "kind",
+      "level": "intermediate"
+    },
+    {
+      "word": "tempo",
+      "translation": "time",
+      "level": "intermediate"
+    },
+    {
+      "word": "rápido",
+      "translation": "fast",
+      "level": "intermediate"
+    },
+    {
+      "word": "desporto",
+      "translation": "sport",
+      "level": "intermediate"
+    },
+    {
+      "word": "saudade",
+      "translation": "longing",
+      "level": "advanced"
+    },
+    {
+      "word": "surpreendente",
+      "translation": "surprising",
+      "level": "advanced"
+    },
+    {
+      "word": "complicado",
+      "translation": "complicated",
+      "level": "advanced"
+    },
+    {
+      "word": "férias",
+      "translation": "holidays",
+      "level": "advanced"
+    },
+    {
+      "word": "conversar",
+      "translation": "to chat",
+      "level": "advanced"
+    },
+    {
+      "word": "desafiante",
+      "translation": "challenging",
+      "level": "advanced"
+    },
+    {
+      "word": "progresso",
+      "translation": "progress",
+      "level": "advanced"
+    },
+    {
+      "word": "através",
+      "translation": "through",
+      "level": "advanced"
+    },
+    {
+      "word": "gentil",
+      "translation": "gentle",
+      "level": "advanced"
+    },
+    {
+      "word": "ocasião",
+      "translation": "occasion",
+      "level": "advanced"
+    },
+    {
+      "word": "diferença",
+      "translation": "difference",
+      "level": "advanced"
+    },
+    {
+      "word": "cuidado",
+      "translation": "care",
+      "level": "advanced"
+    },
+    {
+      "word": "inexorável",
+      "translation": "inexorable",
+      "level": "expert"
+    },
+    {
+      "word": "compadecer",
+      "translation": "to sympathize",
+      "level": "expert"
+    },
+    {
+      "word": "prescindir",
+      "translation": "to do without",
+      "level": "expert"
+    },
+    {
+      "word": "loquaz",
+      "translation": "loquacious",
+      "level": "expert"
+    },
+    {
+      "word": "discrepância",
+      "translation": "discrepancy",
+      "level": "expert"
+    },
+    {
+      "word": "inefável",
+      "translation": "ineffable",
+      "level": "expert"
+    },
+    {
+      "word": "intringante",
+      "translation": "intriguing",
+      "level": "expert"
+    },
+    {
+      "word": "sagacidade",
+      "translation": "sagacity",
+      "level": "expert"
+    },
+    {
+      "word": "estupefato",
+      "translation": "stunned",
+      "level": "expert"
+    },
+    {
+      "word": "contundente",
+      "translation": "blunt",
+      "level": "expert"
+    },
+    {
+      "word": "recôndito",
+      "translation": "recondite",
+      "level": "expert"
+    },
+    {
+      "word": "perspicaz",
+      "translation": "perceptive",
+      "level": "expert"
+    }
+  ]
+}

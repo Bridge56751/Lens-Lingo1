@@ -1,0 +1,426 @@
+{
+  "sentences": [
+    {
+      "category": "greetings",
+      "phrase": "Hola",
+      "translation": "Hello"
+    },
+    {
+      "category": "greetings",
+      "phrase": "Buenos días",
+      "translation": "Good morning"
+    },
+    {
+      "category": "greetings",
+      "phrase": "Buenas tardes",
+      "translation": "Good afternoon"
+    },
+    {
+      "category": "greetings",
+      "phrase": "Buenas noches",
+      "translation": "Good night"
+    },
+    {
+      "category": "greetings",
+      "phrase": "Adiós",
+      "translation": "Goodbye"
+    },
+    {
+      "category": "greetings",
+      "phrase": "Hasta luego",
+      "translation": "See you later"
+    },
+    {
+      "category": "basics",
+      "phrase": "Por favor",
+      "translation": "Please"
+    },
+    {
+      "category": "basics",
+      "phrase": "Gracias",
+      "translation": "Thank you"
+    },
+    {
+      "category": "basics",
+      "phrase": "Perdón",
+      "translation": "Excuse me"
+    },
+    {
+      "category": "basics",
+      "phrase": "Lo siento",
+      "translation": "Sorry"
+    },
+    {
+      "category": "basics",
+      "phrase": "Sí",
+      "translation": "Yes"
+    },
+    {
+      "category": "basics",
+      "phrase": "No",
+      "translation": "No"
+    },
+    {
+      "category": "directions",
+      "phrase": "¿Dónde está el baño?",
+      "translation": "Where is the bathroom?"
+    },
+    {
+      "category": "directions",
+      "phrase": "¿Cómo llego a la estación?",
+      "translation": "How do I get to the station?"
+    },
+    {
+      "category": "directions",
+      "phrase": "¿Está lejos?",
+      "translation": "Is it far?"
+    },
+    {
+      "category": "directions",
+      "phrase": "Gire a la izquierda",
+      "translation": "Turn left"
+    },
+    {
+      "category": "directions",
+      "phrase": "Gire a la derecha",
+      "translation": "Turn right"
+    },
+    {
+      "category": "directions",
+      "phrase": "Siga recto",
+      "translation": "Go straight"
+    },
+    {
+      "category": "dining",
+      "phrase": "Una mesa para dos, por favor",
+      "translation": "A table for two, please"
+    },
+    {
+      "category": "dining",
+      "phrase": "El menú, por favor",
+      "translation": "The menu, please"
+    },
+    {
+      "category": "dining",
+      "phrase": "Agua, por favor",
+      "translation": "Water, please"
+    },
+    {
+      "category": "dining",
+      "phrase": "La cuenta, por favor",
+      "translation": "The check, please"
+    },
+    {
+      "category": "dining",
+      "phrase": "Estoy listo para ordenar",
+      "translation": "I am ready to order"
+    },
+    {
+      "category": "dining",
+      "phrase": "¿Tiene alguna recomendación?",
+      "translation": "Do you have any recommendations?"
+    },
+    {
+      "category": "shopping",
+      "phrase": "¿Cuánto cuesta esto?",
+      "translation": "How much is this?"
+    },
+    {
+      "category": "shopping",
+      "phrase": "Es muy caro",
+      "translation": "It's too expensive"
+    },
+    {
+      "category": "shopping",
+      "phrase": "Lo compro",
+      "translation": "I'll take it"
+    },
+    {
+      "category": "shopping",
+      "phrase": "¿Acepta tarjetas?",
+      "translation": "Do you accept cards?"
+    },
+    {
+      "category": "shopping",
+      "phrase": "Solo estoy mirando",
+      "translation": "I am just looking"
+    },
+    {
+      "category": "shopping",
+      "phrase": "¿Hay descuento?",
+      "translation": "Is there a discount?"
+    },
+    {
+      "category": "emergency",
+      "phrase": "Necesito ayuda",
+      "translation": "I need help"
+    },
+    {
+      "category": "emergency",
+      "phrase": "Llame a un médico",
+      "translation": "Call a doctor"
+    },
+    {
+      "category": "emergency",
+      "phrase": "Estoy perdido",
+      "translation": "I'm lost"
+    },
+    {
+      "category": "emergency",
+      "phrase": "¿Dónde está el hospital?",
+      "translation": "Where is the hospital?"
+    },
+    {
+      "category": "emergency",
+      "phrase": "Llamen a la policía",
+      "translation": "Call the police"
+    },
+    {
+      "category": "emergency",
+      "phrase": "Hay una emergencia",
+      "translation": "There's an emergency"
+    }
+  ],
+  "words": [
+    {
+      "word": "hola",
+      "translation": "hello",
+      "level": "beginner"
+    },
+    {
+      "word": "adiós",
+      "translation": "goodbye",
+      "level": "beginner"
+    },
+    {
+      "word": "gracias",
+      "translation": "thank you",
+      "level": "beginner"
+    },
+    {
+      "word": "por favor",
+      "translation": "please",
+      "level": "beginner"
+    },
+    {
+      "word": "sí",
+      "translation": "yes",
+      "level": "beginner"
+    },
+    {
+      "word": "no",
+      "translation": "no",
+      "level": "beginner"
+    },
+    {
+      "word": "amigo",
+      "translation": "friend",
+      "level": "beginner"
+    },
+    {
+      "word": "comida",
+      "translation": "food",
+      "level": "beginner"
+    },
+    {
+      "word": "agua",
+      "translation": "water",
+      "level": "beginner"
+    },
+    {
+      "word": "mañana",
+      "translation": "morning",
+      "level": "beginner"
+    },
+    {
+      "word": "casa",
+      "translation": "house",
+      "level": "beginner"
+    },
+    {
+      "word": "familia",
+      "translation": "family",
+      "level": "beginner"
+    },
+    {
+      "word": "biblioteca",
+      "translation": "library",
+      "level": "intermediate"
+    },
+    {
+      "word": "coche",
+      "translation": "car",
+      "level": "intermediate"
+    },
+    {
+      "word": "escuela",
+      "translation": "school",
+      "level": "intermediate"
+    },
+    {
+      "word": "mercado",
+      "translation": "market",
+      "level": "intermediate"
+    },
+    {
+      "word": "trabajar",
+      "translation": "to work",
+      "level": "intermediate"
+    },
+    {
+      "word": "descansar",
+      "translation": "to rest",
+      "level": "intermediate"
+    },
+    {
+      "word": "caminar",
+      "translation": "to walk",
+      "level": "intermediate"
+    },
+    {
+      "word": "jugar",
+      "translation": "to play",
+      "level": "intermediate"
+    },
+    {
+      "word": "escribir",
+      "translation": "to write",
+      "level": "intermediate"
+    },
+    {
+      "word": "hermoso",
+      "translation": "beautiful",
+      "level": "intermediate"
+    },
+    {
+      "word": "rápido",
+      "translation": "fast",
+      "level": "intermediate"
+    },
+    {
+      "word": "alto",
+      "translation": "tall",
+      "level": "intermediate"
+    },
+    {
+      "word": "mientras",
+      "translation": "while",
+      "level": "advanced"
+    },
+    {
+      "word": "aunque",
+      "translation": "although",
+      "level": "advanced"
+    },
+    {
+      "word": "sombra",
+      "translation": "shadow",
+      "level": "advanced"
+    },
+    {
+      "word": "esperanza",
+      "translation": "hope",
+      "level": "advanced"
+    },
+    {
+      "word": "recuerdo",
+      "translation": "memory",
+      "level": "advanced"
+    },
+    {
+      "word": "sueño",
+      "translation": "dream",
+      "level": "advanced"
+    },
+    {
+      "word": "lluvia",
+      "translation": "rain",
+      "level": "advanced"
+    },
+    {
+      "word": "viento",
+      "translation": "wind",
+      "level": "advanced"
+    },
+    {
+      "word": "mentira",
+      "translation": "lie",
+      "level": "advanced"
+    },
+    {
+      "word": "lenguaje",
+      "translation": "language",
+      "level": "advanced"
+    },
+    {
+      "word": "naturaleza",
+      "translation": "nature",
+      "level": "advanced"
+    },
+    {
+      "word": "silencio",
+      "translation": "silence",
+      "level": "advanced"
+    },
+    {
+      "word": "inconmensurable",
+      "translation": "immeasurable",
+      "level": "expert"
+    },
+    {
+      "word": "efímero",
+      "translation": "ephemeral",
+      "level": "expert"
+    },
+    {
+      "word": "paradoja",
+      "translation": "paradox",
+      "level": "expert"
+    },
+    {
+      "word": "enigma",
+      "translation": "enigma",
+      "level": "expert"
+    },
+    {
+      "word": "melancolía",
+      "translation": "melancholy",
+      "level": "expert"
+    },
+    {
+      "word": "plenitud",
+      "translation": "plenitude",
+      "level": "expert"
+    },
+    {
+      "word": "resiliencia",
+      "translation": "resilience",
+      "level": "expert"
+    },
+    {
+      "word": "idiosincrasia",
+      "translation": "idiosyncrasy",
+      "level": "expert"
+    },
+    {
+      "word": "soliloquio",
+      "translation": "soliloquy",
+      "level": "expert"
+    },
+    {
+      "word": "transcendental",
+      "translation": "transcendental",
+      "level": "expert"
+    },
+    {
+      "word": "autenticidad",
+      "translation": "authenticity",
+      "level": "expert"
+    },
+    {
+      "word": "eficiencia",
+      "translation": "efficiency",
+      "level": "expert"
+    }
+  ]
+}

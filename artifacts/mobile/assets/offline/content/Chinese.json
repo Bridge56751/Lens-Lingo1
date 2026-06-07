@@ -1,0 +1,426 @@
+{
+  "sentences": [
+    {
+      "category": "greetings",
+      "phrase": "早上好",
+      "translation": "Good morning"
+    },
+    {
+      "category": "greetings",
+      "phrase": "你好",
+      "translation": "Hello"
+    },
+    {
+      "category": "greetings",
+      "phrase": "晚上好",
+      "translation": "Good evening"
+    },
+    {
+      "category": "greetings",
+      "phrase": "再见",
+      "translation": "Goodbye"
+    },
+    {
+      "category": "greetings",
+      "phrase": "晚安",
+      "translation": "Good night"
+    },
+    {
+      "category": "greetings",
+      "phrase": "请多关照",
+      "translation": "Please take care of me"
+    },
+    {
+      "category": "basics",
+      "phrase": "请",
+      "translation": "Please"
+    },
+    {
+      "category": "basics",
+      "phrase": "谢谢",
+      "translation": "Thank you"
+    },
+    {
+      "category": "basics",
+      "phrase": "不好意思",
+      "translation": "Excuse me"
+    },
+    {
+      "category": "basics",
+      "phrase": "对不起",
+      "translation": "Sorry"
+    },
+    {
+      "category": "basics",
+      "phrase": "是",
+      "translation": "Yes"
+    },
+    {
+      "category": "basics",
+      "phrase": "不是",
+      "translation": "No"
+    },
+    {
+      "category": "directions",
+      "phrase": "厕所在哪里？",
+      "translation": "Where is the bathroom?"
+    },
+    {
+      "category": "directions",
+      "phrase": "怎么去车站？",
+      "translation": "How do I get to the station?"
+    },
+    {
+      "category": "directions",
+      "phrase": "这里远吗？",
+      "translation": "Is it far?"
+    },
+    {
+      "category": "directions",
+      "phrase": "左转",
+      "translation": "Turn left"
+    },
+    {
+      "category": "directions",
+      "phrase": "右转",
+      "translation": "Turn right"
+    },
+    {
+      "category": "directions",
+      "phrase": "直走",
+      "translation": "Go straight"
+    },
+    {
+      "category": "dining",
+      "phrase": "两位",
+      "translation": "A table for two"
+    },
+    {
+      "category": "dining",
+      "phrase": "请给我菜单",
+      "translation": "The menu please"
+    },
+    {
+      "category": "dining",
+      "phrase": "请给我水",
+      "translation": "Water please"
+    },
+    {
+      "category": "dining",
+      "phrase": "请给我账单",
+      "translation": "The check please"
+    },
+    {
+      "category": "dining",
+      "phrase": "不要辣",
+      "translation": "No spicy"
+    },
+    {
+      "category": "dining",
+      "phrase": "这个好吃",
+      "translation": "This is delicious"
+    },
+    {
+      "category": "shopping",
+      "phrase": "这个多少钱？",
+      "translation": "How much is this?"
+    },
+    {
+      "category": "shopping",
+      "phrase": "太贵了",
+      "translation": "Too expensive"
+    },
+    {
+      "category": "shopping",
+      "phrase": "我要这个",
+      "translation": "I'll take it"
+    },
+    {
+      "category": "shopping",
+      "phrase": "可以刷卡吗？",
+      "translation": "Do you accept cards?"
+    },
+    {
+      "category": "shopping",
+      "phrase": "便宜一点",
+      "translation": "Cheaper, please"
+    },
+    {
+      "category": "shopping",
+      "phrase": "有其他颜色吗？",
+      "translation": "Do you have other colors?"
+    },
+    {
+      "category": "emergency",
+      "phrase": "我需要帮助",
+      "translation": "I need help"
+    },
+    {
+      "category": "emergency",
+      "phrase": "叫医生",
+      "translation": "Call a doctor"
+    },
+    {
+      "category": "emergency",
+      "phrase": "我迷路了",
+      "translation": "I'm lost"
+    },
+    {
+      "category": "emergency",
+      "phrase": "医院在哪里？",
+      "translation": "Where is the hospital?"
+    },
+    {
+      "category": "emergency",
+      "phrase": "报警",
+      "translation": "Call the police"
+    },
+    {
+      "category": "emergency",
+      "phrase": "出事了",
+      "translation": "There's an emergency"
+    }
+  ],
+  "words": [
+    {
+      "word": "你好",
+      "translation": "hello",
+      "level": "beginner"
+    },
+    {
+      "word": "谢谢",
+      "translation": "thank you",
+      "level": "beginner"
+    },
+    {
+      "word": "请",
+      "translation": "please",
+      "level": "beginner"
+    },
+    {
+      "word": "对不起",
+      "translation": "sorry",
+      "level": "beginner"
+    },
+    {
+      "word": "是",
+      "translation": "yes",
+      "level": "beginner"
+    },
+    {
+      "word": "不是",
+      "translation": "no",
+      "level": "beginner"
+    },
+    {
+      "word": "我",
+      "translation": "I/me",
+      "level": "beginner"
+    },
+    {
+      "word": "你",
+      "translation": "you",
+      "level": "beginner"
+    },
+    {
+      "word": "他",
+      "translation": "he/him",
+      "level": "beginner"
+    },
+    {
+      "word": "她",
+      "translation": "she/her",
+      "level": "beginner"
+    },
+    {
+      "word": "吃",
+      "translation": "eat",
+      "level": "beginner"
+    },
+    {
+      "word": "喝",
+      "translation": "drink",
+      "level": "beginner"
+    },
+    {
+      "word": "今天",
+      "translation": "today",
+      "level": "intermediate"
+    },
+    {
+      "word": "明天",
+      "translation": "tomorrow",
+      "level": "intermediate"
+    },
+    {
+      "word": "昨天",
+      "translation": "yesterday",
+      "level": "intermediate"
+    },
+    {
+      "word": "朋友",
+      "translation": "friend",
+      "level": "intermediate"
+    },
+    {
+      "word": "家",
+      "translation": "home/house",
+      "level": "intermediate"
+    },
+    {
+      "word": "工作",
+      "translation": "work",
+      "level": "intermediate"
+    },
+    {
+      "word": "学校",
+      "translation": "school",
+      "level": "intermediate"
+    },
+    {
+      "word": "学习",
+      "translation": "study/learn",
+      "level": "intermediate"
+    },
+    {
+      "word": "喜欢",
+      "translation": "like",
+      "level": "intermediate"
+    },
+    {
+      "word": "准备",
+      "translation": "prepare",
+      "level": "intermediate"
+    },
+    {
+      "word": "出去",
+      "translation": "go out",
+      "level": "intermediate"
+    },
+    {
+      "word": "旅行",
+      "translation": "travel",
+      "level": "intermediate"
+    },
+    {
+      "word": "发展",
+      "translation": "development",
+      "level": "advanced"
+    },
+    {
+      "word": "关系",
+      "translation": "relationship",
+      "level": "advanced"
+    },
+    {
+      "word": "组织",
+      "translation": "organization",
+      "level": "advanced"
+    },
+    {
+      "word": "讨论",
+      "translation": "discuss",
+      "level": "advanced"
+    },
+    {
+      "word": "计划",
+      "translation": "plan",
+      "level": "advanced"
+    },
+    {
+      "word": "挑战",
+      "translation": "challenge",
+      "level": "advanced"
+    },
+    {
+      "word": "文化",
+      "translation": "culture",
+      "level": "advanced"
+    },
+    {
+      "word": "经济",
+      "translation": "economy",
+      "level": "advanced"
+    },
+    {
+      "word": "社会",
+      "translation": "society",
+      "level": "advanced"
+    },
+    {
+      "word": "环境",
+      "translation": "environment",
+      "level": "advanced"
+    },
+    {
+      "word": "科技",
+      "translation": "technology",
+      "level": "advanced"
+    },
+    {
+      "word": "教育",
+      "translation": "education",
+      "level": "advanced"
+    },
+    {
+      "word": "哲学",
+      "translation": "philosophy",
+      "level": "expert"
+    },
+    {
+      "word": "意识",
+      "translation": "consciousness",
+      "level": "expert"
+    },
+    {
+      "word": "逻辑",
+      "translation": "logic",
+      "level": "expert"
+    },
+    {
+      "word": "理论",
+      "translation": "theory",
+      "level": "expert"
+    },
+    {
+      "word": "历史",
+      "translation": "history",
+      "level": "expert"
+    },
+    {
+      "word": "怀疑",
+      "translation": "skepticism",
+      "level": "expert"
+    },
+    {
+      "word": "创新",
+      "translation": "innovation",
+      "level": "expert"
+    },
+    {
+      "word": "概念",
+      "translation": "concept",
+      "level": "expert"
+    },
+    {
+      "word": "象征",
+      "translation": "symbol",
+      "level": "expert"
+    },
+    {
+      "word": "权威",
+      "translation": "authority",
+      "level": "expert"
+    },
+    {
+      "word": "分析",
+      "translation": "analysis",
+      "level": "expert"
+    },
+    {
+      "word": "复杂",
+      "translation": "complex",
+      "level": "expert"
+    }
+  ]
+}

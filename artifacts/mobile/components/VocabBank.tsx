@@ -20,6 +20,7 @@ import {
   useAddVocabSelection,
   useDeleteVocabSelection,
   getListVocabSelectionsQueryKey,
+  getGetVocabBankQueryKey,
   type VocabBankWord,
   type VocabSelection,
 } from "@workspace/api-client-react";
@@ -27,6 +28,7 @@ import { useColors } from "@/hooks/useColors";
 import { usePreferences } from "@/hooks/usePreferences";
 import { useT } from "@/hooks/useT";
 import { speakWord, prefetchSpeech, stopSpeaking } from "@/lib/speech";
+import { getBundledVocabBank } from "@/lib/offlineAssets";
 
 const LEVELS = ["beginner", "intermediate", "advanced", "expert"] as const;
 type Level = (typeof LEVELS)[number];
@@ -54,10 +56,23 @@ export default function VocabBank() {
   const target = prefs.targetLanguage;
   const native = prefs.nativeLanguage;
 
-  const { data: bank, isLoading, isError, refetch } = useGetVocabBank({
-    targetLanguage: target,
-    nativeLanguage: native,
-  });
+  const bundled = useMemo(
+    () => getBundledVocabBank(target, native),
+    [target, native],
+  );
+
+  const { data: bank, isLoading, isError, refetch } = useGetVocabBank(
+    { targetLanguage: target, nativeLanguage: native },
+    {
+      query: {
+        initialData: bundled,
+        queryKey: getGetVocabBankQueryKey({
+          targetLanguage: target,
+          nativeLanguage: native,
+        }),
+      },
+    },
+  );
   const { data: selections } = useListVocabSelections({ targetLanguage: target });
 
   const selectionsKey = getListVocabSelectionsQueryKey({ targetLanguage: target });
@@ -142,7 +157,7 @@ export default function VocabBank() {
     );
   }
 
-  if (isError) {
+  if (isError && !bank) {
     return (
       <View style={styles.flex}>
         <View style={styles.center}>

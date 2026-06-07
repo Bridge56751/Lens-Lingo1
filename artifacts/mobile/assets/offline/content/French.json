@@ -1,0 +1,426 @@
+{
+  "sentences": [
+    {
+      "category": "greetings",
+      "phrase": "Bonjour",
+      "translation": "Good morning"
+    },
+    {
+      "category": "greetings",
+      "phrase": "Salut",
+      "translation": "Hello"
+    },
+    {
+      "category": "greetings",
+      "phrase": "Bonsoir",
+      "translation": "Good evening"
+    },
+    {
+      "category": "greetings",
+      "phrase": "Bonne nuit",
+      "translation": "Good night"
+    },
+    {
+      "category": "greetings",
+      "phrase": "Au revoir",
+      "translation": "Goodbye"
+    },
+    {
+      "category": "greetings",
+      "phrase": "À bientôt",
+      "translation": "See you soon"
+    },
+    {
+      "category": "basics",
+      "phrase": "S'il vous plaît",
+      "translation": "Please"
+    },
+    {
+      "category": "basics",
+      "phrase": "Merci",
+      "translation": "Thank you"
+    },
+    {
+      "category": "basics",
+      "phrase": "Excusez-moi",
+      "translation": "Excuse me"
+    },
+    {
+      "category": "basics",
+      "phrase": "Je suis désolé",
+      "translation": "I'm sorry"
+    },
+    {
+      "category": "basics",
+      "phrase": "Oui",
+      "translation": "Yes"
+    },
+    {
+      "category": "basics",
+      "phrase": "Non",
+      "translation": "No"
+    },
+    {
+      "category": "directions",
+      "phrase": "Où sont les toilettes ?",
+      "translation": "Where is the bathroom?"
+    },
+    {
+      "category": "directions",
+      "phrase": "Comment puis-je aller à la gare ?",
+      "translation": "How do I get to the station?"
+    },
+    {
+      "category": "directions",
+      "phrase": "Est-ce que c'est loin ?",
+      "translation": "Is it far?"
+    },
+    {
+      "category": "directions",
+      "phrase": "Tournez à gauche",
+      "translation": "Turn left"
+    },
+    {
+      "category": "directions",
+      "phrase": "Tournez à droite",
+      "translation": "Turn right"
+    },
+    {
+      "category": "directions",
+      "phrase": "Je cherche la rue...",
+      "translation": "I'm looking for the street..."
+    },
+    {
+      "category": "dining",
+      "phrase": "Une table pour deux, s'il vous plaît",
+      "translation": "A table for two, please"
+    },
+    {
+      "category": "dining",
+      "phrase": "La carte, s'il vous plaît",
+      "translation": "The menu, please"
+    },
+    {
+      "category": "dining",
+      "phrase": "De l'eau, s'il vous plaît",
+      "translation": "Water, please"
+    },
+    {
+      "category": "dining",
+      "phrase": "L'addition, s'il vous plaît",
+      "translation": "The check, please"
+    },
+    {
+      "category": "dining",
+      "phrase": "Je voudrais...",
+      "translation": "I would like..."
+    },
+    {
+      "category": "dining",
+      "phrase": "C'est délicieux",
+      "translation": "This is delicious"
+    },
+    {
+      "category": "shopping",
+      "phrase": "Combien ça coûte ?",
+      "translation": "How much is this?"
+    },
+    {
+      "category": "shopping",
+      "phrase": "C'est trop cher",
+      "translation": "It's too expensive"
+    },
+    {
+      "category": "shopping",
+      "phrase": "Je le prends",
+      "translation": "I'll take it"
+    },
+    {
+      "category": "shopping",
+      "phrase": "Acceptez-vous les cartes ?",
+      "translation": "Do you accept cards?"
+    },
+    {
+      "category": "shopping",
+      "phrase": "Je regarde seulement",
+      "translation": "I'm just looking"
+    },
+    {
+      "category": "shopping",
+      "phrase": "Avez-vous ça en taille M ?",
+      "translation": "Do you have this in size M?"
+    },
+    {
+      "category": "emergency",
+      "phrase": "J'ai besoin d'aide",
+      "translation": "I need help"
+    },
+    {
+      "category": "emergency",
+      "phrase": "Appelez un médecin",
+      "translation": "Call a doctor"
+    },
+    {
+      "category": "emergency",
+      "phrase": "Je suis perdu",
+      "translation": "I'm lost"
+    },
+    {
+      "category": "emergency",
+      "phrase": "Où est l'hôpital ?",
+      "translation": "Where is the hospital?"
+    },
+    {
+      "category": "emergency",
+      "phrase": "Appelez la police",
+      "translation": "Call the police"
+    },
+    {
+      "category": "emergency",
+      "phrase": "C'est une urgence",
+      "translation": "This is an emergency"
+    }
+  ],
+  "words": [
+    {
+      "word": "bonjour",
+      "translation": "hello",
+      "level": "beginner"
+    },
+    {
+      "word": "merci",
+      "translation": "thank you",
+      "level": "beginner"
+    },
+    {
+      "word": "s'il vous plaît",
+      "translation": "please",
+      "level": "beginner"
+    },
+    {
+      "word": "oui",
+      "translation": "yes",
+      "level": "beginner"
+    },
+    {
+      "word": "non",
+      "translation": "no",
+      "level": "beginner"
+    },
+    {
+      "word": "pardon",
+      "translation": "sorry",
+      "level": "beginner"
+    },
+    {
+      "word": "au revoir",
+      "translation": "goodbye",
+      "level": "beginner"
+    },
+    {
+      "word": "maison",
+      "translation": "house",
+      "level": "beginner"
+    },
+    {
+      "word": "ami",
+      "translation": "friend",
+      "level": "beginner"
+    },
+    {
+      "word": "nourriture",
+      "translation": "food",
+      "level": "beginner"
+    },
+    {
+      "word": "eau",
+      "translation": "water",
+      "level": "beginner"
+    },
+    {
+      "word": "heure",
+      "translation": "hour",
+      "level": "beginner"
+    },
+    {
+      "word": "voyage",
+      "translation": "trip",
+      "level": "intermediate"
+    },
+    {
+      "word": "argent",
+      "translation": "money",
+      "level": "intermediate"
+    },
+    {
+      "word": "enfant",
+      "translation": "child",
+      "level": "intermediate"
+    },
+    {
+      "word": "travail",
+      "translation": "work",
+      "level": "intermediate"
+    },
+    {
+      "word": "temps",
+      "translation": "time",
+      "level": "intermediate"
+    },
+    {
+      "word": "voiture",
+      "translation": "car",
+      "level": "intermediate"
+    },
+    {
+      "word": "école",
+      "translation": "school",
+      "level": "intermediate"
+    },
+    {
+      "word": "fête",
+      "translation": "party",
+      "level": "intermediate"
+    },
+    {
+      "word": "saison",
+      "translation": "season",
+      "level": "intermediate"
+    },
+    {
+      "word": "famille",
+      "translation": "family",
+      "level": "intermediate"
+    },
+    {
+      "word": "midi",
+      "translation": "noon",
+      "level": "intermediate"
+    },
+    {
+      "word": "matin",
+      "translation": "morning",
+      "level": "intermediate"
+    },
+    {
+      "word": "époustouflant",
+      "translation": "breathtaking",
+      "level": "advanced"
+    },
+    {
+      "word": "disponible",
+      "translation": "available",
+      "level": "advanced"
+    },
+    {
+      "word": "rendez-vous",
+      "translation": "appointment",
+      "level": "advanced"
+    },
+    {
+      "word": "accueillir",
+      "translation": "to welcome",
+      "level": "advanced"
+    },
+    {
+      "word": "néanmoins",
+      "translation": "nevertheless",
+      "level": "advanced"
+    },
+    {
+      "word": "remarquer",
+      "translation": "to notice",
+      "level": "advanced"
+    },
+    {
+      "word": "environ",
+      "translation": "approximately",
+      "level": "advanced"
+    },
+    {
+      "word": "soutenir",
+      "translation": "to support",
+      "level": "advanced"
+    },
+    {
+      "word": "intéressant",
+      "translation": "interesting",
+      "level": "advanced"
+    },
+    {
+      "word": "livraison",
+      "translation": "delivery",
+      "level": "advanced"
+    },
+    {
+      "word": "opportunité",
+      "translation": "opportunity",
+      "level": "advanced"
+    },
+    {
+      "word": "précis",
+      "translation": "precise",
+      "level": "advanced"
+    },
+    {
+      "word": "récalcitrant",
+      "translation": "stubborn",
+      "level": "expert"
+    },
+    {
+      "word": "imperturbable",
+      "translation": "unflappable",
+      "level": "expert"
+    },
+    {
+      "word": "inéluctable",
+      "translation": "inevitable",
+      "level": "expert"
+    },
+    {
+      "word": "anticonstitutionnellement",
+      "translation": "anticonstitutionally",
+      "level": "expert"
+    },
+    {
+      "word": "suranné",
+      "translation": "outdated",
+      "level": "expert"
+    },
+    {
+      "word": "convoitise",
+      "translation": "covetousness",
+      "level": "expert"
+    },
+    {
+      "word": "péripétie",
+      "translation": "incident",
+      "level": "expert"
+    },
+    {
+      "word": "fluïdifier",
+      "translation": "to fluidify",
+      "level": "expert"
+    },
+    {
+      "word": "dysfonctionnement",
+      "translation": "malfunction",
+      "level": "expert"
+    },
+    {
+      "word": "ébahi",
+      "translation": "astonished",
+      "level": "expert"
+    },
+    {
+      "word": "intangibilité",
+      "translation": "intangibility",
+      "level": "expert"
+    },
+    {
+      "word": "châtier",
+      "translation": "to chastise",
+      "level": "expert"
+    }
+  ]
+}

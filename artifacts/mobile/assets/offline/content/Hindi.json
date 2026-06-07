@@ -1,0 +1,426 @@
+{
+  "sentences": [
+    {
+      "category": "greetings",
+      "phrase": "नमस्ते",
+      "translation": "Hello"
+    },
+    {
+      "category": "greetings",
+      "phrase": "शुभ प्रभात",
+      "translation": "Good morning"
+    },
+    {
+      "category": "greetings",
+      "phrase": "शुभ संध्या",
+      "translation": "Good evening"
+    },
+    {
+      "category": "greetings",
+      "phrase": "शुभ रात्रि",
+      "translation": "Good night"
+    },
+    {
+      "category": "greetings",
+      "phrase": "अलविदा",
+      "translation": "Goodbye"
+    },
+    {
+      "category": "greetings",
+      "phrase": "फिर मिलेंगे",
+      "translation": "See you again"
+    },
+    {
+      "category": "basics",
+      "phrase": "कृपया",
+      "translation": "Please"
+    },
+    {
+      "category": "basics",
+      "phrase": "धन्यवाद",
+      "translation": "Thank you"
+    },
+    {
+      "category": "basics",
+      "phrase": "मुझे माफ करें",
+      "translation": "Excuse me"
+    },
+    {
+      "category": "basics",
+      "phrase": "मुझे खेद है",
+      "translation": "Sorry"
+    },
+    {
+      "category": "basics",
+      "phrase": "हां",
+      "translation": "Yes"
+    },
+    {
+      "category": "basics",
+      "phrase": "नहीं",
+      "translation": "No"
+    },
+    {
+      "category": "directions",
+      "phrase": "शौचालय कहां है?",
+      "translation": "Where is the bathroom?"
+    },
+    {
+      "category": "directions",
+      "phrase": "स्टेशन कैसे जाऊं?",
+      "translation": "How do I get to the station?"
+    },
+    {
+      "category": "directions",
+      "phrase": "क्या यह दूर है?",
+      "translation": "Is it far?"
+    },
+    {
+      "category": "directions",
+      "phrase": "बाएं मुड़ें",
+      "translation": "Turn left"
+    },
+    {
+      "category": "directions",
+      "phrase": "दाएं मुड़ें",
+      "translation": "Turn right"
+    },
+    {
+      "category": "directions",
+      "phrase": "सीधा जाएं",
+      "translation": "Go straight"
+    },
+    {
+      "category": "dining",
+      "phrase": "दो लोगों के लिए एक मेज",
+      "translation": "A table for two"
+    },
+    {
+      "category": "dining",
+      "phrase": "मेनू दीजिये",
+      "translation": "The menu please"
+    },
+    {
+      "category": "dining",
+      "phrase": "पानी दीजिये",
+      "translation": "Water please"
+    },
+    {
+      "category": "dining",
+      "phrase": "बिल दीजिये",
+      "translation": "The check please"
+    },
+    {
+      "category": "dining",
+      "phrase": "क्या आप शाकाहारी हैं?",
+      "translation": "Are you vegetarian?"
+    },
+    {
+      "category": "dining",
+      "phrase": "मुझे यह पसंद नहीं है",
+      "translation": "I don't like this"
+    },
+    {
+      "category": "shopping",
+      "phrase": "यह कितने का है?",
+      "translation": "How much is this?"
+    },
+    {
+      "category": "shopping",
+      "phrase": "यह बहुत महंगा है",
+      "translation": "It's too expensive"
+    },
+    {
+      "category": "shopping",
+      "phrase": "मैं इसे लूंगा",
+      "translation": "I'll take it"
+    },
+    {
+      "category": "shopping",
+      "phrase": "क्या आप कार्ड स्वीकार करते हैं?",
+      "translation": "Do you accept cards?"
+    },
+    {
+      "category": "shopping",
+      "phrase": "मुझे छूट चाहिए",
+      "translation": "I need a discount"
+    },
+    {
+      "category": "shopping",
+      "phrase": "और सस्ता दिखाइये",
+      "translation": "Show me something cheaper"
+    },
+    {
+      "category": "emergency",
+      "phrase": "मुझे मदद चाहिए",
+      "translation": "I need help"
+    },
+    {
+      "category": "emergency",
+      "phrase": "डॉक्टर को बुलाइये",
+      "translation": "Call a doctor"
+    },
+    {
+      "category": "emergency",
+      "phrase": "मैं खो गया/गई हूँ",
+      "translation": "I'm lost"
+    },
+    {
+      "category": "emergency",
+      "phrase": "अस्पताल कहां है?",
+      "translation": "Where is the hospital?"
+    },
+    {
+      "category": "emergency",
+      "phrase": "पुलिस को बुलाइये",
+      "translation": "Call the police"
+    },
+    {
+      "category": "emergency",
+      "phrase": "मुझे चोट लगी है",
+      "translation": "I'm injured"
+    }
+  ],
+  "words": [
+    {
+      "word": "नमस्ते",
+      "translation": "Hello",
+      "level": "beginner"
+    },
+    {
+      "word": "धन्यवाद",
+      "translation": "Thank you",
+      "level": "beginner"
+    },
+    {
+      "word": "पानी",
+      "translation": "Water",
+      "level": "beginner"
+    },
+    {
+      "word": "खाना",
+      "translation": "Food",
+      "level": "beginner"
+    },
+    {
+      "word": "दोस्त",
+      "translation": "Friend",
+      "level": "beginner"
+    },
+    {
+      "word": "खुश",
+      "translation": "Happy",
+      "level": "beginner"
+    },
+    {
+      "word": "घर",
+      "translation": "House",
+      "level": "beginner"
+    },
+    {
+      "word": "बिल्ली",
+      "translation": "Cat",
+      "level": "beginner"
+    },
+    {
+      "word": "कुत्ता",
+      "translation": "Dog",
+      "level": "beginner"
+    },
+    {
+      "word": "पुस्तक",
+      "translation": "Book",
+      "level": "beginner"
+    },
+    {
+      "word": "सूरज",
+      "translation": "Sun",
+      "level": "beginner"
+    },
+    {
+      "word": "चाँद",
+      "translation": "Moon",
+      "level": "beginner"
+    },
+    {
+      "word": "खिड़की",
+      "translation": "Window",
+      "level": "intermediate"
+    },
+    {
+      "word": "सेब",
+      "translation": "Apple",
+      "level": "intermediate"
+    },
+    {
+      "word": "शिक्षक",
+      "translation": "Teacher",
+      "level": "intermediate"
+    },
+    {
+      "word": "बाग",
+      "translation": "Garden",
+      "level": "intermediate"
+    },
+    {
+      "word": "संगीत",
+      "translation": "Music",
+      "level": "intermediate"
+    },
+    {
+      "word": "समाचार",
+      "translation": "News",
+      "level": "intermediate"
+    },
+    {
+      "word": "विमान",
+      "translation": "Airplane",
+      "level": "intermediate"
+    },
+    {
+      "word": "समुद्र",
+      "translation": "Ocean",
+      "level": "intermediate"
+    },
+    {
+      "word": "कपड़े",
+      "translation": "Clothes",
+      "level": "intermediate"
+    },
+    {
+      "word": "मंज़िल",
+      "translation": "Destination",
+      "level": "intermediate"
+    },
+    {
+      "word": "मौसम",
+      "translation": "Weather",
+      "level": "intermediate"
+    },
+    {
+      "word": "व्यक्ति",
+      "translation": "Person",
+      "level": "intermediate"
+    },
+    {
+      "word": "अधिकार",
+      "translation": "Right (entitlement)",
+      "level": "advanced"
+    },
+    {
+      "word": "यात्रा",
+      "translation": "Journey",
+      "level": "advanced"
+    },
+    {
+      "word": "अनुभव",
+      "translation": "Experience",
+      "level": "advanced"
+    },
+    {
+      "word": "विरोध",
+      "translation": "Opposition",
+      "level": "advanced"
+    },
+    {
+      "word": "कविता",
+      "translation": "Poem",
+      "level": "advanced"
+    },
+    {
+      "word": "संस्कृति",
+      "translation": "Culture",
+      "level": "advanced"
+    },
+    {
+      "word": "तकनीक",
+      "translation": "Technique",
+      "level": "advanced"
+    },
+    {
+      "word": "चुनौती",
+      "translation": "Challenge",
+      "level": "advanced"
+    },
+    {
+      "word": "आवश्यकता",
+      "translation": "Necessity",
+      "level": "advanced"
+    },
+    {
+      "word": "समीक्षा",
+      "translation": "Review",
+      "level": "advanced"
+    },
+    {
+      "word": "परियोजना",
+      "translation": "Project",
+      "level": "advanced"
+    },
+    {
+      "word": "सत्ता",
+      "translation": "Power (authority)",
+      "level": "advanced"
+    },
+    {
+      "word": "उद्यमिता",
+      "translation": "Entrepreneurship",
+      "level": "expert"
+    },
+    {
+      "word": "अमूर्त",
+      "translation": "Abstract",
+      "level": "expert"
+    },
+    {
+      "word": "संविधान",
+      "translation": "Constitution",
+      "level": "expert"
+    },
+    {
+      "word": "प्रवृत्ति",
+      "translation": "Trend",
+      "level": "expert"
+    },
+    {
+      "word": "वैधता",
+      "translation": "Validity",
+      "level": "expert"
+    },
+    {
+      "word": "प्रतिबिंब",
+      "translation": "Reflection",
+      "level": "expert"
+    },
+    {
+      "word": "समर्थन",
+      "translation": "Support",
+      "level": "expert"
+    },
+    {
+      "word": "विवेक",
+      "translation": "Discretion",
+      "level": "expert"
+    },
+    {
+      "word": "प्रस्तुति",
+      "translation": "Presentation",
+      "level": "expert"
+    },
+    {
+      "word": "अवसरवाद",
+      "translation": "Opportunism",
+      "level": "expert"
+    },
+    {
+      "word": "सरलीकरण",
+      "translation": "Simplification",
+      "level": "expert"
+    },
+    {
+      "word": "परिपूर्णता",
+      "translation": "Fulfillment",
+      "level": "expert"
+    }
+  ]
+}

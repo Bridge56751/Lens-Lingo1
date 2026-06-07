@@ -5,6 +5,7 @@ import { File, Paths, Directory } from "expo-file-system";
 import { fetch as expoFetch } from "expo/fetch";
 import { getDeviceIdSync } from "@/lib/device";
 import type { Language } from "@/hooks/usePreferences";
+import { resolveBundledAudio, hasBundledAudio } from "@/lib/offlineAssets";
 
 /** BCP-47 voice locales used for the on-device fallback voice, keyed by language. */
 export const SPEECH_LOCALES: Record<Language, string> = {
@@ -248,6 +249,12 @@ async function fetchAudio(
       return cached;
     }
   }
+
+  // Pre-bundled audio ships with the app: resolve it to a local file URI and
+  // play it directly (offline, instant, correct). It is intentionally NOT put
+  // through store()/the LRU cache so eviction can never delete the packaged file.
+  const bundled = await resolveBundledAudio(text, language);
+  if (bundled) return bundled;
 
   // A real tap should never queue behind prefetch traffic or stale taps.
   if (priority === "tap") {
@@ -502,7 +509,10 @@ async function drainPrefetchQueue(): Promise<void> {
     // Pause while a tap is running so prefetch never contends for the server.
     while (prefetchQueue.length > 0 && activeTaps === 0) {
       const item = prefetchQueue.shift();
-      if (!item || audioCache.has(clipKey(item.text, item.language))) continue;
+      if (!item) continue;
+      // Bundled clips need no warming — they're already on-device.
+      if (hasBundledAudio(item.text, item.language)) continue;
+      if (audioCache.has(clipKey(item.text, item.language))) continue;
       await fetchAudio(item.text, "prefetch", item.language);
     }
   } finally {
@@ -524,7 +534,10 @@ function scheduleDrain(): void {
  */
 export function prefetchSpeech(word: string, language?: Language): void {
   const text = word?.trim();
-  if (!text || audioCache.has(clipKey(text, language))) return;
+  if (!text) return;
+  // Bundled clips are already on-device — nothing to warm.
+  if (hasBundledAudio(text, language)) return;
+  if (audioCache.has(clipKey(text, language))) return;
   if (!prefetchQueue.some((i) => i.text === text && i.language === language)) {
     prefetchQueue.push({ text, language });
   }
@@ -568,6 +581,9 @@ export async function cacheAudioClips(
   for (const it of items) {
     const text = it.text?.trim();
     if (!text) continue;
+    // Bundled clips already ship offline — exclude them so they don't inflate
+    // the progress total or trigger a needless network fetch.
+    if (hasBundledAudio(text, it.language)) continue;
     const key = clipKey(text, it.language);
     if (seen.has(key)) continue;
     seen.add(key);

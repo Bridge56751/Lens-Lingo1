@@ -55,7 +55,8 @@
         {
           "microphonePermission": "Lens Lingo uses your microphone so you can speak with your AI tutor and practice your pronunciation."
         }
-      ]
+      ],
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true,

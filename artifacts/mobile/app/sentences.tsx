@@ -14,12 +14,14 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import {
   useGetSentenceBank,
+  getGetSentenceBankQueryKey,
   type SentencePhrase,
 } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { usePreferences } from "@/hooks/usePreferences";
 import { useT } from "@/hooks/useT";
 import { speakWord, prefetchSpeech, stopSpeaking } from "@/lib/speech";
+import { getBundledSentenceBank } from "@/lib/offlineAssets";
 
 const CATEGORIES = [
   "greetings",
@@ -49,10 +51,23 @@ export default function SentencesScreen() {
   const target = prefs.targetLanguage;
   const native = prefs.nativeLanguage;
 
-  const { data, isLoading, isError, refetch } = useGetSentenceBank({
-    targetLanguage: target,
-    nativeLanguage: native,
-  });
+  const bundled = useMemo(
+    () => getBundledSentenceBank(target, native),
+    [target, native],
+  );
+
+  const { data, isLoading, isError, refetch } = useGetSentenceBank(
+    { targetLanguage: target, nativeLanguage: native },
+    {
+      query: {
+        initialData: bundled,
+        queryKey: getGetSentenceBankQueryKey({
+          targetLanguage: target,
+          nativeLanguage: native,
+        }),
+      },
+    },
+  );
 
   const grouped = useMemo(() => {
     const out: Record<Category, SentencePhrase[]> = {

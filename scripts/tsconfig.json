@@ -2,8 +2,13 @@
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist",
-    "rootDir": "src",
-    "types": ["node"]
+    "noEmit": true,
+    "types": ["node"],
+    "baseUrl": ".",
+    "paths": {
+      "@/hooks/usePreferences": ["./src/stubs/usePreferences"],
+      "@/*": ["../artifacts/mobile/*"]
+    }
   },
   "include": ["src"]
 }
