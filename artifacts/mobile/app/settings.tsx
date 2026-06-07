@@ -270,9 +270,9 @@ export default function SettingsScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Profile card */}
-        <View style={[styles.profileCard, { backgroundColor: "#5B3FD9" }]}>
-          <View style={[styles.avatarLg, { backgroundColor: "rgba(255,255,255,0.18)", borderColor: "rgba(255,255,255,0.55)" }]}>
-            <Ionicons name="person" size={32} color="#FFFFFF" />
+        <View style={[styles.profileCard, { backgroundColor: colors.card }]}>
+          <View style={[styles.avatarLg, { backgroundColor: colors.primarySoft, borderColor: colors.primary }]}>
+            <Ionicons name="person" size={32} color={colors.primary} />
           </View>
           {editingName ? (
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
@@ -283,8 +283,8 @@ export default function SettingsScreen() {
                 style={[
                   styles.nameInput,
                   {
-                    color: "#FFFFFF",
-                    borderColor: "rgba(255,255,255,0.7)",
+                    color: colors.foreground,
+                    borderColor: colors.primary,
                     fontFamily: "Inter_700Bold",
                   },
                 ]}
@@ -293,7 +293,7 @@ export default function SettingsScreen() {
                 maxLength={20}
               />
               <TouchableOpacity onPress={saveName} activeOpacity={0.7}>
-                <Ionicons name="checkmark-circle" size={28} color="#FFFFFF" />
+                <Ionicons name="checkmark-circle" size={28} color={colors.primary} />
               </TouchableOpacity>
             </View>
           ) : (
@@ -305,34 +305,34 @@ export default function SettingsScreen() {
               activeOpacity={0.7}
               style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
             >
-              <Text style={[styles.profileName, { color: "#FFFFFF", fontFamily: "Inter_700Bold" }]}>
+              <Text style={[styles.profileName, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
                 {prefs.displayName}
               </Text>
-              <Ionicons name="pencil" size={14} color="rgba(255,255,255,0.85)" />
+              <Ionicons name="pencil" size={14} color={colors.mutedForeground} />
             </TouchableOpacity>
           )}
-          <Text style={[styles.profileSub, { color: "rgba(255,255,255,0.85)", fontFamily: "Inter_400Regular" }]}>
+          <Text style={[styles.profileSub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
             {t("settings.learningSub", { lang: prefs.targetLanguage })}
           </Text>
         </View>
 
         {/* Activity */}
         <View style={styles.streakRow}>
-          <View style={[styles.streakCard, { backgroundColor: "#FBBF24" }]}>
+          <View style={[styles.streakCard, { backgroundColor: "rgba(251,191,36,0.18)" }]}>
             <Text style={{ fontSize: 22 }}>🔥</Text>
-            <Text style={[styles.streakNum, { color: "#422006", fontFamily: "Inter_700Bold" }]}>
+            <Text style={[styles.streakNum, { color: "#B45309", fontFamily: "Inter_700Bold" }]}>
               {streak}
             </Text>
-            <Text style={[styles.streakLabel, { color: "#7A3E0A", fontFamily: "Inter_600SemiBold" }]}>
+            <Text style={[styles.streakLabel, { color: "#92400E", fontFamily: "Inter_600SemiBold" }]}>
               {t("home.dailyStreak")}
             </Text>
           </View>
-          <View style={[styles.streakCard, { backgroundColor: "#047857" }]}>
-            <Ionicons name="trophy" size={20} color="#FFFFFF" />
-            <Text style={[styles.streakNum, { color: "#FFFFFF", fontFamily: "Inter_700Bold" }]}>
+          <View style={[styles.streakCard, { backgroundColor: "rgba(4,120,87,0.14)" }]}>
+            <Ionicons name="trophy" size={20} color="#047857" />
+            <Text style={[styles.streakNum, { color: "#047857", fontFamily: "Inter_700Bold" }]}>
               {bestStreak}
             </Text>
-            <Text style={[styles.streakLabel, { color: "rgba(255,255,255,0.9)", fontFamily: "Inter_600SemiBold" }]}>
+            <Text style={[styles.streakLabel, { color: "#15803D", fontFamily: "Inter_600SemiBold" }]}>
               {t("home.bestStreak")}
             </Text>
           </View>
