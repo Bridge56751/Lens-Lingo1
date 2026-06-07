@@ -136,6 +136,16 @@ export type TKey =
   | "auth.completing"
   | "auth.retry"
   | "auth.continue"
+  | "auth.forgotPassword"
+  | "auth.resetTitle"
+  | "auth.resetSubtitle"
+  | "auth.sendResetCta"
+  | "auth.resetVerifyTitle"
+  | "auth.resetVerifySubtitle"
+  | "auth.newPasswordLabel"
+  | "auth.newPasswordPlaceholder"
+  | "auth.resetCta"
+  | "auth.backToSignIn"
   | "settings.chooseLearning"
   | "settings.chooseNative"
   | "settings.helpAlertTitle"
@@ -526,6 +536,16 @@ const en: Record<TKey, string> = {
   "auth.completing": "Finishing sign-in\u2026",
   "auth.retry": "Try again",
   "auth.continue": "Continue anyway",
+  "auth.forgotPassword": "Forgot password?",
+  "auth.resetTitle": "Reset password",
+  "auth.resetSubtitle": "Enter your email and we'll send you a reset code.",
+  "auth.sendResetCta": "Send reset code",
+  "auth.resetVerifyTitle": "Check your email",
+  "auth.resetVerifySubtitle": "Enter the code we sent to {email} and choose a new password.",
+  "auth.newPasswordLabel": "New password",
+  "auth.newPasswordPlaceholder": "New password",
+  "auth.resetCta": "Reset password",
+  "auth.backToSignIn": "Back to sign in",
   "settings.chooseLearning": "Choose a language to learn",
   "settings.chooseNative": "Choose your language",
   "settings.helpAlertTitle": "Help",

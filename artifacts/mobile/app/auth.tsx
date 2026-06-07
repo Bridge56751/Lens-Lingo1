@@ -45,7 +45,9 @@ export default function AuthScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
+  const [newPassword, setNewPassword] = useState("");
   const [pendingVerify, setPendingVerify] = useState(false);
+  const [resetStep, setResetStep] = useState<"none" | "request" | "verify">("none");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -195,6 +197,88 @@ export default function AuthScreen() {
     }
   }, [busy, startSSOFlow, t]);
 
+  const handleSendReset = useCallback(async () => {
+    if (busy) return;
+    resetMessages();
+    Haptics.selectionAsync();
+    setBusy(true);
+    try {
+      const { error: createErr } = await signIn.create({ identifier: email.trim() });
+      if (createErr) {
+        setError(createErr.message ?? t("auth.genericError"));
+        return;
+      }
+      const { error: sendErr } = await signIn.resetPasswordEmailCode.sendCode();
+      if (sendErr) {
+        setError(sendErr.message ?? t("auth.genericError"));
+        return;
+      }
+      setCode("");
+      setNewPassword("");
+      setResetStep("verify");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t("auth.genericError"));
+    } finally {
+      setBusy(false);
+    }
+  }, [busy, email, signIn, t]);
+
+  const handleResetSubmit = useCallback(async () => {
+    if (busy) return;
+    resetMessages();
+    Haptics.selectionAsync();
+    setBusy(true);
+    try {
+      const { error: verifyErr } = await signIn.resetPasswordEmailCode.verifyCode({ code: code.trim() });
+      if (verifyErr) {
+        setError(verifyErr.message ?? t("auth.genericError"));
+        return;
+      }
+      if (signIn.status !== "needs_new_password") {
+        setError(t("auth.genericError"));
+        return;
+      }
+      const { error: submitErr } = await signIn.resetPasswordEmailCode.submitPassword({ password: newPassword });
+      if (submitErr) {
+        setError(submitErr.message ?? t("auth.genericError"));
+        return;
+      }
+      if ((signIn.status as string) === "complete") {
+        await signIn.finalize({ navigate: () => {} });
+      } else {
+        setError(t("auth.genericError"));
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t("auth.genericError"));
+    } finally {
+      setBusy(false);
+    }
+  }, [busy, code, newPassword, signIn, t]);
+
+  const handleResendReset = useCallback(async () => {
+    if (busy) return;
+    resetMessages();
+    Haptics.selectionAsync();
+    setBusy(true);
+    try {
+      const { error: sendErr } = await signIn.resetPasswordEmailCode.sendCode();
+      if (sendErr) {
+        setError(sendErr.message ?? t("auth.genericError"));
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t("auth.genericError"));
+    } finally {
+      setBusy(false);
+    }
+  }, [busy, signIn, t]);
+
+  const exitReset = useCallback(() => {
+    resetMessages();
+    setResetStep("none");
+    setCode("");
+    setNewPassword("");
+  }, []);
+
   const topPadding = Platform.OS === "web" ? 16 : insets.top + 8;
   const canSubmit = email.trim().length > 0 && password.length > 0 && !busy;
 
@@ -276,10 +360,107 @@ export default function AuthScreen() {
         showsVerticalScrollIndicator={false}
       >
         <Text style={[styles.subtitle, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-          {t("auth.subtitle")}
+          {resetStep !== "none" ? t("auth.resetSubtitle") : t("auth.subtitle")}
         </Text>
 
-        {pendingVerify ? (
+        {resetStep === "request" ? (
+          <View style={{ gap: 14 }}>
+            <Text style={[styles.label, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
+              {t("auth.resetTitle")}
+            </Text>
+            <View style={{ gap: 6 }}>
+              <Text style={[styles.label, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
+                {t("auth.emailLabel")}
+              </Text>
+              <TextInput
+                style={[styles.input, { color: colors.foreground, borderColor: colors.border, backgroundColor: colors.card }]}
+                value={email}
+                onChangeText={setEmail}
+                placeholder={t("auth.emailPlaceholder")}
+                placeholderTextColor={colors.mutedForeground}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoFocus
+              />
+            </View>
+            {error ? (
+              <Text style={[styles.error, { fontFamily: "Inter_500Medium" }]}>{error}</Text>
+            ) : null}
+            <TouchableOpacity
+              style={[styles.primaryBtn, { backgroundColor: colors.primary }, (busy || email.trim().length === 0) && styles.disabled]}
+              onPress={handleSendReset}
+              disabled={busy || email.trim().length === 0}
+              activeOpacity={0.85}
+            >
+              {busy ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <Text style={[styles.primaryBtnText, { fontFamily: "Inter_600SemiBold" }]}>
+                  {t("auth.sendResetCta")}
+                </Text>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity onPress={exitReset} activeOpacity={0.7} style={styles.linkBtn}>
+              <Text style={[styles.linkText, { color: colors.mutedForeground, fontFamily: "Inter_600SemiBold" }]}>
+                {t("auth.backToSignIn")}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ) : resetStep === "verify" ? (
+          <View style={{ gap: 14 }}>
+            <Text style={[styles.label, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
+              {t("auth.resetVerifyTitle")}
+            </Text>
+            <Text style={[styles.helper, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+              {t("auth.resetVerifySubtitle", { email: email.trim() })}
+            </Text>
+            <TextInput
+              style={[styles.input, { color: colors.foreground, borderColor: colors.border, backgroundColor: colors.card }]}
+              value={code}
+              onChangeText={setCode}
+              placeholder={t("auth.codePlaceholder")}
+              placeholderTextColor={colors.mutedForeground}
+              keyboardType="number-pad"
+              autoFocus
+            />
+            <TextInput
+              style={[styles.input, { color: colors.foreground, borderColor: colors.border, backgroundColor: colors.card }]}
+              value={newPassword}
+              onChangeText={setNewPassword}
+              placeholder={t("auth.newPasswordPlaceholder")}
+              placeholderTextColor={colors.mutedForeground}
+              secureTextEntry
+            />
+            {error ? (
+              <Text style={[styles.error, { fontFamily: "Inter_500Medium" }]}>{error}</Text>
+            ) : null}
+            <TouchableOpacity
+              style={[styles.primaryBtn, { backgroundColor: colors.primary }, (busy || code.trim().length === 0 || newPassword.length === 0) && styles.disabled]}
+              onPress={handleResetSubmit}
+              disabled={busy || code.trim().length === 0 || newPassword.length === 0}
+              activeOpacity={0.85}
+            >
+              {busy ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <Text style={[styles.primaryBtnText, { fontFamily: "Inter_600SemiBold" }]}>
+                  {t("auth.resetCta")}
+                </Text>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleResendReset} disabled={busy} activeOpacity={0.7} style={styles.linkBtn}>
+              <Text style={[styles.linkText, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
+                {t("auth.resendCode")}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={exitReset} activeOpacity={0.7} style={styles.linkBtn}>
+              <Text style={[styles.linkText, { color: colors.mutedForeground, fontFamily: "Inter_600SemiBold" }]}>
+                {t("auth.backToSignIn")}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ) : pendingVerify ? (
           <View style={{ gap: 14 }}>
             <Text style={[styles.label, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
               {t("auth.verifyTitle")}
@@ -404,6 +585,22 @@ export default function AuthScreen() {
                 </Text>
               )}
             </TouchableOpacity>
+
+            {mode === "signIn" ? (
+              <TouchableOpacity
+                onPress={() => {
+                  resetMessages();
+                  Haptics.selectionAsync();
+                  setResetStep("request");
+                }}
+                activeOpacity={0.7}
+                style={styles.linkBtn}
+              >
+                <Text style={[styles.linkText, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
+                  {t("auth.forgotPassword")}
+                </Text>
+              </TouchableOpacity>
+            ) : null}
 
             {/* Required for Clerk's bot sign-up protection. */}
             <View nativeID="clerk-captcha" />
