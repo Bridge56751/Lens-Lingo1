@@ -578,6 +578,10 @@ export default function SettingsScreen() {
                       active && { backgroundColor: colors.primarySoft },
                     ]}
                     onPress={() => {
+                      if (active) {
+                        setPicker(null);
+                        return;
+                      }
                       const apply = () => {
                         update("targetLanguage", lang as Language);
                         setPicker(null);

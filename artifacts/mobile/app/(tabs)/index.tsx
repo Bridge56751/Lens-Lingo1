@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -8,6 +8,8 @@ import {
   Platform,
   Alert,
   ActivityIndicator,
+  Modal,
+  Pressable,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
@@ -18,8 +20,9 @@ import {
   useStartOpenaiChat,
 } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
-import { usePreferences, type Language } from "@/hooks/usePreferences";
+import { usePreferences, LANGUAGES, type Language } from "@/hooks/usePreferences";
 import { useT } from "@/hooks/useT";
+import { LOCALE_NATIVE_NAMES, type Locale } from "@/constants/translations";
 import { useAlphabetProgress } from "@/lib/alphabetProgress";
 
 type Conversation = {
@@ -239,7 +242,8 @@ export default function HomeScreen() {
   const t = useT();
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { prefs } = usePreferences();
+  const { prefs, update } = usePreferences();
+  const [langPickerOpen, setLangPickerOpen] = useState(false);
   const { languageProgress } = useAlphabetProgress();
   const alphabet = languageProgress(prefs.targetLanguage);
   const { data: conversations, refetch } = useListOpenaiConversations();
@@ -311,7 +315,7 @@ export default function HomeScreen() {
               style={styles.learningChip}
               onPress={() => {
                 Haptics.selectionAsync();
-                router.push("/settings");
+                setLangPickerOpen(true);
               }}
               activeOpacity={0.7}
             >
@@ -319,6 +323,7 @@ export default function HomeScreen() {
               <Text style={[styles.learningChipText, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
                 {t("settings.learningSub", { lang: prefs.targetLanguage })}
               </Text>
+              <Ionicons name="chevron-down" size={16} color={colors.primary} />
             </TouchableOpacity>
           </View>
           <View style={styles.greetingRight}>
@@ -481,6 +486,106 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* Learning-language picker — change the language you're learning from home */}
+      <Modal
+        visible={langPickerOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setLangPickerOpen(false)}
+      >
+        <Pressable style={styles.modalBackdrop} onPress={() => setLangPickerOpen(false)}>
+          <Pressable
+            style={[styles.modalCard, { backgroundColor: colors.card }]}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <Text style={[styles.modalTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
+              {t("settings.chooseLearning")}
+            </Text>
+            <ScrollView style={{ maxHeight: 420 }}>
+              {LANGUAGES.map((lang) => {
+                const active = lang === prefs.targetLanguage;
+                const nativeName = LOCALE_NATIVE_NAMES[lang as Locale] ?? lang;
+                return (
+                  <TouchableOpacity
+                    key={lang}
+                    style={[
+                      styles.langOption,
+                      active && { backgroundColor: colors.primarySoft },
+                    ]}
+                    onPress={() => {
+                      if (active) {
+                        setLangPickerOpen(false);
+                        return;
+                      }
+                      const apply = () => {
+                        update("targetLanguage", lang as Language);
+                        setLangPickerOpen(false);
+                        Haptics.selectionAsync();
+                      };
+                      if (lang === prefs.nativeLanguage) {
+                        const title = t("settings.sameLangTitle");
+                        const body = t("settings.sameLangBody", { lang });
+                        if (Platform.OS === "web") {
+                          if (typeof window !== "undefined" && window.confirm(`${title}\n\n${body}`)) {
+                            apply();
+                          } else {
+                            setLangPickerOpen(false);
+                          }
+                        } else {
+                          Alert.alert(title, body, [
+                            { text: t("history.cancel"), style: "cancel" },
+                            {
+                              text: t("settings.continueAnyway"),
+                              style: "destructive",
+                              onPress: apply,
+                            },
+                          ]);
+                        }
+                        return;
+                      }
+                      apply();
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <Text
+                        style={[
+                          styles.langOptionText,
+                          {
+                            color: active ? colors.primary : colors.foreground,
+                            fontFamily: active ? "Inter_600SemiBold" : "Inter_500Medium",
+                            textAlign: "left",
+                            writingDirection: "ltr",
+                          },
+                        ]}
+                      >
+                        {nativeName}
+                      </Text>
+                      {nativeName !== lang && (
+                        <Text
+                          style={[
+                            styles.langOptionSub,
+                            {
+                              color: colors.mutedForeground,
+                              fontFamily: "Inter_400Regular",
+                              textAlign: "left",
+                              writingDirection: "ltr",
+                            },
+                          ]}
+                        >
+                          {lang}
+                        </Text>
+                      )}
+                    </View>
+                    {active && <Ionicons name="checkmark" size={20} color={colors.primary} />}
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -499,6 +604,27 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
   },
   learningChipText: { fontSize: 16 },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    justifyContent: "center",
+    paddingHorizontal: 28,
+  },
+  modalCard: {
+    borderRadius: 20,
+    padding: 18,
+  },
+  modalTitle: { fontSize: 18, marginBottom: 10 },
+  langOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  langOptionText: { fontSize: 15 },
+  langOptionSub: { fontSize: 11, marginTop: 2 },
   greetingRight: { flexDirection: "row", alignItems: "center", gap: 10 },
   headerDivider: {
     height: 1,
