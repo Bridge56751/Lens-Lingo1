@@ -1,23 +1,58 @@
 import type { Request, Response, NextFunction } from "express";
+import { getAuth, clerkClient } from "@clerk/express";
 import { db, customers } from "@workspace/db";
+import { eq } from "drizzle-orm";
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
-      /** Numeric id of the customer resolved from the x-device-id header. */
+      /** Numeric id of the resolved customer (account row, else device row). */
       customerId?: number;
       /** Raw device id from the x-device-id header, if present. */
       deviceId?: string;
+      /** Clerk user id of the signed-in user, if authenticated. */
+      authUserId?: string;
     }
   }
 }
 
 /**
- * Resolves (and lazily creates) a customer from the `x-device-id` request
- * header. Until real authentication exists, the device id is how we scope a
- * customer's records, progress, and chats. Requests without the header proceed
- * with no customer attached.
+ * Returns the Clerk-verified primary email for a user, or null when there is no
+ * verified primary address. Only verified addresses are ever returned so we
+ * never persist an unverified (spoofable) email onto a customer row.
+ */
+export async function getVerifiedEmail(
+  userId: string,
+): Promise<string | null> {
+  try {
+    const user = await clerkClient.users.getUser(userId);
+    const primaryId = user.primaryEmailAddressId;
+    const primary = user.emailAddresses.find((e) => e.id === primaryId);
+    if (
+      primary &&
+      primary.verification?.status === "verified" &&
+      primary.emailAddress
+    ) {
+      return primary.emailAddress;
+    }
+  } catch {
+    // Network/Clerk errors are non-fatal — email backfill is best-effort.
+  }
+  return null;
+}
+
+/**
+ * Resolves (and lazily creates) a customer for the request.
+ *
+ * Two identity modes coexist:
+ *   - Signed-in (Clerk): the account row keyed by `authUserId` is authoritative.
+ *     We upsert it, lazily backfill the verified primary email, and still record
+ *     the device id header for a later carry-over/link.
+ *   - Anonymous: scoped by the `x-device-id` header, exactly as before.
+ *
+ * Requests with neither an auth session nor a device id proceed with no
+ * customer attached.
  */
 export async function resolveCustomer(
   req: Request,
@@ -25,7 +60,42 @@ export async function resolveCustomer(
   next: NextFunction,
 ): Promise<void> {
   const header = req.header("x-device-id");
-  const deviceId = header?.trim();
+  const deviceId = header?.trim() || undefined;
+  if (deviceId) req.deviceId = deviceId;
+
+  const { userId } = getAuth(req);
+
+  if (userId) {
+    req.authUserId = userId;
+    try {
+      const [account] = await db
+        .insert(customers)
+        .values({ authUserId: userId })
+        .onConflictDoUpdate({
+          target: customers.authUserId,
+          set: { lastSeenAt: new Date() },
+        })
+        .returning();
+
+      req.customerId = account?.id;
+
+      // Lazily backfill the verified primary email the first time we see this
+      // account (or any time it's still missing).
+      if (account && !account.email) {
+        const email = await getVerifiedEmail(userId);
+        if (email) {
+          await db
+            .update(customers)
+            .set({ email })
+            .where(eq(customers.id, account.id));
+        }
+      }
+    } catch (err) {
+      req.log.error({ err }, "Failed to resolve customer from auth user id");
+    }
+    next();
+    return;
+  }
 
   if (!deviceId) {
     next();
@@ -43,10 +113,25 @@ export async function resolveCustomer(
       .returning();
 
     req.customerId = customer?.id;
-    req.deviceId = deviceId;
   } catch (err) {
     req.log.error({ err }, "Failed to resolve customer from device id");
   }
 
+  next();
+}
+
+/**
+ * Route guard that requires an authenticated Clerk user. Must run after
+ * `resolveCustomer` so `req.authUserId` / `req.customerId` are populated.
+ */
+export function requireAuth(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): void {
+  if (!req.authUserId) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
   next();
 }

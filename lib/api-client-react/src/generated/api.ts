@@ -20,6 +20,8 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AccountLinkInput,
+  AccountLinkResult,
   ApiError,
   GetSentenceBankParams,
   GetVocabBankParams,
@@ -1479,5 +1481,78 @@ export const useGradeOpenaiConversation = <TError = ErrorType<OpenaiError>,
         TContext
       > => {
       return useMutation(getGradeOpenaiConversationMutationOptions(options));
+    }
+
+export const getLinkAccountUrl = () => {
+
+
+
+
+  return `/api/account/link`
+}
+
+/**
+ * Called after sign-in. Merges the anonymous device customer's conversations, vocabulary selections, and usage counters into the authenticated account, then deletes the device row. Idempotent — calling it again (or with an unknown device id) is a no-op.
+
+ * @summary Link anonymous device data into the signed-in account
+ */
+export const linkAccount = async (accountLinkInput: AccountLinkInput, options?: RequestInit): Promise<AccountLinkResult> => {
+
+  return customFetch<AccountLinkResult>(getLinkAccountUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      accountLinkInput,)
+  }
+);}
+
+
+
+
+export const getLinkAccountMutationOptions = <TError = ErrorType<OpenaiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof linkAccount>>, TError,{data: BodyType<AccountLinkInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof linkAccount>>, TError,{data: BodyType<AccountLinkInput>}, TContext> => {
+
+const mutationKey = ['linkAccount'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof linkAccount>>, {data: BodyType<AccountLinkInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  linkAccount(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type LinkAccountMutationResult = NonNullable<Awaited<ReturnType<typeof linkAccount>>>
+    export type LinkAccountMutationBody = BodyType<AccountLinkInput>
+    export type LinkAccountMutationError = ErrorType<OpenaiError>
+
+    /**
+ * @summary Link anonymous device data into the signed-in account
+ */
+export const useLinkAccount = <TError = ErrorType<OpenaiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof linkAccount>>, TError,{data: BodyType<AccountLinkInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof linkAccount>>,
+        TError,
+        {data: BodyType<AccountLinkInput>},
+        TContext
+      > => {
+      return useMutation(getLinkAccountMutationOptions(options));
     }
 

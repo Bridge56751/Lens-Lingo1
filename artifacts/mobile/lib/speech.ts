@@ -4,6 +4,7 @@ import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from "expo-aud
 import { File, Paths, Directory } from "expo-file-system";
 import { fetch as expoFetch } from "expo/fetch";
 import { getDeviceIdSync } from "@/lib/device";
+import { authHeader } from "@/lib/authToken";
 import type { Language } from "@/hooks/usePreferences";
 import { resolveBundledAudio, hasBundledAudio } from "@/lib/offlineAssets";
 
@@ -277,6 +278,7 @@ async function fetchAudio(
         headers: {
           "Content-Type": "application/json",
           ...(deviceId ? { "x-device-id": deviceId } : {}),
+          ...(await authHeader()),
         },
         body: JSON.stringify(language ? { text, language } : { text }),
         signal: controller.signal,

@@ -6,6 +6,8 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './accountLinkInput';
+export * from './accountLinkResult';
 export * from './apiError';
 export * from './getSentenceBankParams';
 export * from './getVocabBankParams';

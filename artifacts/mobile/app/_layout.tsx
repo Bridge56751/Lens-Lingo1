@@ -16,9 +16,16 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
+import { ClerkProvider, useAuth } from "@clerk/expo";
+import { tokenCache } from "@clerk/expo/token-cache";
+
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { getOrCreateDeviceId } from "@/lib/device";
-import { setBaseUrl, setDeviceId } from "@workspace/api-client-react";
+import { setMobileAuthTokenGetter } from "@/lib/authToken";
+import { setAuthTokenGetter, setBaseUrl, setDeviceId } from "@workspace/api-client-react";
+
+const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
+const CLERK_PROXY_URL = process.env.EXPO_PUBLIC_CLERK_PROXY_URL || undefined;
 
 // Configure API base URL for Expo (runs outside the web proxy)
 if (process.env.EXPO_PUBLIC_DOMAIN) {
@@ -43,6 +50,25 @@ const asyncStoragePersister = createAsyncStoragePersister({
   throttleTime: 1000,
 });
 
+// Bridges Clerk's session token into the API client and the manual fetch
+// paths. Auth is optional — when signed out getToken returns null and requests
+// fall back to the anonymous device flow.
+function AuthTokenSync() {
+  const { getToken } = useAuth();
+  useEffect(() => {
+    // getToken always reads the current session, so registering once is enough;
+    // it returns null when signed out (anonymous device flow takes over).
+    const getter = () => getToken();
+    setAuthTokenGetter(getter);
+    setMobileAuthTokenGetter(getter);
+    return () => {
+      setAuthTokenGetter(null);
+      setMobileAuthTokenGetter(null);
+    };
+  }, [getToken]);
+  return null;
+}
+
 function RootLayoutNav() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
@@ -63,6 +89,10 @@ function RootLayoutNav() {
         }}
       />
       <Stack.Screen name="settings" options={{ presentation: "card" }} />
+      <Stack.Screen
+        name="auth"
+        options={{ presentation: "modal", animation: "slide_from_bottom" }}
+      />
       <Stack.Screen name="vocabulary" options={{ presentation: "card" }} />
       <Stack.Screen name="sentences" options={{ presentation: "card" }} />
       <Stack.Screen name="practice" options={{ presentation: "card" }} />
@@ -97,19 +127,29 @@ export default function RootLayout() {
   if ((!fontsLoaded && !fontError) || !deviceReady) return null;
 
   return (
-    <SafeAreaProvider>
-      <ErrorBoundary>
-        <PersistQueryClientProvider
-          client={queryClient}
-          persistOptions={{ persister: asyncStoragePersister, maxAge: OFFLINE_MAX_AGE }}
-        >
-          <GestureHandlerRootView>
-            <KeyboardProvider>
-              <RootLayoutNav />
-            </KeyboardProvider>
-          </GestureHandlerRootView>
-        </PersistQueryClientProvider>
-      </ErrorBoundary>
-    </SafeAreaProvider>
+    // Auth is optional: render the app immediately and let Clerk hydrate in the
+    // background. We intentionally do NOT gate the tree behind <ClerkLoaded> so
+    // the anonymous device flow is never blocked by Clerk loading/availability.
+    <ClerkProvider
+      publishableKey={CLERK_PUBLISHABLE_KEY ?? ""}
+      tokenCache={tokenCache}
+      {...(CLERK_PROXY_URL ? { proxyUrl: CLERK_PROXY_URL } : {})}
+    >
+      <AuthTokenSync />
+      <SafeAreaProvider>
+        <ErrorBoundary>
+          <PersistQueryClientProvider
+            client={queryClient}
+            persistOptions={{ persister: asyncStoragePersister, maxAge: OFFLINE_MAX_AGE }}
+          >
+            <GestureHandlerRootView>
+              <KeyboardProvider>
+                <RootLayoutNav />
+              </KeyboardProvider>
+            </GestureHandlerRootView>
+          </PersistQueryClientProvider>
+        </ErrorBoundary>
+      </SafeAreaProvider>
+    </ClerkProvider>
   );
 }

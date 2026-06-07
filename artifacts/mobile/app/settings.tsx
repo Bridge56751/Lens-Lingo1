@@ -30,6 +30,7 @@ import { useT } from "@/hooks/useT";
 import { LOCALE_NATIVE_NAMES, type Locale } from "@/constants/translations";
 import { useListOpenaiConversations } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAuth, useClerk, useUser } from "@clerk/expo";
 import { computeStreak, computeBestStreak } from "@/lib/streak";
 import {
   downloadOfflinePack,
@@ -147,6 +148,13 @@ export default function SettingsScreen() {
   const t = useT();
   const { prefs, update } = usePreferences();
   const { data: conversations } = useListOpenaiConversations();
+  const { isSignedIn } = useAuth();
+  const { user } = useUser();
+  const { signOut } = useClerk();
+  const accountEmail =
+    user?.primaryEmailAddress?.emailAddress ??
+    user?.emailAddresses?.[0]?.emailAddress ??
+    null;
 
   // Streaks are derived from conversation activity. Best streak is a high-water
   // mark that must never drop even if conversations are deleted, so persist it
@@ -325,21 +333,56 @@ export default function SettingsScreen() {
 
           <View style={[styles.profileDivider, { backgroundColor: colors.border }]} />
 
-          <Text style={[styles.profileSignInSub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-            {t("settings.signInSub")}
-          </Text>
-          <TouchableOpacity
-            style={[styles.profileSignIn, { backgroundColor: colors.primary }]}
-            onPress={() =>
-              Alert.alert(t("settings.comingSoonTitle"), t("settings.comingSoonBody"))
-            }
-            activeOpacity={0.85}
-          >
-            <Ionicons name="mail" size={16} color="#FFFFFF" />
-            <Text style={[styles.profileSignInText, { fontFamily: "Inter_600SemiBold" }]}>
-              {t("settings.signInCta")}
-            </Text>
-          </TouchableOpacity>
+          {isSignedIn ? (
+            <>
+              <Text style={[styles.profileSignInSub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                {t("settings.signedInAs")}
+              </Text>
+              {accountEmail ? (
+                <View style={styles.accountEmailRow}>
+                  <Ionicons name="checkmark-circle" size={16} color="#22C55E" />
+                  <Text
+                    style={[styles.accountEmail, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}
+                    numberOfLines={1}
+                  >
+                    {accountEmail}
+                  </Text>
+                </View>
+              ) : null}
+              <TouchableOpacity
+                style={[styles.profileSignIn, { backgroundColor: colors.muted }]}
+                onPress={async () => {
+                  Haptics.selectionAsync();
+                  await signOut();
+                }}
+                activeOpacity={0.85}
+              >
+                <Ionicons name="log-out-outline" size={16} color={colors.foreground} />
+                <Text style={[styles.profileSignInText, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
+                  {t("settings.signOut")}
+                </Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <>
+              <Text style={[styles.profileSignInSub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                {t("settings.signInSub")}
+              </Text>
+              <TouchableOpacity
+                style={[styles.profileSignIn, { backgroundColor: colors.primary }]}
+                onPress={() => {
+                  Haptics.selectionAsync();
+                  router.push("/auth");
+                }}
+                activeOpacity={0.85}
+              >
+                <Ionicons name="mail" size={16} color="#FFFFFF" />
+                <Text style={[styles.profileSignInText, { fontFamily: "Inter_600SemiBold" }]}>
+                  {t("settings.signInCta")}
+                </Text>
+              </TouchableOpacity>
+            </>
+          )}
         </View>
 
         {/* Activity */}
@@ -721,6 +764,14 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   profileSignInText: { color: "#FFFFFF", fontSize: 15 },
+  accountEmailRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    marginTop: 2,
+  },
+  accountEmail: { fontSize: 15, maxWidth: "85%" },
   nameInput: {
     fontSize: 20,
     borderBottomWidth: 1.5,

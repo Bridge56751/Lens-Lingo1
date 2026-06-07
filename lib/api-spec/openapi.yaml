@@ -16,6 +16,8 @@ tags:
     description: OpenAI AI chat, image, and audio operations
   - name: vocab
     description: Curated vocabulary word bank and study
+  - name: account
+    description: Account linking and device carry-over
 paths:
   /healthz:
     get:
@@ -442,6 +444,35 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/OpenaiError"
+  /account/link:
+    post:
+      operationId: linkAccount
+      tags: [account]
+      summary: Link anonymous device data into the signed-in account
+      description: >
+        Called after sign-in. Merges the anonymous device customer's
+        conversations, vocabulary selections, and usage counters into the
+        authenticated account, then deletes the device row. Idempotent — calling
+        it again (or with an unknown device id) is a no-op.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountLinkInput"
+      responses:
+        "200":
+          description: Link result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountLinkResult"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpenaiError"
 components:
   schemas:
     HealthStatus:
@@ -451,6 +482,32 @@ components:
           type: string
       required:
         - status
+    AccountLinkInput:
+      type: object
+      properties:
+        deviceId:
+          type: string
+          description: The anonymous device id whose data should be carried over.
+      required:
+        - deviceId
+    AccountLinkResult:
+      type: object
+      properties:
+        linked:
+          type: boolean
+          description: True if a device row was found and merged; false on no-op.
+        conversationsMoved:
+          type: integer
+        vocabSelectionsMoved:
+          type: integer
+        email:
+          type: string
+          nullable: true
+          description: The Clerk-verified primary email stored on the account.
+      required:
+        - linked
+        - conversationsMoved
+        - vocabSelectionsMoved
     ScanRequest:
       type: object
       properties:

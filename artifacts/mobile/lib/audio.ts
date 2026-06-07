@@ -2,6 +2,7 @@ import { Platform } from "react-native";
 import { File } from "expo-file-system";
 import { fetch as expoFetch } from "expo/fetch";
 import { getDeviceIdSync } from "@/lib/device";
+import { authHeader } from "@/lib/authToken";
 
 const MAX_AUDIO_BASE64_LEN = 7_000_000;
 
@@ -67,6 +68,7 @@ export async function transcribeAudio(uri: string, language: string): Promise<st
     headers: {
       "Content-Type": "application/json",
       ...(getDeviceIdSync() ? { "x-device-id": getDeviceIdSync()! } : {}),
+      ...(await authHeader()),
     },
     body: JSON.stringify({ audioBase64: base64, mimeType, language: WHISPER_LANG[language] }),
   });

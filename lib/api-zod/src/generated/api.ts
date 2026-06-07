@@ -292,3 +292,20 @@ export const GradeOpenaiConversationResponse = zod.object({
 })
 
 
+/**
+ * Called after sign-in. Merges the anonymous device customer's conversations, vocabulary selections, and usage counters into the authenticated account, then deletes the device row. Idempotent — calling it again (or with an unknown device id) is a no-op.
+
+ * @summary Link anonymous device data into the signed-in account
+ */
+export const LinkAccountBody = zod.object({
+  "deviceId": zod.string().describe('The anonymous device id whose data should be carried over.')
+})
+
+export const LinkAccountResponse = zod.object({
+  "linked": zod.boolean().describe('True if a device row was found and merged; false on no-op.'),
+  "conversationsMoved": zod.number(),
+  "vocabSelectionsMoved": zod.number(),
+  "email": zod.string().nullish().describe('The Clerk-verified primary email stored on the account.')
+})
+
+

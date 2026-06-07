@@ -14,6 +14,7 @@ A language learning mobile app that lets users scan real-world objects with thei
   - Must be the Supabase **Session pooler** URI (`...pooler.supabase.com:5432`, user `postgres.<ref>`). The Direct connection (`db.<ref>.supabase.co`) is IPv6-only and unreachable here.
   - Paste the pooler URI with the literal `[YOUR-PASSWORD]` placeholder left in place; provide the password separately as `SUPABASE_DB_PASSWORD`. `lib/db/src/connection.ts` URL-encodes and substitutes it for both the runtime pool and drizzle migrations.
 - Required env: `AI_INTEGRATIONS_OPENAI_BASE_URL`, `AI_INTEGRATIONS_OPENAI_API_KEY` — auto-provisioned by Replit AI Integrations
+- Auth (optional sign-in) env — Replit-managed Clerk: server uses `CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `CLERK_PROXY_URL`; mobile dev/build inject `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` and `EXPO_PUBLIC_CLERK_PROXY_URL`
 
 ## Stack
 
@@ -49,6 +50,7 @@ A language learning mobile app that lets users scan real-world objects with thei
 - `setBaseUrl` is called at app root in `_layout.tsx` so all generated hooks work from Expo Go
 - Per-customer data is scoped by a stable device id (no auth yet). The mobile app generates/persists a UUID in AsyncStorage (`lib/device.ts`), sets it via `setDeviceId` at app root, and sends it as an `x-device-id` header on every request (generated hooks auto-inject it; direct `expoFetch` calls add it manually). Server middleware upserts a `customers` row from the header and sets `req.customerId`; conversations and vocabulary are filtered/ownership-checked by that id. Requests with no device id see an empty list.
 - Per-customer tracking lives on the `customers` table: `plan` ('free'/'pro') + `pro_since` for tiering, and `scan_count` (pictures taken), `chat_count` (chats started), `message_count` (messages sent) usage counters incremented in the scan, create-conversation, and message-send routes. View these directly in the Supabase Table Editor.
+- **Optional auth (Replit-managed Clerk)**: Sign-in is optional — the anonymous device flow stays the default and the app is never gated behind login. Email sign-up (with email-code verification) and Sign in with Apple are supported. The server mounts the Clerk proxy + `clerkMiddleware`; identity resolution in `customer.ts` is token-aware — a Clerk session resolves/creates the `customers` row by `auth_user_id` and lazily populates the Clerk-**verified** email; otherwise it falls back to the `x-device-id` device row. On first sign-in the mobile `auth.tsx` screen calls `POST /api/account/link` (auth-gated, idempotent) which merges the anonymous device row's conversations + vocab selections + usage counters into the account row and stores the verified email. `customers` has nullable `auth_user_id` (unique) + `email`; `device_id` is nullable. The mobile app renders immediately (Clerk hydrates in the background, not gated by `<ClerkLoaded>`); the auth modal waits for a session token before linking and shows a retry on failure so device data is never silently dropped.
 
 ## Product
 

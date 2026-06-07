@@ -36,6 +36,7 @@ import { useColors } from "@/hooks/useColors";
 import { useT } from "@/hooks/useT";
 import { usePreferences, type Language } from "@/hooks/usePreferences";
 import { getDeviceIdSync } from "@/lib/device";
+import { authHeader } from "@/lib/authToken";
 import { speakWord, stopSpeaking, prefetchSpeech } from "@/lib/speech";
 import { fetch as expoFetch } from "expo/fetch";
 
@@ -126,6 +127,7 @@ function MessageBubble({
         headers: {
           "Content-Type": "application/json",
           ...(getDeviceIdSync() ? { "x-device-id": getDeviceIdSync()! } : {}),
+          ...(await authHeader()),
         },
         body: JSON.stringify({ text: message.content, to: nativeLanguage }),
       });
@@ -448,6 +450,7 @@ export default function ConversationScreen() {
         headers: {
           "Content-Type": "application/json",
           ...(getDeviceIdSync() ? { "x-device-id": getDeviceIdSync()! } : {}),
+          ...(await authHeader()),
         },
         body: JSON.stringify({
           audioBase64,
@@ -504,6 +507,7 @@ export default function ConversationScreen() {
           headers: {
             "Content-Type": "application/json",
             ...(getDeviceIdSync() ? { "x-device-id": getDeviceIdSync()! } : {}),
+            ...(await authHeader()),
           },
           body: JSON.stringify({
             content: text,

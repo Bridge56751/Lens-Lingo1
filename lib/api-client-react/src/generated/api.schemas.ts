@@ -9,6 +9,20 @@ export interface HealthStatus {
   status: string;
 }
 
+export interface AccountLinkInput {
+  /** The anonymous device id whose data should be carried over. */
+  deviceId: string;
+}
+
+export interface AccountLinkResult {
+  /** True if a device row was found and merged; false on no-op. */
+  linked: boolean;
+  conversationsMoved: number;
+  vocabSelectionsMoved: number;
+  /** The Clerk-verified primary email stored on the account. */
+  email?: string | null;
+}
+
 export interface ScanRequest {
   /** Base64-encoded image data */
   imageBase64: string;

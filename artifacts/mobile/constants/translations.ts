@@ -111,6 +111,31 @@ export type TKey =
   | "settings.signInCta"
   | "settings.comingSoonTitle"
   | "settings.comingSoonBody"
+  | "settings.signedInAs"
+  | "settings.synced"
+  | "settings.signOut"
+  | "auth.title"
+  | "auth.subtitle"
+  | "auth.signInTab"
+  | "auth.signUpTab"
+  | "auth.emailLabel"
+  | "auth.emailPlaceholder"
+  | "auth.passwordLabel"
+  | "auth.passwordPlaceholder"
+  | "auth.signInCta"
+  | "auth.signUpCta"
+  | "auth.appleCta"
+  | "auth.or"
+  | "auth.verifyTitle"
+  | "auth.verifySubtitle"
+  | "auth.codePlaceholder"
+  | "auth.verifyCta"
+  | "auth.resendCode"
+  | "auth.genericError"
+  | "auth.close"
+  | "auth.completing"
+  | "auth.retry"
+  | "auth.continue"
   | "settings.chooseLearning"
   | "settings.chooseNative"
   | "settings.helpAlertTitle"
@@ -476,6 +501,31 @@ const en: Record<TKey, string> = {
   "settings.signInCta": "Sign in with Email",
   "settings.comingSoonTitle": "Coming soon",
   "settings.comingSoonBody": "Email accounts are on the way \u2014 soon you'll be able to save your progress and access it from any device.",
+  "settings.signedInAs": "Signed in as",
+  "settings.synced": "Your progress is synced to your account",
+  "settings.signOut": "Sign out",
+  "auth.title": "Welcome",
+  "auth.subtitle": "Sign in to save your progress and sync across devices",
+  "auth.signInTab": "Sign in",
+  "auth.signUpTab": "Sign up",
+  "auth.emailLabel": "Email",
+  "auth.emailPlaceholder": "you@example.com",
+  "auth.passwordLabel": "Password",
+  "auth.passwordPlaceholder": "Your password",
+  "auth.signInCta": "Sign in",
+  "auth.signUpCta": "Create account",
+  "auth.appleCta": "Continue with Apple",
+  "auth.or": "or",
+  "auth.verifyTitle": "Check your email",
+  "auth.verifySubtitle": "We sent a verification code to {email}",
+  "auth.codePlaceholder": "Verification code",
+  "auth.verifyCta": "Verify",
+  "auth.resendCode": "Resend code",
+  "auth.genericError": "Something went wrong. Please try again.",
+  "auth.close": "Close",
+  "auth.completing": "Finishing sign-in\u2026",
+  "auth.retry": "Try again",
+  "auth.continue": "Continue anyway",
   "settings.chooseLearning": "Choose a language to learn",
   "settings.chooseNative": "Choose your language",
   "settings.helpAlertTitle": "Help",
