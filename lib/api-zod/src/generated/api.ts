@@ -309,3 +309,13 @@ export const LinkAccountResponse = zod.object({
 })
 
 
+/**
+ * Deletes the customer row resolved for the caller (either the signed-in account row or the anonymous device row), cascade-deleting all of their conversations, messages, and vocabulary selections. Idempotent — when no customer row is resolved it is a clean no-op. Clerk user deletion and local-storage wiping are handled client-side.
+
+ * @summary Permanently delete the caller's account and all associated data
+ */
+export const DeleteAccountResponse = zod.object({
+  "deleted": zod.boolean().describe('True if a customer row was found and deleted; false on no-op.')
+})
+
+

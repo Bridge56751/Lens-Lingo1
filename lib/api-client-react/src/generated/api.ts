@@ -20,6 +20,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AccountDeleteResult,
   AccountLinkInput,
   AccountLinkResult,
   ApiError,
@@ -1554,5 +1555,77 @@ export const useLinkAccount = <TError = ErrorType<OpenaiError>,
         TContext
       > => {
       return useMutation(getLinkAccountMutationOptions(options));
+    }
+
+export const getDeleteAccountUrl = () => {
+
+
+
+
+  return `/api/account`
+}
+
+/**
+ * Deletes the customer row resolved for the caller (either the signed-in account row or the anonymous device row), cascade-deleting all of their conversations, messages, and vocabulary selections. Idempotent — when no customer row is resolved it is a clean no-op. Clerk user deletion and local-storage wiping are handled client-side.
+
+ * @summary Permanently delete the caller's account and all associated data
+ */
+export const deleteAccount = async ( options?: RequestInit): Promise<AccountDeleteResult> => {
+
+  return customFetch<AccountDeleteResult>(getDeleteAccountUrl(),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteAccountMutationOptions = <TError = ErrorType<OpenaiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAccount>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteAccount>>, TError,void, TContext> => {
+
+const mutationKey = ['deleteAccount'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteAccount>>, void> = () => {
+
+
+          return  deleteAccount(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteAccountMutationResult = NonNullable<Awaited<ReturnType<typeof deleteAccount>>>
+
+    export type DeleteAccountMutationError = ErrorType<OpenaiError>
+
+    /**
+ * @summary Permanently delete the caller's account and all associated data
+ */
+export const useDeleteAccount = <TError = ErrorType<OpenaiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAccount>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteAccount>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getDeleteAccountMutationOptions(options));
     }
 

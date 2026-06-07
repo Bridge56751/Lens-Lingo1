@@ -473,6 +473,30 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/OpenaiError"
+  /account:
+    delete:
+      operationId: deleteAccount
+      tags: [account]
+      summary: Permanently delete the caller's account and all associated data
+      description: >
+        Deletes the customer row resolved for the caller (either the signed-in
+        account row or the anonymous device row), cascade-deleting all of their
+        conversations, messages, and vocabulary selections. Idempotent — when no
+        customer row is resolved it is a clean no-op. Clerk user deletion and
+        local-storage wiping are handled client-side.
+      responses:
+        "200":
+          description: Deletion result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountDeleteResult"
+        "500":
+          description: Deletion failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpenaiError"
 components:
   schemas:
     HealthStatus:
@@ -508,6 +532,14 @@ components:
         - linked
         - conversationsMoved
         - vocabSelectionsMoved
+    AccountDeleteResult:
+      type: object
+      properties:
+        deleted:
+          type: boolean
+          description: True if a customer row was found and deleted; false on no-op.
+      required:
+        - deleted
     ScanRequest:
       type: object
       properties:

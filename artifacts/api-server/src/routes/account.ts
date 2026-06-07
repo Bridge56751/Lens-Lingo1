@@ -130,4 +130,33 @@ router.post("/account/link", requireAuth, async (req, res) => {
   }
 });
 
+/**
+ * Permanently deletes the caller's customer row and, via FK cascades, all of
+ * their conversations, messages, and vocabulary selections (Apple guideline
+ * 5.1.1(v) in-app account deletion).
+ *
+ * Runs after `resolveCustomer`, so `req.customerId` is the signed-in account row
+ * (keyed by Clerk user id) or the anonymous device row. Deleting the Clerk user
+ * itself and wiping local AsyncStorage are handled client-side. Idempotent: with
+ * no resolved customer row there is nothing to delete.
+ */
+router.delete("/account", async (req, res) => {
+  const customerId = req.customerId;
+  if (customerId == null) {
+    res.json({ deleted: false });
+    return;
+  }
+
+  try {
+    const removed = await db
+      .delete(customers)
+      .where(eq(customers.id, customerId))
+      .returning({ id: customers.id });
+    res.json({ deleted: removed.length > 0 });
+  } catch (err) {
+    req.log.error({ err }, "Failed to delete account");
+    res.status(500).json({ error: "Failed to delete account" });
+  }
+});
+
 export default router;

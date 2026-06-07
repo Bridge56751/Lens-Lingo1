@@ -114,6 +114,14 @@ export type TKey =
   | "settings.signedInAs"
   | "settings.synced"
   | "settings.signOut"
+  | "settings.dangerZone"
+  | "settings.deleteAccountTitle"
+  | "settings.deleteAccountSub"
+  | "settings.deleteAccountConfirm"
+  | "settings.deleteCancel"
+  | "settings.deleteConfirmCta"
+  | "settings.deleteFailedTitle"
+  | "settings.deleteFailedBody"
   | "auth.title"
   | "auth.subtitle"
   | "auth.signInTab"
@@ -514,6 +522,14 @@ const en: Record<TKey, string> = {
   "settings.signedInAs": "Signed in as",
   "settings.synced": "Your progress is synced to your account",
   "settings.signOut": "Sign out",
+  "settings.dangerZone": "DANGER ZONE",
+  "settings.deleteAccountTitle": "Delete account",
+  "settings.deleteAccountSub": "Permanently erase your account and all data",
+  "settings.deleteAccountConfirm": "This permanently deletes your account and all of your scans, conversations, vocabulary, and on-device data. This cannot be undone.",
+  "settings.deleteCancel": "Cancel",
+  "settings.deleteConfirmCta": "Delete everything",
+  "settings.deleteFailedTitle": "Couldn't delete account",
+  "settings.deleteFailedBody": "Something went wrong. Please check your connection and try again.",
   "auth.title": "Welcome",
   "auth.subtitle": "Sign in to save your progress and sync across devices",
   "auth.signInTab": "Sign in",

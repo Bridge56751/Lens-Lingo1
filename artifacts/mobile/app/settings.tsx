@@ -11,6 +11,7 @@ import {
   Switch,
   TextInput,
   Alert,
+  ActivityIndicator,
   LayoutAnimation,
   UIManager,
 } from "react-native";
@@ -28,9 +29,11 @@ import {
 } from "@/hooks/usePreferences";
 import { useT } from "@/hooks/useT";
 import { LOCALE_NATIVE_NAMES, type Locale } from "@/constants/translations";
-import { useListOpenaiConversations } from "@workspace/api-client-react";
+import { useListOpenaiConversations, useDeleteAccount, setDeviceId } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth, useClerk, useUser } from "@clerk/expo";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { resetDeviceId } from "@/lib/device";
 import { computeStreak, computeBestStreak } from "@/lib/streak";
 import { StreakCards } from "@/components/StreakCards";
 import { LinearGradient } from "expo-linear-gradient";
@@ -177,9 +180,76 @@ export default function SettingsScreen() {
   const [picker, setPicker] = useState<PickerKind>(null);
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState(prefs.displayName);
+  const [deleting, setDeleting] = useState(false);
 
   // Offline download state, scoped to the current language pair.
   const queryClient = useQueryClient();
+  const { mutateAsync: deleteAccountMutation } = useDeleteAccount();
+
+  // Permanently removes the account/device data both server-side (cascades all
+  // conversations, messages, and vocab) and locally (Clerk user, sign-out, every
+  // @linguascan/* AsyncStorage key, cached queries), then re-provisions a fresh
+  // anonymous device id so the session continues as a brand-new empty user.
+  // Apple guideline 5.1.1(v) requires this be available in-app.
+  const performDeleteAccount = async () => {
+    if (deleting) return;
+    setDeleting(true);
+    try {
+      // Delete server data first, while the Clerk session token is still valid,
+      // so the row removed is the account row (resolved by Clerk user id) and not
+      // the anonymous device row the server would fall back to once the token is
+      // revoked by user.delete() below.
+      await deleteAccountMutation();
+
+      // Delete the Clerk user itself. A failure here is fatal: we must not report
+      // success while the account still exists (Apple 5.1.1(v)).
+      if (isSignedIn && user) {
+        await user.delete();
+        try {
+          await signOut();
+        } catch {
+          // The user is already deleted; sign-out is best effort.
+        }
+      }
+
+      // Wipe every local key, then re-provision a fresh anonymous identity and
+      // push it to the API client so subsequent requests use the new device id
+      // (not the just-deleted one) for the rest of this session.
+      try {
+        const keys = await AsyncStorage.getAllKeys();
+        const ours = keys.filter((k) => k.startsWith("@linguascan/"));
+        if (ours.length) await AsyncStorage.multiRemove(ours);
+      } catch {
+        // ignore — best effort
+      }
+      const freshId = await resetDeviceId();
+      setDeviceId(freshId);
+      queryClient.clear();
+
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      router.replace("/");
+    } catch {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Alert.alert(t("settings.deleteFailedTitle"), t("settings.deleteFailedBody"));
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const confirmDeleteAccount = () => {
+    if (deleting) return;
+    Haptics.selectionAsync();
+    Alert.alert(t("settings.deleteAccountTitle"), t("settings.deleteAccountConfirm"), [
+      { text: t("settings.deleteCancel"), style: "cancel" },
+      {
+        text: t("settings.deleteConfirmCta"),
+        style: "destructive",
+        onPress: () => {
+          void performDeleteAccount();
+        },
+      },
+    ]);
+  };
   const [packState, setPackState] = useState<PackState | null>(null);
   const [downloading, setDownloading] = useState(false);
   const [progress, setProgress] = useState<OfflineProgress | null>(null);
@@ -550,6 +620,30 @@ export default function SettingsScreen() {
             iconColor="#FFFFFF"
             title={t("settings.version")}
             subtitle="1.0.0"
+          />
+        </Section>
+
+        {/* Danger zone — Apple guideline 5.1.1(v) in-app account deletion */}
+        <Section
+          title={t("settings.dangerZone")}
+          icon="warning"
+          iconBg="#DC2626"
+          iconColor="#FFFFFF"
+        >
+          <Row
+            icon="trash"
+            iconBg="#DC2626"
+            iconColor="#FFFFFF"
+            title={t("settings.deleteAccountTitle")}
+            subtitle={t("settings.deleteAccountSub")}
+            right={
+              deleting ? (
+                <ActivityIndicator size="small" color="#DC2626" />
+              ) : (
+                <Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />
+              )
+            }
+            onPress={deleting ? undefined : confirmDeleteAccount}
           />
         </Section>
       </ScrollView>

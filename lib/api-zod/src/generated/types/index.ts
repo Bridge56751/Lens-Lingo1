@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './accountDeleteResult';
 export * from './accountLinkInput';
 export * from './accountLinkResult';
 export * from './apiError';

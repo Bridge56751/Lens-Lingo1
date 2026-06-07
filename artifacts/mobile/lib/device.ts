@@ -44,3 +44,19 @@ export async function getOrCreateDeviceId(): Promise<string> {
 export function getDeviceIdSync(): string | null {
   return cachedId;
 }
+
+/**
+ * Discards the current device identity and provisions a brand-new one. Used
+ * after account deletion so the live session continues as a fresh, empty
+ * anonymous user instead of re-resolving the just-deleted customer row.
+ */
+export async function resetDeviceId(): Promise<string> {
+  const id = generateUuid();
+  cachedId = id;
+  try {
+    await AsyncStorage.setItem(STORAGE_KEY, id);
+  } catch {
+    // ignore write errors; id stays cached for this session
+  }
+  return id;
+}

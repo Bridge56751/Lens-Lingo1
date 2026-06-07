@@ -23,6 +23,11 @@ export interface AccountLinkResult {
   email?: string | null;
 }
 
+export interface AccountDeleteResult {
+  /** True if a customer row was found and deleted; false on no-op. */
+  deleted: boolean;
+}
+
 export interface ScanRequest {
   /** Base64-encoded image data */
   imageBase64: string;
