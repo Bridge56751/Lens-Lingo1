@@ -43,6 +43,8 @@ import type {
   VocabCheckInput,
   VocabExample,
   VocabExampleInput,
+  VocabSearchInput,
+  VocabSearchResults,
   VocabSelection,
   VocabSelectionInput,
   VocabularyEntry
@@ -1030,6 +1032,77 @@ export const useCheckVocabSentence = <TError = ErrorType<ApiError>,
         TContext
       > => {
       return useMutation(getCheckVocabSentenceMutationOptions(options));
+    }
+
+export const getSearchVocabUrl = () => {
+
+
+
+
+  return `/api/vocab/search`
+}
+
+/**
+ * @summary Search for words by a term and translate them for study
+ */
+export const searchVocab = async (vocabSearchInput: VocabSearchInput, options?: RequestInit): Promise<VocabSearchResults> => {
+
+  return customFetch<VocabSearchResults>(getSearchVocabUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      vocabSearchInput,)
+  }
+);}
+
+
+
+
+export const getSearchVocabMutationOptions = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof searchVocab>>, TError,{data: BodyType<VocabSearchInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof searchVocab>>, TError,{data: BodyType<VocabSearchInput>}, TContext> => {
+
+const mutationKey = ['searchVocab'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof searchVocab>>, {data: BodyType<VocabSearchInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  searchVocab(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SearchVocabMutationResult = NonNullable<Awaited<ReturnType<typeof searchVocab>>>
+    export type SearchVocabMutationBody = BodyType<VocabSearchInput>
+    export type SearchVocabMutationError = ErrorType<ApiError>
+
+    /**
+ * @summary Search for words by a term and translate them for study
+ */
+export const useSearchVocab = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof searchVocab>>, TError,{data: BodyType<VocabSearchInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof searchVocab>>,
+        TError,
+        {data: BodyType<VocabSearchInput>},
+        TContext
+      > => {
+      return useMutation(getSearchVocabMutationOptions(options));
     }
 
 export const getGetSentenceBankUrl = (params: GetSentenceBankParams,) => {

@@ -18,8 +18,9 @@ import { useColors } from "@/hooks/useColors";
 import { usePreferences } from "@/hooks/usePreferences";
 import { useT } from "@/hooks/useT";
 import VocabBank from "@/components/VocabBank";
+import VocabSearch from "@/components/VocabSearch";
 
-type Tab = "myWords" | "bank";
+type Tab = "myWords" | "bank" | "search";
 
 export default function VocabularyScreen() {
   const t = useT();
@@ -74,13 +75,15 @@ export default function VocabularyScreen() {
   };
 
   const [activeTab, setActiveTab] = useState<Tab>(
-    params.tab === "bank" ? "bank" : "myWords",
+    params.tab === "bank" ? "bank" : params.tab === "search" ? "search" : "myWords",
   );
 
   const topPadding = Platform.OS === "web" ? 16 : insets.top;
   const bottomPadding = Platform.OS === "web" ? 34 : insets.bottom + 16;
 
   const showMyWords = activeTab === "myWords";
+  const showBank = activeTab === "bank";
+  const showSearch = activeTab === "search";
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -103,8 +106,13 @@ export default function VocabularyScreen() {
         />
         <SegmentButton
           label={t("vocab.bankTitle")}
-          active={!showMyWords}
+          active={showBank}
           onPress={() => setActiveTab("bank")}
+        />
+        <SegmentButton
+          label={t("vocab.search")}
+          active={showSearch}
+          onPress={() => setActiveTab("search")}
         />
       </View>
 
@@ -213,8 +221,13 @@ export default function VocabularyScreen() {
       </View>
 
       {/* Word Bank tab — kept mounted so its selected level persists across switches */}
-      <View style={[styles.flex, showMyWords && styles.hidden, { pointerEvents: showMyWords ? "none" : "auto" }]}>
+      <View style={[styles.flex, !showBank && styles.hidden, { pointerEvents: showBank ? "auto" : "none" }]}>
         <VocabBank />
+      </View>
+
+      {/* Search tab — find any word and add it to My Words to study later */}
+      <View style={[styles.flex, !showSearch && styles.hidden, { pointerEvents: showSearch ? "auto" : "none" }]}>
+        <VocabSearch />
       </View>
     </View>
   );

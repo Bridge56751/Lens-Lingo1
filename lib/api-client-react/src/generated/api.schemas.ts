@@ -118,6 +118,16 @@ export interface VocabBank {
   words: VocabBankWord[];
 }
 
+export interface VocabSearchInput {
+  query: string;
+  targetLanguage: string;
+  nativeLanguage: string;
+}
+
+export interface VocabSearchResults {
+  results: VocabBankWord[];
+}
+
 export interface VocabSelection {
   id: number;
   targetLanguage: string;

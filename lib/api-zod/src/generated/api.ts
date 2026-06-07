@@ -192,6 +192,24 @@ export const CheckVocabSentenceResponse = zod.object({
 
 
 /**
+ * @summary Search for words by a term and translate them for study
+ */
+export const SearchVocabBody = zod.object({
+  "query": zod.string(),
+  "targetLanguage": zod.string(),
+  "nativeLanguage": zod.string()
+})
+
+export const SearchVocabResponse = zod.object({
+  "results": zod.array(zod.object({
+  "word": zod.string(),
+  "translation": zod.string(),
+  "level": zod.string().describe('beginner | intermediate | advanced | expert')
+}))
+})
+
+
+/**
  * @summary Get everyday survival phrases for a language, grouped by situation
  */
 export const GetSentenceBankQueryParams = zod.object({

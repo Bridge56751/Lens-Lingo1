@@ -32,6 +32,8 @@ export * from './vocabCheck';
 export * from './vocabCheckInput';
 export * from './vocabExample';
 export * from './vocabExampleInput';
+export * from './vocabSearchInput';
+export * from './vocabSearchResults';
 export * from './vocabSelection';
 export * from './vocabSelectionInput';
 export * from './vocabularyEntry';

@@ -260,6 +260,67 @@ router.delete("/vocab/selections/:id", async (req, res) => {
   res.status(204).send();
 });
 
+// POST /vocab/search - find and translate words by a search term so the user
+// can add them to their personal study list ("My Words").
+router.post("/vocab/search", async (req, res) => {
+  const { query: rawQuery, targetLanguage: rawTarget, nativeLanguage: rawNative } =
+    req.body as { query?: string; targetLanguage?: string; nativeLanguage?: string };
+
+  const targetLanguage = validLanguage(rawTarget);
+  const nativeLanguage = validLanguage(rawNative);
+  const query = sanitize(rawQuery, 60);
+  if (!query || !targetLanguage || !nativeLanguage) {
+    res
+      .status(400)
+      .json({ error: "query, targetLanguage and nativeLanguage are required" });
+    return;
+  }
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      max_completion_tokens: 600,
+      messages: [
+        {
+          role: "user",
+          content: `A native ${nativeLanguage} speaker learning ${targetLanguage} searched their vocabulary for "${query}". The search term may be written in either ${nativeLanguage} or ${targetLanguage}. Return the most relevant words to study: first the direct translation of the search term itself, then up to 5 closely related or commonly associated useful words.
+
+${accuracyRules(targetLanguage, nativeLanguage)}
+
+For each entry give the word written in ${targetLanguage} (in ${targetLanguage}'s own correct script — never substitute another language's script or readings) and its accurate translation in ${nativeLanguage}, plus a difficulty "level" that is exactly one of: beginner, intermediate, advanced, expert. Respond with ONLY valid JSON in exactly this shape:
+{"results":[{"word":"...","translation":"...","level":"..."}]}`,
+        },
+      ],
+    });
+    const content = response.choices[0]?.message?.content ?? "{}";
+    const match = content.match(/\{[\s\S]*\}/);
+    const parsed = match ? (JSON.parse(match[0]) as { results?: unknown }) : {};
+    const raw = Array.isArray(parsed.results) ? parsed.results : [];
+    const seen = new Set<string>();
+    const results = raw
+      .map((item) => {
+        const obj = item as { word?: unknown; translation?: unknown; level?: unknown };
+        const word = sanitize(obj.word, 60);
+        const translation = sanitize(obj.translation, 80);
+        const lvl = sanitize(obj.level, 20).toLowerCase();
+        const level = (LEVELS as readonly string[]).includes(lvl) ? lvl : "beginner";
+        return { word, translation, level };
+      })
+      .filter((r) => {
+        if (!r.word || !r.translation) return false;
+        const key = r.word.toLowerCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .slice(0, 8);
+    res.json({ results });
+  } catch (err) {
+    req.log.error({ err }, "Vocab search failed");
+    res.status(502).json({ error: "Could not search words" });
+  }
+});
+
 // POST /vocab/example - generate an example sentence using a word
 router.post("/vocab/example", async (req, res) => {
   const { word: rawWord, targetLanguage: rawTarget, nativeLanguage: rawNative } =

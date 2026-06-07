@@ -282,6 +282,30 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiError"
+  /vocab/search:
+    post:
+      operationId: searchVocab
+      tags: [vocab]
+      summary: Search for words by a term and translate them for study
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VocabSearchInput"
+      responses:
+        "200":
+          description: Matching words
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VocabSearchResults"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
   /sentences/bank:
     get:
       operationId: getSentenceBank
@@ -666,6 +690,28 @@ components:
             $ref: "#/components/schemas/VocabBankWord"
       required:
         - words
+    VocabSearchInput:
+      type: object
+      properties:
+        query:
+          type: string
+        targetLanguage:
+          type: string
+        nativeLanguage:
+          type: string
+      required:
+        - query
+        - targetLanguage
+        - nativeLanguage
+    VocabSearchResults:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/VocabBankWord"
+      required:
+        - results
     VocabSelection:
       type: object
       properties:

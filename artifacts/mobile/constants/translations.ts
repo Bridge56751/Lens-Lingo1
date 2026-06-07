@@ -262,6 +262,14 @@ export type TKey =
   | "vocab.expert"
   | "vocab.add"
   | "vocab.added"
+  | "vocab.search"
+  | "vocab.searchPlaceholder"
+  | "vocab.searchAction"
+  | "vocab.searching"
+  | "vocab.searchEmptyTitle"
+  | "vocab.searchEmptySub"
+  | "vocab.searchNoResults"
+  | "vocab.searchError"
   | "vocab.myWords"
   | "vocab.studySelected"
   | "vocab.tapToSelect"
@@ -317,6 +325,14 @@ const en: Record<TKey, string> = {
   "vocab.expert": "Expert",
   "vocab.add": "Add",
   "vocab.added": "Added",
+  "vocab.search": "Search",
+  "vocab.searchPlaceholder": "Search any word…",
+  "vocab.searchAction": "Search",
+  "vocab.searching": "Searching…",
+  "vocab.searchEmptyTitle": "Search for any word",
+  "vocab.searchEmptySub": "Find words in {lang} and add them to study later",
+  "vocab.searchNoResults": "No words found. Try another term.",
+  "vocab.searchError": "Couldn't search right now. Try again.",
   "vocab.myWords": "My Words",
   "vocab.studySelected": "Study selected words",
   "vocab.tapToSelect": "Tap words to include them",
