@@ -27,6 +27,7 @@ type Conversation = {
   title: string;
   createdAt: string;
   lastOpenedAt?: string | null;
+  gradeScore?: number | null;
 };
 
 function getLanguage(title: string): string {
@@ -99,6 +100,14 @@ function ConversationItem({
             <View style={[styles.languageBadge, { backgroundColor: colors.primarySoft }]}>
               <Text style={[styles.languageBadgeText, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
                 {language}
+              </Text>
+            </View>
+          ) : null}
+          {item.gradeScore != null ? (
+            <View style={[styles.gradeBadge, { backgroundColor: colors.primarySoft }]}>
+              <Ionicons name="ribbon" size={11} color={colors.primary} />
+              <Text style={[styles.gradeBadgeText, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
+                {item.gradeScore}
               </Text>
             </View>
           ) : null}
@@ -353,6 +362,15 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   languageBadgeText: { fontSize: 11 },
+  gradeBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  gradeBadgeText: { fontSize: 11 },
   itemDate: { fontSize: 12 },
   centered: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12, paddingHorizontal: 24 },
   emptyIcon: {

@@ -11,4 +11,6 @@ export interface OpenaiConversation {
   title: string;
   createdAt: Date;
   lastOpenedAt?: Date | null;
+  /** Most recent end-of-conversation grade (0-100), if graded */
+  gradeScore?: number | null;
 }

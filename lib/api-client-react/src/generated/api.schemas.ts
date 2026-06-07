@@ -39,6 +39,8 @@ export interface OpenaiConversation {
   title: string;
   createdAt: string;
   lastOpenedAt?: string | null;
+  /** Most recent end-of-conversation grade (0-100), if graded */
+  gradeScore?: number | null;
 }
 
 export interface OpenaiMessage {

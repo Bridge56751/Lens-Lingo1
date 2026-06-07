@@ -35,7 +35,8 @@ export const ListOpenaiConversationsResponseItem = zod.object({
   "id": zod.number(),
   "title": zod.string(),
   "createdAt": zod.coerce.date(),
-  "lastOpenedAt": zod.coerce.date().nullish()
+  "lastOpenedAt": zod.coerce.date().nullish(),
+  "gradeScore": zod.number().nullish().describe('Most recent end-of-conversation grade (0-100), if graded')
 })
 export const ListOpenaiConversationsResponse = zod.array(ListOpenaiConversationsResponseItem)
 

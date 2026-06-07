@@ -486,6 +486,10 @@ components:
           type: string
           format: date-time
           nullable: true
+        gradeScore:
+          type: integer
+          nullable: true
+          description: Most recent end-of-conversation grade (0-100), if graded
       required:
         - id
         - title
