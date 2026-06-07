@@ -316,6 +316,17 @@ export default function SettingsScreen() {
           </Text>
         </View>
 
+        {/* Languages */}
+        <Row
+          icon="globe"
+          iconBg={colors.primary}
+          iconColor="#FFFFFF"
+          title={t("settings.learning")}
+          subtitle={prefs.targetLanguage}
+          right={<Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />}
+          onPress={() => setPicker("learning")}
+        />
+
         {/* Activity */}
         <View style={styles.streakRow}>
           <View style={[styles.streakCard, { backgroundColor: "rgba(251,191,36,0.18)" }]}>
@@ -348,17 +359,6 @@ export default function SettingsScreen() {
             Haptics.selectionAsync();
             router.push("/progress");
           }}
-        />
-
-        {/* Languages */}
-        <Row
-          icon="globe"
-          iconBg={colors.primary}
-          iconColor="#FFFFFF"
-          title={t("settings.learning")}
-          subtitle={prefs.targetLanguage}
-          right={<Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />}
-          onPress={() => setPicker("learning")}
         />
 
         {/* Preferences */}
