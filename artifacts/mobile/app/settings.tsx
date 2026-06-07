@@ -295,7 +295,7 @@ export default function SettingsScreen() {
             {/* Avatar with edit badge */}
             <View style={styles.avatarWrap}>
               <View style={styles.avatarLg}>
-                <Ionicons name="person" size={28} color={colors.primary} />
+                <Ionicons name="person" size={24} color={colors.primary} />
               </View>
               {!editingName && (
                 <TouchableOpacity
@@ -731,28 +731,28 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   avatarWrap: {
-    width: 58,
-    height: 58,
+    width: 46,
+    height: 46,
   },
   avatarLg: {
-    width: 58,
-    height: 58,
-    borderRadius: 29,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
     backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
   },
   avatarEdit: {
     position: "absolute",
-    right: -2,
-    bottom: -2,
-    width: 26,
-    height: 26,
-    borderRadius: 13,
+    right: -3,
+    bottom: -3,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
     backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 3,
+    borderWidth: 2.5,
     borderColor: "#6A45E8",
   },
   profileMid: {
