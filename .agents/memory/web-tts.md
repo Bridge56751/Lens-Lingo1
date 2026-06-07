@@ -72,6 +72,22 @@ server cache + the client cache are complementary, not redundant. The client sen
 → high hit rate. Flashcard screens (`vocab-study.tsx`) prefetch the next 3 cards to warm both caches
 before the user advances.
 
+**Native client cache is now PERSISTENT across app restarts (chosen over device synth).**
+When asked to make sentence/vocab audio "instant," the user explicitly chose keeping the
+natural OpenAI voice but caching it permanently on device — NOT switching to the phone's
+built-in voice. True bundling isn't possible: the sentence/vocab TEXT is server-generated,
+not hardcoded. So on native the rendered MP3s persist in a `tts-cache` subdir of **Caches**
+(not Documents — the audio is always re-downloadable, so OS may purge it and Apple keeps
+re-downloadable data out of backups), plus a debounced `manifest.json` of clip keys.
+`ensureCacheLoaded()` rehydrates the in-memory index from the manifest on the first fetch
+(load-once promise), checking each file still exists. Web stays in-memory only (blobs aren't
+cheaply persistable + web preview isn't the target). **The on-disk filename is derived from
+the clip key by a hash and MUST be injective** — two concatenated variable-length base36
+hashes need a delimiter (`_`), or distinct keys can collide onto one MP3 (wrong audio +
+unsafe eviction deleting a file another key still references). **Why:** cold synth + tunnel
+latency is a hard floor; persisting the result means each phrase is paid for once, then
+instant and offline forever.
+
 ## Pronunciation must be language-anchored or shared scripts read wrong
 
 **Symptom:** Japanese words "sounded Chinese." `gpt-4o-mini-tts` guesses pronunciation

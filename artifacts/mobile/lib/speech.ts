@@ -1,7 +1,7 @@
 import * as Speech from "expo-speech";
 import { Platform } from "react-native";
 import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from "expo-audio";
-import { File, Paths } from "expo-file-system";
+import { File, Paths, Directory } from "expo-file-system";
 import { fetch as expoFetch } from "expo/fetch";
 import { getDeviceIdSync } from "@/lib/device";
 import type { Language } from "@/hooks/usePreferences";
@@ -33,7 +33,16 @@ function apiBaseUrl(): string {
 // can also prefetch (e.g. as soon as a scan result or alphabet letter shows) so
 // the audio is ready before the user taps. On web we cache the Blob; on native
 // we cache the path of the written MP3.
-const MAX_CACHE = 60;
+// On web we keep clips in memory only (blobs can't be cheaply persisted across
+// reloads, and the web preview isn't the real target). On native we persist
+// rendered MP3s to the Caches directory and remember them across app restarts via
+// a small manifest, so each phrase is synthesized once and then plays instantly
+// (and offline) forever after. Caches (not Documents) is used because the audio
+// is always re-downloadable: the OS may reclaim it under storage pressure, and
+// Apple guidelines keep re-downloadable data out of iCloud backups.
+const MAX_CACHE = Platform.OS === "web" ? 60 : 600;
+const CACHE_DIR_NAME = "tts-cache";
+const MANIFEST_NAME = "manifest.json";
 type CacheValue = Blob | string;
 type Priority = "tap" | "prefetch";
 interface Pending {
@@ -80,10 +89,103 @@ function cancelTaps(keep?: string): void {
 // queue is paused so a tap always has a clear lane to the server.
 let activeTaps = 0;
 
-function hashKey(s: string): string {
-  let h = 5381;
-  for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0;
-  return (h >>> 0).toString(36);
+/** Low-collision filename stem for a clip key (two independent rolling hashes). */
+function fileKey(s: string): string {
+  let h1 = 5381;
+  let h2 = 52711;
+  for (let i = 0; i < s.length; i++) {
+    const c = s.charCodeAt(i);
+    h1 = ((h1 << 5) + h1 + c) | 0;
+    h2 = ((h2 << 5) + h2 + c) | 0;
+  }
+  // `_` separates the two halves so the mapping is injective (base36 never
+  // contains `_`); without it variable-length halves could collide and two clip
+  // keys would share one MP3 path (wrong audio + unsafe eviction).
+  return `${(h1 >>> 0).toString(36)}_${(h2 >>> 0).toString(36)}`;
+}
+
+// --- persistent cache (native only) ----------------------------------------
+// Rendered clips survive app restarts: MP3s live in a Caches subdirectory and a
+// manifest of clip keys lets the in-memory index rehydrate on launch, so a
+// phrase fetched in a previous session plays instantly (and offline).
+let cacheDir: Directory | null = null;
+let cacheDirResolved = false;
+function getCacheDir(): Directory | null {
+  if (Platform.OS === "web") return null;
+  if (cacheDirResolved) return cacheDir;
+  cacheDirResolved = true;
+  try {
+    const dir = new Directory(Paths.cache, CACHE_DIR_NAME);
+    if (!dir.exists) dir.create({ intermediates: true });
+    cacheDir = dir;
+  } catch {
+    cacheDir = null;
+  }
+  return cacheDir;
+}
+
+let cacheLoaded = false;
+let cacheLoadPromise: Promise<void> | null = null;
+/** Rehydrate the in-memory index from the on-disk manifest (native, once). */
+function ensureCacheLoaded(): Promise<void> {
+  if (Platform.OS === "web" || cacheLoaded) return Promise.resolve();
+  if (cacheLoadPromise) return cacheLoadPromise;
+  cacheLoadPromise = (async () => {
+    try {
+      const dir = getCacheDir();
+      if (!dir) return;
+      const manifest = new File(dir, MANIFEST_NAME);
+      if (!manifest.exists) return;
+      const data = JSON.parse(manifest.textSync()) as { items?: string[] };
+      const keys = Array.isArray(data.items) ? data.items : [];
+      for (const key of keys) {
+        if (audioCache.has(key)) continue;
+        try {
+          const f = new File(dir, `${fileKey(key)}.mp3`);
+          if (f.exists) audioCache.set(key, f.uri);
+        } catch {
+          // skip an unreadable entry
+        }
+      }
+    } catch {
+      // ignore a missing/corrupt manifest
+    } finally {
+      cacheLoaded = true;
+    }
+  })();
+  return cacheLoadPromise;
+}
+
+let manifestTimer: ReturnType<typeof setTimeout> | null = null;
+function persistManifest(): void {
+  manifestTimer = null;
+  if (Platform.OS === "web") return;
+  try {
+    const dir = getCacheDir();
+    if (!dir) return;
+    const keys: string[] = [];
+    for (const [k, v] of audioCache) if (typeof v === "string") keys.push(k);
+    const manifest = new File(dir, MANIFEST_NAME);
+    const body = JSON.stringify({ v: 1, items: keys });
+    try {
+      manifest.write(body);
+    } catch {
+      try {
+        manifest.create();
+        manifest.write(body);
+      } catch {
+        // ignore write failure
+      }
+    }
+  } catch {
+    // ignore
+  }
+}
+/** Debounced manifest write so rapid caching doesn't thrash the disk. */
+function schedulePersistManifest(): void {
+  if (Platform.OS === "web") return;
+  if (manifestTimer) clearTimeout(manifestTimer);
+  manifestTimer = setTimeout(persistManifest, 800);
 }
 
 function touch(key: string, val: CacheValue): void {
@@ -108,6 +210,7 @@ function store(key: string, val: CacheValue): void {
       }
     }
   }
+  schedulePersistManifest();
 }
 
 /**
@@ -126,6 +229,7 @@ async function fetchAudio(
   language?: Language,
 ): Promise<CacheValue | null> {
   const key = clipKey(text, language);
+  await ensureCacheLoaded();
   const cached = audioCache.get(key);
   if (cached !== undefined) {
     if (typeof cached === "string") {
@@ -179,7 +283,10 @@ async function fetchAudio(
       }
 
       const bytes = new Uint8Array(await res.arrayBuffer());
-      const file = new File(Paths.cache, `tts-${hashKey(key)}.mp3`);
+      const dir = getCacheDir();
+      const file = dir
+        ? new File(dir, `${fileKey(key)}.mp3`)
+        : new File(Paths.cache, `tts-${fileKey(key)}.mp3`);
       try {
         file.write(bytes);
       } catch {
