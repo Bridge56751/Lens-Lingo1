@@ -357,6 +357,7 @@ export type TKey =
   | "vocab.speak"
   | "vocab.recording"
   | "vocab.transcribing"
+  | "vocab.doneTyping"
   | "vocab.scriptHint"
   | "vocab.correct"
   | "vocab.needsWork"
@@ -420,6 +421,7 @@ const en: Record<TKey, string> = {
   "vocab.speak": "Speak your sentence",
   "vocab.recording": "Tap to stop",
   "vocab.transcribing": "Transcribing…",
+  "vocab.doneTyping": "Done",
   "vocab.scriptHint": "Typing in {lang} needs that keyboard added to your device — or just tap the mic and speak.",
   "vocab.correct": "Great job!",
   "vocab.needsWork": "Almost there",

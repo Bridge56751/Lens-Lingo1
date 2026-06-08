@@ -9,6 +9,8 @@ import {
   ScrollView,
   TextInput,
   KeyboardAvoidingView,
+  InputAccessoryView,
+  Keyboard,
   Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -52,6 +54,8 @@ const NON_LATIN_LANGS = new Set([
   "Russian",
   "Hindi",
 ]);
+
+const INPUT_ACCESSORY_ID = "vocabSentenceInput";
 
 export default function VocabStudyScreen() {
   const t = useT();
@@ -105,6 +109,8 @@ export default function VocabStudyScreen() {
   const exampleCache = useRef<Map<string, VocabExample>>(new Map());
   // Tracks the word currently on screen so stale async results don't leak onto the wrong card.
   const currentWordRef = useRef<string | undefined>(undefined);
+  // Scroll the "Now you try" input above the keyboard when it focuses.
+  const scrollRef = useRef<ScrollView>(null);
 
   const exampleMutation = useGetVocabExample();
   const checkMutation = useCheckVocabSentence();
@@ -368,6 +374,7 @@ export default function VocabStudyScreen() {
     <KeyboardAvoidingView
       style={[styles.container, { backgroundColor: colors.background }]}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
+      keyboardVerticalOffset={Platform.OS === "ios" ? insets.top + 8 : 0}
     >
       {Header}
 
@@ -381,9 +388,10 @@ export default function VocabStudyScreen() {
       </View>
 
       <ScrollView
+        ref={scrollRef}
         contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: bottomPadding }}
         keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="on-drag"
+        keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
         showsVerticalScrollIndicator={false}
       >
         {/* Word card */}
@@ -509,6 +517,10 @@ export default function VocabStudyScreen() {
             placeholder={t("vocab.inputPlaceholder", { word: card.word })}
             placeholderTextColor={colors.mutedForeground}
             multiline
+            inputAccessoryViewID={Platform.OS === "ios" ? INPUT_ACCESSORY_ID : undefined}
+            onFocus={() => {
+              setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 250);
+            }}
           />
           <TouchableOpacity
             style={[
@@ -628,6 +640,18 @@ export default function VocabStudyScreen() {
           <Ionicons name="arrow-forward" size={18} color={colors.primary} />
         </TouchableOpacity>
       </ScrollView>
+
+      {Platform.OS === "ios" && (
+        <InputAccessoryView nativeID={INPUT_ACCESSORY_ID}>
+          <View style={[styles.accessoryBar, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
+            <TouchableOpacity onPress={() => Keyboard.dismiss()} hitSlop={10} activeOpacity={0.7}>
+              <Text style={[styles.accessoryDone, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
+                {t("vocab.doneTyping")}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </InputAccessoryView>
+      )}
     </KeyboardAvoidingView>
   );
 }
@@ -695,6 +719,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlignVertical: "top",
   },
+  accessoryBar: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  accessoryDone: { fontSize: 16 },
 
   micBtn: {
     flexDirection: "row",
