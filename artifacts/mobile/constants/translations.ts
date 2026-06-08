@@ -501,7 +501,7 @@ const en: Record<TKey, string> = {
   "onboarding.abcDesc": "Learn the letters and sounds of your new language with bite-sized, interactive alphabet lessons.",
   "onboarding.sentencesTitle": "Speak in Sentences",
   "onboarding.sentencesDesc": "Pick up everyday phrases to greet people, ask questions, and get around — ready for real conversations.",
-  "onboarding.welcomeTitle": "Welcome to LinguaScan",
+  "onboarding.welcomeTitle": "Welcome to Lenso Lingo",
   "onboarding.welcomeDesc": "Learn a language from the world around you. Answer two quick questions and we'll set you up.",
   "onboarding.langTitle": "What do you want to learn?",
   "onboarding.langDesc": "Pick a language to start with — you can change it anytime.",

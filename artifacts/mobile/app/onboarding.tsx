@@ -2,6 +2,7 @@ import React, { useRef, useState } from "react";
 import {
   View,
   Text,
+  Image,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
@@ -157,9 +158,11 @@ export default function OnboardingScreen() {
 
   const renderWelcome = () => (
     <View style={styles.centerSlide}>
-      <View style={[styles.iconWrap, { backgroundColor: colors.primarySoft }]}>
-        <Ionicons name="language" size={76} color={colors.primary} />
-      </View>
+      <Image
+        source={require("../assets/images/icon.png")}
+        style={styles.logo}
+        resizeMode="contain"
+      />
       <Text style={[styles.title, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
         {t("onboarding.welcomeTitle")}
       </Text>
@@ -399,6 +402,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 44,
   },
+  logo: { width: 156, height: 156, borderRadius: 36, marginBottom: 40 },
   glyph: { fontSize: 64, fontWeight: "800" },
   iconBadge: {
     position: "absolute",
