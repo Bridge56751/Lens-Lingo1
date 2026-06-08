@@ -20,6 +20,7 @@ import {
 import { useColors } from "@/hooks/useColors";
 import { usePreferences } from "@/hooks/usePreferences";
 import { useRomanizations } from "@/hooks/useRomanizations";
+import { RomanizeToggle } from "@/components/RomanizeToggle";
 import { useT } from "@/hooks/useT";
 import { speakWord, prefetchSpeech, stopSpeaking } from "@/lib/speech";
 import { getBundledSentenceBank } from "@/lib/offlineAssets";
@@ -98,10 +99,11 @@ export default function SentencesScreen() {
 
   const [selectedCategory, setSelectedCategory] = useState<Category>("greetings");
   const visible = grouped[selectedCategory];
+  const [showRoman, setShowRoman] = useState(false);
   const roman = useRomanizations(
     (visible ?? []).map((s) => s.phrase),
     target,
-    prefs.showRomanization,
+    showRoman,
   );
   const isEmptyBank = CATEGORIES.every((c) => grouped[c].length === 0);
 
@@ -182,6 +184,12 @@ export default function SentencesScreen() {
       <Text style={[styles.subtitle, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
         {t("sentences.sub", { lang: target })}
       </Text>
+      <RomanizeToggle
+        language={target}
+        active={showRoman}
+        onToggle={() => setShowRoman((v) => !v)}
+        style={{ marginHorizontal: 20, marginBottom: 4 }}
+      />
 
       <ScrollView
         horizontal

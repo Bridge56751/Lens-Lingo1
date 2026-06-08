@@ -38,10 +38,6 @@ export type Preferences = {
   bestStreak: number;
   // Whether the user has completed (or skipped) the first-run onboarding tour.
   onboardingSeen: boolean;
-  // Optional reading aid: show a Latin-alphabet romanization (romaji, pinyin,
-  // romaja, etc.) under target-language words/messages. Only meaningful for
-  // non-Latin target languages. Off by default.
-  showRomanization: boolean;
 };
 
 const DEFAULTS: Preferences = {
@@ -54,7 +50,6 @@ const DEFAULTS: Preferences = {
   alphabetCardHidden: {},
   bestStreak: 0,
   onboardingSeen: false,
-  showRomanization: false,
 };
 
 const STORAGE_KEY = "@linguascan/preferences/v1";

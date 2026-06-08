@@ -32,6 +32,7 @@ import {
 import { useColors } from "@/hooks/useColors";
 import { usePreferences } from "@/hooks/usePreferences";
 import { useRomanizations } from "@/hooks/useRomanizations";
+import { RomanizeToggle } from "@/components/RomanizeToggle";
 import { useT } from "@/hooks/useT";
 import { speakWord, prefetchSpeech, stopSpeaking } from "@/lib/speech";
 import {
@@ -77,6 +78,7 @@ export default function VocabStudyScreen() {
   }, [selections, idsParam]);
 
   const [pos, setPos] = useState(0);
+  const [showRoman, setShowRoman] = useState(false);
   const card = deck[pos];
 
   // Per-card UI state.
@@ -84,12 +86,12 @@ export default function VocabStudyScreen() {
   const wordRoman = useRomanizations(
     card ? [card.word] : [],
     target,
-    prefs.showRomanization,
+    showRoman,
   );
   const exampleRoman = useRomanizations(
     example ? [example.sentence] : [],
     target,
-    prefs.showRomanization,
+    showRoman,
   );
   const [sentence, setSentence] = useState("");
   const [feedback, setFeedback] = useState<VocabCheck | null>(null);
@@ -411,6 +413,12 @@ export default function VocabStudyScreen() {
               {t("vocab.tapHear")}
             </Text>
           </TouchableOpacity>
+          <RomanizeToggle
+            language={target}
+            active={showRoman}
+            onToggle={() => setShowRoman((v) => !v)}
+            style={{ alignSelf: "center", marginTop: 12 }}
+          />
         </View>
 
         {/* Example sentence */}

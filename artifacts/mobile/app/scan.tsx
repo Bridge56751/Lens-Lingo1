@@ -30,6 +30,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColors";
 import { usePreferences, DIFFICULTIES, type Difficulty } from "@/hooks/usePreferences";
 import { useRomanizations } from "@/hooks/useRomanizations";
+import { RomanizeToggle } from "@/components/RomanizeToggle";
 import { useT } from "@/hooks/useT";
 import { getDeviceIdSync } from "@/lib/device";
 import { speakWord, stopSpeaking, prefetchSpeech } from "@/lib/speech";
@@ -51,10 +52,11 @@ export default function ScanScreen() {
     conversationId: number;
     initialMessage: string;
   } | null>(null);
+  const [showRoman, setShowRoman] = useState(false);
   const itemRoman = useRomanizations(
     scanResult ? [scanResult.itemNameTranslated] : [],
     selectedLanguage,
-    prefs.showRomanization,
+    showRoman,
   );
 
   const pulseAnim = useSharedValue(1);
@@ -266,6 +268,13 @@ export default function ScanScreen() {
               <Text style={[styles.resultLanguage, { color: colors.mutedForeground, fontFamily: "Inter_500Medium" }]}>
                 {selectedLanguage}
               </Text>
+
+              <RomanizeToggle
+                language={selectedLanguage}
+                active={showRoman}
+                onToggle={() => setShowRoman((v) => !v)}
+                style={{ marginTop: 10 }}
+              />
 
               <View style={[styles.exampleBox, { backgroundColor: colors.primarySoft }]}>
                 <Text style={[styles.exampleLabel, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>

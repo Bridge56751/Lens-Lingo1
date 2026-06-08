@@ -528,24 +528,6 @@ export default function SettingsScreen() {
               />
             }
           />
-          <Row
-            icon="language"
-            iconBg="#0EA5E9"
-            iconColor="#FFFFFF"
-            title={t("settings.showRomanization")}
-            subtitle={t("settings.showRomanizationSub")}
-            right={
-              <Switch
-                value={prefs.showRomanization}
-                onValueChange={(v) => {
-                  update("showRomanization", v);
-                  if (prefs.hapticsEnabled) Haptics.selectionAsync();
-                }}
-                trackColor={{ false: colors.muted, true: colors.primary }}
-                thumbColor="#FFFFFF"
-              />
-            }
-          />
         </Section>
 
         {/* Offline */}

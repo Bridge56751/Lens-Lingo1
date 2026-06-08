@@ -29,6 +29,7 @@ import {
 import { useColors } from "@/hooks/useColors";
 import { usePreferences } from "@/hooks/usePreferences";
 import { useRomanizations } from "@/hooks/useRomanizations";
+import { RomanizeToggle } from "@/components/RomanizeToggle";
 import { useT } from "@/hooks/useT";
 import { speakWord, prefetchSpeech, stopSpeaking } from "@/lib/speech";
 
@@ -50,10 +51,11 @@ export default function VocabSearch() {
 
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<VocabBankWord[] | null>(null);
+  const [showRoman, setShowRoman] = useState(false);
   const roman = useRomanizations(
     (results ?? []).map((w) => w.word),
     target,
-    prefs.showRomanization,
+    showRoman,
   );
 
   const { data: selections } = useListVocabSelections({ targetLanguage: target });
@@ -171,6 +173,15 @@ export default function VocabSearch() {
           </Text>
         </TouchableOpacity>
       </View>
+
+      {results && results.length > 0 ? (
+        <RomanizeToggle
+          language={target}
+          active={showRoman}
+          onToggle={() => setShowRoman((v) => !v)}
+          style={{ marginHorizontal: 20, marginBottom: 8 }}
+        />
+      ) : null}
 
       {isSearching ? (
         <View style={styles.center}>

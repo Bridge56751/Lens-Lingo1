@@ -100,13 +100,11 @@ function MessageBubble({
   colors,
   language,
   nativeLanguage,
-  showRomanization,
 }: {
   message: Message;
   colors: ReturnType<typeof useColors>;
   language: Language;
   nativeLanguage: string;
-  showRomanization: boolean;
 }) {
   const t = useT();
   const isUser = message.role === "user";
@@ -115,8 +113,8 @@ function MessageBubble({
   const [romanization, setRomanization] = useState<string | null>(null);
   const [isRomanizing, setIsRomanizing] = useState(false);
   // The romanize aid only makes sense for AI turns written in a non-Latin
-  // target language, and only when the user has opted in via Settings.
-  const canRomanize = showRomanization && isNonLatinLanguage(language);
+  // target language; it's an on-demand per-message button (no global setting).
+  const canRomanize = isNonLatinLanguage(language);
 
   const toggleRomanization = useCallback(async () => {
     Haptics.selectionAsync();
@@ -716,7 +714,6 @@ export default function ConversationScreen() {
                 colors={colors}
                 language={language}
                 nativeLanguage={prefs.nativeLanguage}
-                showRomanization={prefs.showRomanization}
               />
             )}
             contentContainerStyle={[styles.messageList, { paddingBottom: 16 }]}
@@ -1058,7 +1055,8 @@ const styles = StyleSheet.create({
   bubbleActions: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 16,
+    flexWrap: "wrap",
+    columnGap: 16,
   },
   speakButton: {
     flexDirection: "row",

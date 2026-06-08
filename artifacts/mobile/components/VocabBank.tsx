@@ -27,6 +27,7 @@ import {
 import { useColors } from "@/hooks/useColors";
 import { usePreferences } from "@/hooks/usePreferences";
 import { useRomanizations } from "@/hooks/useRomanizations";
+import { RomanizeToggle } from "@/components/RomanizeToggle";
 import { useT } from "@/hooks/useT";
 import { speakWord, prefetchSpeech, stopSpeaking } from "@/lib/speech";
 import { getBundledVocabBank } from "@/lib/offlineAssets";
@@ -155,11 +156,12 @@ export default function VocabBank() {
 
   const isEmptyBank = LEVELS.every((level) => grouped[level].length === 0);
   const [selectedLevel, setSelectedLevel] = useState<Level>("beginner");
+  const [showRoman, setShowRoman] = useState(false);
   const visibleWords = grouped[selectedLevel];
   const roman = useRomanizations(
     (visibleWords ?? []).map((w) => w.word),
     target,
-    prefs.showRomanization,
+    showRoman,
   );
 
   if (isLoading) {
@@ -229,6 +231,13 @@ export default function VocabBank() {
           );
         })}
       </View>
+
+      <RomanizeToggle
+        language={target}
+        active={showRoman}
+        onToggle={() => setShowRoman((v) => !v)}
+        style={{ marginHorizontal: 20, marginBottom: 8 }}
+      />
 
       <ScrollView
         contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: bottomPadding }}

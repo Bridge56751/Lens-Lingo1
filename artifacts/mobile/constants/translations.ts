@@ -101,8 +101,6 @@ export type TKey =
   | "settings.about"
   | "settings.haptics"
   | "settings.hapticsSub"
-  | "settings.showRomanization"
-  | "settings.showRomanizationSub"
   | "settings.daily"
   | "settings.dailySub"
   | "settings.help"
@@ -515,8 +513,6 @@ const en: Record<TKey, string> = {
   "settings.about": "ABOUT",
   "settings.haptics": "Haptic feedback",
   "settings.hapticsSub": "Vibrate on actions",
-  "settings.showRomanization": "Show romanization",
-  "settings.showRomanizationSub": "Latin spelling for Japanese, Chinese, etc.",
   "settings.daily": "Daily reminder",
   "settings.dailySub": "Practice every day",
   "settings.help": "Help & support",
