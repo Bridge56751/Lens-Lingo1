@@ -193,7 +193,7 @@ export default function OnboardingScreen() {
                 {t(slide.titleKey)}
               </Text>
               <Text
-                style={[styles.featureDesc, { color: slide.fg, fontFamily: "Inter_400Regular" }]}
+                style={[styles.featureDesc, { color: slide.fg, fontFamily: "Inter_600SemiBold" }]}
                 numberOfLines={3}
               >
                 {t(slide.descKey)}
@@ -470,7 +470,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   featureTitle: { fontSize: 16, letterSpacing: -0.2, marginBottom: 4 },
-  featureDesc: { fontSize: 12.5, lineHeight: 17, opacity: 0.9 },
+  featureDesc: { fontSize: 12.5, lineHeight: 17 },
   footer: { paddingHorizontal: 24, gap: 24, paddingTop: 8 },
   dots: { flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 7 },
   dot: { height: 8, borderRadius: 4 },
