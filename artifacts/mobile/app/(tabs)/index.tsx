@@ -187,7 +187,7 @@ function GridCard({
         </Text>
         {subtitle ? (
           <Text
-            style={[styles.gridSub, { color: fg, fontFamily: "Inter_400Regular" }]}
+            style={[styles.gridSub, { color: fg, fontFamily: "Inter_600SemiBold" }]}
             numberOfLines={2}
           >
             {subtitle}
@@ -720,7 +720,7 @@ const styles = StyleSheet.create({
   gridWatermark: { position: "absolute", right: -4, bottom: -14, opacity: 0.16 },
   gridWatermarkText: { fontSize: 84, fontFamily: "Inter_700Bold", letterSpacing: -3 },
   gridTitle: { fontSize: 19, letterSpacing: -0.4, lineHeight: 23 },
-  gridSub: { fontSize: 12.5, lineHeight: 17, opacity: 0.82 },
+  gridSub: { fontSize: 12.5, lineHeight: 17, opacity: 0.95 },
   gridCta: {
     width: 38,
     height: 38,
