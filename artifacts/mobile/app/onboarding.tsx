@@ -33,9 +33,9 @@ const CHIP_WIDTH = (width - GRID_PADDING * 2 - GRID_GAP) / 2;
 
 type FeatureSlide = {
   icon: keyof typeof Ionicons.glyphMap;
-  glyph: string;
-  color: string;
-  soft: string;
+  bg: string;
+  fg: string;
+  badge: string;
   titleKey: TKey;
   descKey: TKey;
 };
@@ -43,33 +43,33 @@ type FeatureSlide = {
 const FEATURES: FeatureSlide[] = [
   {
     icon: "scan",
-    glyph: "📷",
-    color: "#7C5CFF",
-    soft: "#EFE9FF",
+    bg: "#7C5CFF",
+    fg: "#FFFFFF",
+    badge: "rgba(255,255,255,0.20)",
     titleKey: "onboarding.scanTitle",
     descKey: "onboarding.scanDesc",
   },
   {
     icon: "chatbubbles",
-    glyph: "AI",
-    color: "#EA580C",
-    soft: "#FFEDD5",
+    bg: "#EA580C",
+    fg: "#FFFFFF",
+    badge: "rgba(255,255,255,0.20)",
     titleKey: "onboarding.chatTitle",
     descKey: "onboarding.chatDesc",
   },
   {
     icon: "text",
-    glyph: "Aa",
-    color: "#F59E0B",
-    soft: "#FEF3C7",
+    bg: "#FBBF24",
+    fg: "#422006",
+    badge: "rgba(66,32,6,0.16)",
     titleKey: "onboarding.abcTitle",
     descKey: "onboarding.abcDesc",
   },
   {
     icon: "chatbox-ellipses",
-    glyph: "Hi",
-    color: "#2563EB",
-    soft: "#DBEAFE",
+    bg: "#2563EB",
+    fg: "#FFFFFF",
+    badge: "rgba(255,255,255,0.20)",
     titleKey: "onboarding.sentencesTitle",
     descKey: "onboarding.sentencesDesc",
   },
@@ -179,20 +179,23 @@ export default function OnboardingScreen() {
       <Text style={[styles.formDesc, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
         {t("onboarding.howDesc")}
       </Text>
-      <View style={styles.featureList}>
+      <View style={styles.featureGrid}>
         {FEATURES.map((slide) => (
-          <View
-            key={slide.titleKey}
-            style={[styles.featureRow, { backgroundColor: colors.card, borderColor: colors.border }]}
-          >
-            <View style={[styles.featureIcon, { backgroundColor: slide.soft }]}>
-              <Ionicons name={slide.icon} size={24} color={slide.color} />
+          <View key={slide.titleKey} style={[styles.featureCard, { backgroundColor: slide.bg }]}>
+            <View style={styles.featureWatermark} pointerEvents="none">
+              <Ionicons name={slide.icon} size={72} color={slide.fg} />
             </View>
-            <View style={styles.featureText}>
-              <Text style={[styles.featureTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
+            <View style={[styles.featureBadge, { backgroundColor: slide.badge }]}>
+              <Ionicons name={slide.icon} size={22} color={slide.fg} />
+            </View>
+            <View>
+              <Text style={[styles.featureTitle, { color: slide.fg, fontFamily: "Inter_700Bold" }]}>
                 {t(slide.titleKey)}
               </Text>
-              <Text style={[styles.featureDesc, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+              <Text
+                style={[styles.featureDesc, { color: slide.fg, fontFamily: "Inter_400Regular" }]}
+                numberOfLines={3}
+              >
                 {t(slide.descKey)}
               </Text>
             </View>
@@ -444,25 +447,30 @@ const styles = StyleSheet.create({
   },
   levelTitle: { fontSize: 19, letterSpacing: -0.3 },
   levelDesc: { fontSize: 14, lineHeight: 20 },
-  featureList: { gap: 12 },
-  featureRow: {
+  featureGrid: {
     flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
-    borderWidth: 1,
-    borderRadius: 16,
-    padding: 14,
+    flexWrap: "wrap",
+    gap: GRID_GAP,
   },
-  featureIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
+  featureCard: {
+    width: CHIP_WIDTH,
+    minHeight: 168,
+    borderRadius: 20,
+    padding: 16,
+    overflow: "hidden",
+    justifyContent: "space-between",
+    gap: 14,
+  },
+  featureWatermark: { position: "absolute", right: -8, bottom: -10, opacity: 0.18 },
+  featureBadge: {
+    width: 44,
+    height: 44,
+    borderRadius: 13,
     alignItems: "center",
     justifyContent: "center",
   },
-  featureText: { flex: 1 },
-  featureTitle: { fontSize: 16, letterSpacing: -0.2, marginBottom: 3 },
-  featureDesc: { fontSize: 13, lineHeight: 18 },
+  featureTitle: { fontSize: 16, letterSpacing: -0.2, marginBottom: 4 },
+  featureDesc: { fontSize: 12.5, lineHeight: 17, opacity: 0.9 },
   footer: { paddingHorizontal: 24, gap: 24, paddingTop: 8 },
   dots: { flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 7 },
   dot: { height: 8, borderRadius: 4 },
