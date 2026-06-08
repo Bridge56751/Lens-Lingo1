@@ -73,7 +73,17 @@ const FEATURES: FeatureSlide[] = [
     titleKey: "onboarding.sentencesTitle",
     descKey: "onboarding.sentencesDesc",
   },
+  {
+    icon: "book",
+    bg: "#047857",
+    fg: "#FFFFFF",
+    badge: "rgba(255,255,255,0.20)",
+    titleKey: "onboarding.vocabTitle",
+    descKey: "onboarding.vocabDesc",
+  },
 ];
+
+const [SCAN_FEATURE, ...GRID_FEATURES] = FEATURES;
 
 type Page =
   | { kind: "welcome" }
@@ -179,8 +189,26 @@ export default function OnboardingScreen() {
       <Text style={[styles.formDesc, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
         {t("onboarding.howDesc")}
       </Text>
+      <View style={[styles.featureCard, styles.featureWide, { backgroundColor: SCAN_FEATURE.bg }]}>
+        <View style={styles.featureWatermark} pointerEvents="none">
+          <Ionicons name={SCAN_FEATURE.icon} size={96} color={SCAN_FEATURE.fg} />
+        </View>
+        <View style={[styles.featureBadge, { backgroundColor: SCAN_FEATURE.badge }]}>
+          <Ionicons name={SCAN_FEATURE.icon} size={24} color={SCAN_FEATURE.fg} />
+        </View>
+        <View style={styles.featureWideText}>
+          <Text style={[styles.featureTitle, { color: SCAN_FEATURE.fg, fontFamily: "Inter_700Bold" }]}>
+            {t(SCAN_FEATURE.titleKey)}
+          </Text>
+          <Text
+            style={[styles.featureDesc, { color: SCAN_FEATURE.fg, fontFamily: "Inter_600SemiBold" }]}
+          >
+            {t(SCAN_FEATURE.descKey)}
+          </Text>
+        </View>
+      </View>
       <View style={styles.featureGrid}>
-        {FEATURES.map((slide) => (
+        {GRID_FEATURES.map((slide) => (
           <View key={slide.titleKey} style={[styles.featureCard, { backgroundColor: slide.bg }]}>
             <View style={styles.featureWatermark} pointerEvents="none">
               <Ionicons name={slide.icon} size={72} color={slide.fg} />
@@ -461,6 +489,12 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 14,
   },
+  featureWide: {
+    width: "100%",
+    minHeight: 0,
+    marginBottom: GRID_GAP,
+  },
+  featureWideText: { paddingRight: 64 },
   featureWatermark: { position: "absolute", right: -8, bottom: -10, opacity: 0.18 },
   featureBadge: {
     width: 44,

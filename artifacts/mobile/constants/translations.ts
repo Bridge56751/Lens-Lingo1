@@ -82,6 +82,8 @@ export type TKey =
   | "onboarding.abcDesc"
   | "onboarding.sentencesTitle"
   | "onboarding.sentencesDesc"
+  | "onboarding.vocabTitle"
+  | "onboarding.vocabDesc"
   | "onboarding.welcomeTitle"
   | "onboarding.welcomeDesc"
   | "onboarding.langTitle"
@@ -503,6 +505,8 @@ const en: Record<TKey, string> = {
   "onboarding.abcDesc": "Learn the letters and sounds of your new language with bite-sized, interactive alphabet lessons.",
   "onboarding.sentencesTitle": "Speak in Sentences",
   "onboarding.sentencesDesc": "Pick up everyday phrases to greet people, ask questions, and get around — ready for real conversations.",
+  "onboarding.vocabTitle": "Build a Word Bank",
+  "onboarding.vocabDesc": "Save the words you discover, then review and master them with quick practice sessions.",
   "onboarding.welcomeTitle": "Welcome to Lens Lingo",
   "onboarding.welcomeDesc": "Learn a language from the world around you. Answer two quick questions and we'll set you up.",
   "onboarding.langTitle": "What do you want to learn?",
@@ -511,7 +515,7 @@ const en: Record<TKey, string> = {
   "onboarding.levelDesc": "We'll match the difficulty of conversations and corrections to you.",
   "onboarding.continue": "Continue",
   "onboarding.howTitle": "Here's how Lens Lingo helps",
-  "onboarding.howDesc": "Four ways to learn — all in one app.",
+  "onboarding.howDesc": "Five ways to learn — all in one app.",
   "home.scanTag": "SCAN",
   "home.scanCta": "Scan Object",
   "home.practicing": "Practicing {lang}",
