@@ -362,24 +362,11 @@ export default function SettingsScreen() {
           </View>
 
           <View style={styles.profileTop}>
-            {/* Avatar with edit badge */}
+            {/* Avatar */}
             <View style={styles.avatarWrap}>
               <View style={styles.avatarLg}>
                 <Ionicons name="person" size={24} color={colors.primary} />
               </View>
-              {!editingName && (
-                <TouchableOpacity
-                  style={styles.avatarEdit}
-                  onPress={() => {
-                    setNameDraft(prefs.displayName);
-                    setEditingName(true);
-                    Haptics.selectionAsync();
-                  }}
-                  activeOpacity={0.8}
-                >
-                  <Ionicons name="pencil" size={11} color={colors.primary} />
-                </TouchableOpacity>
-              )}
             </View>
 
             {/* Name + language + subtitle */}
@@ -401,9 +388,23 @@ export default function SettingsScreen() {
                   </TouchableOpacity>
                 </View>
               ) : (
-                <Text style={[styles.profileName, { color: "#FFFFFF", fontFamily: "Inter_700Bold" }]} numberOfLines={1}>
-                  {prefs.displayName}
-                </Text>
+                <View style={styles.nameRow}>
+                  <Text style={[styles.profileName, { color: "#FFFFFF", fontFamily: "Inter_700Bold" }]} numberOfLines={1}>
+                    {prefs.displayName}
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.nameEdit}
+                    onPress={() => {
+                      setNameDraft(prefs.displayName);
+                      setEditingName(true);
+                      Haptics.selectionAsync();
+                    }}
+                    activeOpacity={0.8}
+                    hitSlop={8}
+                  >
+                    <Ionicons name="pencil" size={12} color={colors.primary} />
+                  </TouchableOpacity>
+                </View>
               )}
 
               <TouchableOpacity
@@ -836,18 +837,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  avatarEdit: {
-    position: "absolute",
-    right: -3,
-    bottom: -3,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
+  nameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  nameEdit: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 2.5,
-    borderColor: "#6A45E8",
   },
   profileMid: {
     flex: 1,
@@ -855,7 +856,7 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingRight: 40,
   },
-  profileName: { fontSize: 24, letterSpacing: -0.4 },
+  profileName: { fontSize: 24, letterSpacing: -0.4, flexShrink: 1 },
   learningPill: {
     flexDirection: "row",
     alignItems: "center",
