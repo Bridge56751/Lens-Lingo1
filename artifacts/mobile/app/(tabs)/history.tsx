@@ -63,8 +63,10 @@ function ConversationItem({
 
   const date = new Date(item.lastOpenedAt ?? item.createdAt);
   const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  // Compare calendar days (not raw 24h windows), and clamp to 0 so a timestamp
+  // a few seconds in the future (server/device clock skew) never shows "-1 days".
+  const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const diffDays = Math.max(0, Math.round((startOfDay(now) - startOfDay(date)) / 86400000));
   let dateStr: string;
   if (diffDays === 0) dateStr = t("history.today");
   else if (diffDays === 1) dateStr = t("history.yesterday");
