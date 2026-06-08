@@ -465,7 +465,7 @@ const en: Record<TKey, string> = {
   "home.vocabulary": "Vocabulary",
   "home.vocabTag": "WORD BANK",
   "home.pathVocabSub": "Save \u00b7 Review \u00b7 Master",
-  "home.pathVocabCta": "Open Word Bank",
+  "home.pathVocabCta": "Study Words",
   "home.words": "{n} words",
   "home.dailyGoal": "Daily Goal",
   "home.dailyProgress": "{done} / {goal} today",
