@@ -157,6 +157,7 @@ export default function ScanScreen() {
       setScanResult(data);
       // Warm the TTS cache so the "tap to hear" button plays instantly.
       prefetchSpeech(data.itemNameTranslated, selectedLanguage);
+      prefetchSpeech(data.initialMessage, selectedLanguage);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (err) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -213,6 +214,12 @@ export default function ScanScreen() {
     if (!scanResult) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     speakWord(scanResult.itemNameTranslated, selectedLanguage);
+  };
+
+  const speakSample = () => {
+    if (!scanResult) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    speakWord(scanResult.initialMessage, selectedLanguage);
   };
 
   const topPadding = Platform.OS === "web" ? 16 : insets.top;
@@ -283,9 +290,19 @@ export default function ScanScreen() {
               />
 
               <View style={[styles.exampleBox, { backgroundColor: colors.primarySoft }]}>
-                <Text style={[styles.exampleLabel, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
-                  {t("scan.tutorSays")}
-                </Text>
+                <View style={styles.exampleHeader}>
+                  <Text style={[styles.exampleLabel, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
+                    {t("scan.tutorSays")}
+                  </Text>
+                  <TouchableOpacity
+                    style={[styles.speakerDot, { backgroundColor: colors.card }]}
+                    onPress={speakSample}
+                    activeOpacity={0.7}
+                    hitSlop={8}
+                  >
+                    <Ionicons name="volume-medium" size={16} color={colors.primary} />
+                  </TouchableOpacity>
+                </View>
                 <Text style={[styles.exampleText, { color: colors.foreground, fontFamily: "Inter_400Regular" }]}>
                   {scanResult.initialMessage}
                 </Text>
@@ -721,6 +738,11 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 14,
     gap: 6,
+  },
+  exampleHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   exampleLabel: { fontSize: 11, textTransform: "uppercase", letterSpacing: 1 },
   exampleText: { fontSize: 14, lineHeight: 20 },
