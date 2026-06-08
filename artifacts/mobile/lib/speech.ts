@@ -329,6 +329,21 @@ let playToken = 0;
 // again while loading"). A different word still supersedes the current one.
 let activeSpeakKey: string | null = null;
 let activeSpeakPromise: Promise<void> | null = null;
+
+/**
+ * Release the per-clip re-entrancy lock for the request identified by `token`,
+ * but only if a newer tap hasn't already taken ownership. Every place that
+ * learns a clip has reached a terminal state — natural finish, error, or an
+ * interruption/unload that never emits a "finished" event — calls this so the
+ * lock can never get permanently stuck on one word.
+ */
+function releaseSpeakLock(token: number): void {
+  if (token === playToken) {
+    activeSpeakKey = null;
+    activeSpeakPromise = null;
+  }
+}
+
 let nativePlayer: AudioPlayer | null = null;
 // Every native player we create is tracked here until torn down. Spam-tapping
 // can create a player and supersede it before its clip finishes loading; on
@@ -452,16 +467,21 @@ async function playCached(audio: CacheValue, token: number): Promise<boolean> {
     const objectUrl = URL.createObjectURL(audio as Blob);
     const el = new Audio(objectUrl);
     webAudio = el;
-    el.onended = () => {
+    // Tear down this element and release the lock once it reaches any terminal
+    // state. `ended` is the natural finish; `error` covers decode/playback
+    // failures; `pause` covers an external interruption (another media session,
+    // an OS audio focus change) that stops the clip without ever firing `ended`.
+    // A natural end does NOT emit `pause`, so these never double-fire, and our
+    // own teardown only pauses after bumping playToken — so releaseSpeakLock
+    // (token-guarded) won't release a clip a newer tap already owns.
+    const finalize = () => {
       if (el.src.startsWith("blob:")) URL.revokeObjectURL(el.src);
       if (webAudio === el) webAudio = null;
-      // Playback finished naturally — release the re-entrancy lock so a fresh
-      // tap on the same word plays again (unless a newer tap already took over).
-      if (token === playToken) {
-        activeSpeakKey = null;
-        activeSpeakPromise = null;
-      }
+      releaseSpeakLock(token);
     };
+    el.onended = finalize;
+    el.onerror = finalize;
+    el.onpause = finalize;
     try {
       await el.play();
     } catch {
@@ -488,15 +508,29 @@ async function playCached(audio: CacheValue, token: number): Promise<boolean> {
   const player = createAudioPlayer({ uri: audio as string });
   nativePlayer = player;
   nativePlayers.add(player);
+  // Track whether this clip ever actually started so we can tell a real
+  // interruption (it was playing, then stopped) from the normal not-yet-playing
+  // states emitted while it loads.
+  let started = false;
   player.addListener("playbackStatusUpdate", (status) => {
-    if (status.didJustFinish && nativePlayer === player) {
+    if (nativePlayer !== player) return;
+    if (status.playing) started = true;
+    // Terminal: natural finish.
+    const finished = status.didJustFinish;
+    // Terminal without a "finished" event: an interruption (phone call, audio
+    // focus loss) or engine anomaly stops/unloads the clip after it began. We
+    // require `started` so the ordinary loading -> not-playing transitions don't
+    // count, and exclude buffering (a transient stall, not a stop).
+    const interrupted =
+      !finished && started && !status.playing && !status.isBuffering;
+    // `started` also guards this: before playback the player legitimately
+    // reports isLoaded:false while loading, which is not a terminal state.
+    const unloaded = !finished && started && !status.isLoaded;
+    if (finished || interrupted || unloaded) {
       teardownPlayback();
-      // Playback finished naturally — release the re-entrancy lock so a fresh
-      // tap on the same word plays again (unless a newer tap already took over).
-      if (token === playToken) {
-        activeSpeakKey = null;
-        activeSpeakPromise = null;
-      }
+      // Release the re-entrancy lock so a fresh tap on the same word plays again
+      // (unless a newer tap already took over).
+      releaseSpeakLock(token);
     }
   });
   // A newer tap may have superseded this request while the clip was loading;

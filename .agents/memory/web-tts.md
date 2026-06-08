@@ -105,9 +105,16 @@ when no playback started (no clip / failure / device fallback) — both guarded 
 `token === playToken` so a newer tap that took ownership is never clobbered.
 `stopSpeaking` clears it. **Why:** the guard MUST live in `speakWord` so every
 voice line inherits it; per-screen button-disabling can't cover the whole app and
-the token race needs a single owner. **Edge:** if a platform never emits a finish
-event the lock can stick for that one clip, but it self-heals (any different word
-or a screen blur's `stopSpeaking` clears it).
+the token race needs a single owner. **Lock release must cover ALL terminal
+states, not just natural finish** — a single token-guarded `releaseSpeakLock(token)`
+is called from web `onended`/`onerror`/`onpause` and, on native, from
+`playbackStatusUpdate` on `didJustFinish` OR an interrupted/unloaded clip. Native
+interruption detection needs a `started` latch (set when `status.playing` first
+goes true) so the normal loading transitions (`isLoaded:false`, `playing:false`
+before play) don't falsely release; only after it started does
+`!playing && !isBuffering` (or `!isLoaded`) count as a stop. Without this, an
+interrupted clip (phone call, audio-focus loss) that never emits a finish event
+left the lock stuck on that one word until a different word or screen blur.
 
 ## Pronunciation must be language-anchored or shared scripts read wrong
 
