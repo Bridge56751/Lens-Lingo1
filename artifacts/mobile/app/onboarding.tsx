@@ -79,13 +79,13 @@ type Page =
   | { kind: "welcome" }
   | { kind: "language" }
   | { kind: "level" }
-  | { kind: "feature"; slide: FeatureSlide };
+  | { kind: "features" };
 
 const PAGES: Page[] = [
   { kind: "welcome" },
   { kind: "language" },
   { kind: "level" },
-  ...FEATURES.map((slide) => ({ kind: "feature", slide }) as Page),
+  { kind: "features" },
 ];
 
 export default function OnboardingScreen() {
@@ -97,8 +97,7 @@ export default function OnboardingScreen() {
   const [index, setIndex] = useState(0);
 
   const isLast = index === PAGES.length - 1;
-  const page = PAGES[index];
-  const accent = page.kind === "feature" ? page.slide.color : colors.primary;
+  const accent = colors.primary;
 
   const langOptions = LANGUAGES.filter((l) => l !== prefs.nativeLanguage);
 
@@ -150,11 +149,7 @@ export default function OnboardingScreen() {
     }
   };
 
-  const ctaLabel = isLast
-    ? t("onboarding.getStarted")
-    : page.kind === "feature"
-      ? t("onboarding.next")
-      : t("onboarding.continue");
+  const ctaLabel = isLast ? t("onboarding.getStarted") : t("onboarding.continue");
 
   const renderWelcome = () => (
     <View style={styles.centerSlide}>
@@ -172,21 +167,39 @@ export default function OnboardingScreen() {
     </View>
   );
 
-  const renderFeature = (slide: FeatureSlide) => (
-    <View style={styles.centerSlide}>
-      <View style={[styles.iconWrap, { backgroundColor: slide.soft }]}>
-        <Text style={[styles.glyph, { color: slide.color }]}>{slide.glyph}</Text>
-        <View style={[styles.iconBadge, { backgroundColor: slide.color }]}>
-          <Ionicons name={slide.icon} size={26} color="#FFFFFF" />
-        </View>
+  const renderFeatures = () => (
+    <ScrollView
+      style={styles.formSlide}
+      contentContainerStyle={styles.formContent}
+      showsVerticalScrollIndicator={false}
+    >
+      <Text style={[styles.formTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
+        {t("onboarding.howTitle")}
+      </Text>
+      <Text style={[styles.formDesc, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+        {t("onboarding.howDesc")}
+      </Text>
+      <View style={styles.featureList}>
+        {FEATURES.map((slide) => (
+          <View
+            key={slide.titleKey}
+            style={[styles.featureRow, { backgroundColor: colors.card, borderColor: colors.border }]}
+          >
+            <View style={[styles.featureIcon, { backgroundColor: slide.soft }]}>
+              <Ionicons name={slide.icon} size={24} color={slide.color} />
+            </View>
+            <View style={styles.featureText}>
+              <Text style={[styles.featureTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
+                {t(slide.titleKey)}
+              </Text>
+              <Text style={[styles.featureDesc, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                {t(slide.descKey)}
+              </Text>
+            </View>
+          </View>
+        ))}
       </View>
-      <Text style={[styles.title, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-        {t(slide.titleKey)}
-      </Text>
-      <Text style={[styles.desc, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-        {t(slide.descKey)}
-      </Text>
-    </View>
+    </ScrollView>
   );
 
   const renderLanguage = () => (
@@ -311,8 +324,8 @@ export default function OnboardingScreen() {
         return renderLanguage();
       case "level":
         return renderLevel();
-      case "feature":
-        return renderFeature(p.slide);
+      case "features":
+        return renderFeatures();
     }
   };
 
@@ -394,26 +407,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: 36,
   },
-  iconWrap: {
-    width: 168,
-    height: 168,
-    borderRadius: 48,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 44,
-  },
   logo: { width: 156, height: 156, borderRadius: 36, marginBottom: 40 },
-  glyph: { fontSize: 64, fontWeight: "800" },
-  iconBadge: {
-    position: "absolute",
-    bottom: -14,
-    right: -14,
-    width: 56,
-    height: 56,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-  },
   title: { fontSize: 28, letterSpacing: -0.5, textAlign: "center", marginBottom: 14 },
   desc: { fontSize: 16, lineHeight: 24, textAlign: "center" },
   formSlide: { flex: 1 },
@@ -450,6 +444,25 @@ const styles = StyleSheet.create({
   },
   levelTitle: { fontSize: 19, letterSpacing: -0.3 },
   levelDesc: { fontSize: 14, lineHeight: 20 },
+  featureList: { gap: 12 },
+  featureRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 14,
+  },
+  featureIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  featureText: { flex: 1 },
+  featureTitle: { fontSize: 16, letterSpacing: -0.2, marginBottom: 3 },
+  featureDesc: { fontSize: 13, lineHeight: 18 },
   footer: { paddingHorizontal: 24, gap: 24, paddingTop: 8 },
   dots: { flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 7 },
   dot: { height: 8, borderRadius: 4 },

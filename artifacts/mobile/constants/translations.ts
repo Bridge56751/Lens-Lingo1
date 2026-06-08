@@ -89,6 +89,8 @@ export type TKey =
   | "onboarding.levelTitle"
   | "onboarding.levelDesc"
   | "onboarding.continue"
+  | "onboarding.howTitle"
+  | "onboarding.howDesc"
   | "home.scanTag"
   | "home.scanCta"
   | "home.practicing"
@@ -508,6 +510,8 @@ const en: Record<TKey, string> = {
   "onboarding.levelTitle": "What's your level?",
   "onboarding.levelDesc": "We'll match the difficulty of conversations and corrections to you.",
   "onboarding.continue": "Continue",
+  "onboarding.howTitle": "Here's how Lenso Lingo helps",
+  "onboarding.howDesc": "Four ways to learn — all in one app.",
   "home.scanTag": "SCAN",
   "home.scanCta": "Scan Object",
   "home.practicing": "Practicing {lang}",
