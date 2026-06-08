@@ -15,7 +15,7 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.lenslingo.app",
+      "bundleIdentifier": "com.lenslingo.mobile",
       "infoPlist": {
         "NSCameraUsageDescription": "Lens Lingo uses your camera to scan real-world objects so it can identify them and start a language lesson.",
         "NSMicrophoneUsageDescription": "Lens Lingo uses your microphone so you can speak with your AI tutor and practice your pronunciation.",
@@ -23,7 +23,7 @@
       }
     },
     "android": {
-      "package": "com.lenslingo.app"
+      "package": "com.lenslingo.mobile"
     },
     "web": {
       "favicon": "./assets/images/icon.png"
