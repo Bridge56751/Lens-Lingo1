@@ -46,3 +46,15 @@ covers every navigation path (just-chat AND scan→conversation), not just one b
 Use `style={{ pointerEvents: ... }}`, not the `pointerEvents` PROP (deprecated on RN Web).
 A residual "props.pointerEvents is deprecated" warning can still come from libraries
 (e.g. expo-camera), not your screen.
+
+## Camera bleeds through onto pushed screens
+The native `CameraView` preview renders ABOVE all RN views, so if the scan screen
+(presented as a `modal`) stays mounted under a `router.push`ed route, the live camera
+shows on top of the new screen (e.g. the conversation). Gating the CameraView on a
+`screenFocused` flag is not enough on its own for the post-scan handoff.
+
+**Fix / rule:** when navigating from scan into the conversation, use `router.replace`
+(not `push`) so the scan modal + its camera are torn down entirely, and set
+`screenFocused=false` right before navigating. `replace` also matches the desired UX:
+"close the camera and go directly to the conversation" — back from the chat returns to
+home, not a stale scan result.

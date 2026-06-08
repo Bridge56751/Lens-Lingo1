@@ -192,7 +192,13 @@ export default function ScanScreen() {
     if (!scanResult || isOpeningRef.current) return;
     isOpeningRef.current = true;
     setIsOpening(true);
-    router.push(`/conversation/${scanResult.conversationId}`);
+    // Unmount the live camera before navigating. The native camera preview
+    // renders above all RN views, so if the scan modal stays mounted under the
+    // conversation (router.push) the camera bleeds through on top of the chat.
+    // Replacing the route tears the scan screen (and its camera) down entirely
+    // and drops us straight into the conversation.
+    setScreenFocused(false);
+    router.replace(`/conversation/${scanResult.conversationId}`);
   };
 
   const reset = () => {
