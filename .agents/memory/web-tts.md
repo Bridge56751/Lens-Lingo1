@@ -88,6 +88,27 @@ unsafe eviction deleting a file another key still references). **Why:** cold syn
 latency is a hard floor; persisting the result means each phrase is paid for once, then
 instant and offline forever.
 
+## No stacked/doubled voices: a per-clip re-entrancy lock in speakWord
+
+**Symptom:** mashing a speaker button (vocab especially) "while loading" stacked
+several plays that overlapped into doubled voices. The monotonic play-token +
+`teardownPlayback` alone did NOT prevent it — on native, `remove()`/pause on a
+still-loading player doesn't reliably halt deferred playback, so superseded clips
+still started.
+
+**Fix:** `speakWord` holds an `activeSpeakKey` (= `clipKey(text,language)`) +
+`activeSpeakPromise`. A repeat tap for the clip already loading/playing is ignored
+(returns the in-flight promise); a DIFFERENT word still supersedes via the token
+path. The lock is released by the playback-finished handlers (web `onended`,
+native `didJustFinish`) when real audio played, else in the `speakWord` finally
+when no playback started (no clip / failure / device fallback) — both guarded by
+`token === playToken` so a newer tap that took ownership is never clobbered.
+`stopSpeaking` clears it. **Why:** the guard MUST live in `speakWord` so every
+voice line inherits it; per-screen button-disabling can't cover the whole app and
+the token race needs a single owner. **Edge:** if a platform never emits a finish
+event the lock can stick for that one clip, but it self-heals (any different word
+or a screen blur's `stopSpeaking` clears it).
+
 ## Pronunciation must be language-anchored or shared scripts read wrong
 
 **Symptom:** Japanese words "sounded Chinese." `gpt-4o-mini-tts` guesses pronunciation

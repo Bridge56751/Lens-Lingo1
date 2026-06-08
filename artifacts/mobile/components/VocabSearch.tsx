@@ -208,6 +208,7 @@ export default function VocabSearch() {
                   onPress={() => hear(w.word)}
                   activeOpacity={0.8}
                   hitSlop={8}
+                  disabled={loadingWord === w.word}
                 >
                   {loadingWord === w.word ? (
                     <ActivityIndicator size="small" color={colors.primary} />

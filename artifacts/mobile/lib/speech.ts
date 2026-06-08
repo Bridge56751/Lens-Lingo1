@@ -323,6 +323,12 @@ async function fetchAudio(
 // --- playback state (so stopSpeaking can interrupt) -------------------------
 // A token guards against races: rapid taps should only play the latest request.
 let playToken = 0;
+// The clip (text+language key) currently loading or audibly playing, plus the
+// in-flight promise for it. speakWord ignores a repeat tap for this same clip so
+// mashing a speaker button can't stack the same voice over itself ("again and
+// again while loading"). A different word still supersedes the current one.
+let activeSpeakKey: string | null = null;
+let activeSpeakPromise: Promise<void> | null = null;
 let nativePlayer: AudioPlayer | null = null;
 // Every native player we create is tracked here until torn down. Spam-tapping
 // can create a player and supersede it before its clip finishes loading; on
@@ -449,6 +455,12 @@ async function playCached(audio: CacheValue, token: number): Promise<boolean> {
     el.onended = () => {
       if (el.src.startsWith("blob:")) URL.revokeObjectURL(el.src);
       if (webAudio === el) webAudio = null;
+      // Playback finished naturally — release the re-entrancy lock so a fresh
+      // tap on the same word plays again (unless a newer tap already took over).
+      if (token === playToken) {
+        activeSpeakKey = null;
+        activeSpeakPromise = null;
+      }
     };
     try {
       await el.play();
@@ -477,7 +489,15 @@ async function playCached(audio: CacheValue, token: number): Promise<boolean> {
   nativePlayer = player;
   nativePlayers.add(player);
   player.addListener("playbackStatusUpdate", (status) => {
-    if (status.didJustFinish && nativePlayer === player) teardownPlayback();
+    if (status.didJustFinish && nativePlayer === player) {
+      teardownPlayback();
+      // Playback finished naturally — release the re-entrancy lock so a fresh
+      // tap on the same word plays again (unless a newer tap already took over).
+      if (token === playToken) {
+        activeSpeakKey = null;
+        activeSpeakPromise = null;
+      }
+    }
   });
   // A newer tap may have superseded this request while the clip was loading;
   // don't even start playback in that case.
@@ -502,12 +522,24 @@ export function speakWord(word: string, language: Language): Promise<void> {
   const text = word?.trim();
   if (!text) return Promise.resolve();
 
+  // Re-entrancy guard: if this exact clip is already loading or audibly playing,
+  // ignore the repeat tap. The slow part is the network fetch, so without this a
+  // user mashing the speaker "while loading" kicks off several plays that overlap
+  // into stacked, doubled voices. Living in speakWord means every voice line in
+  // the app (vocab, study, sentences, alphabet, scan, conversation) is covered.
+  const key = clipKey(text, language);
+  if (key === activeSpeakKey) {
+    return activeSpeakPromise ?? Promise.resolve();
+  }
+
   const token = ++playToken;
   activeTaps++;
+  activeSpeakKey = key;
   teardownPlayback();
   cancelSynth();
 
-  return (async () => {
+  let playbackStarted = false;
+  const promise = (async () => {
     try {
       const audio = await fetchAudio(text, "tap", language);
       if (token !== playToken) return; // superseded by a newer tap
@@ -518,15 +550,28 @@ export function speakWord(word: string, language: Language): Promise<void> {
       await ensureAudioMode();
       if (token !== playToken) return;
       const ok = await playCached(audio, token);
-      if (!ok && token === playToken) speakDevice(text, language);
+      if (token === playToken) {
+        if (ok) playbackStarted = true;
+        else speakDevice(text, language);
+      }
     } catch {
       if (token === playToken) speakDevice(text, language);
     } finally {
       activeTaps = Math.max(0, activeTaps - 1);
       // Resume any prefetch work that was paused while this tap ran.
       if (activeTaps === 0 && prefetchQueue.length > 0) scheduleDrain();
+      // Release the lock here only when real audio did NOT start playing (no
+      // clip, failure, or device-voice fallback) — when it did, the playback
+      // "finished" handler releases it. Never release if a newer tap already
+      // took ownership of the lock (token !== playToken).
+      if (token === playToken && !playbackStarted) {
+        activeSpeakKey = null;
+        activeSpeakPromise = null;
+      }
     }
   })();
+  activeSpeakPromise = promise;
+  return promise;
 }
 
 // --- prefetch queue --------------------------------------------------------
@@ -585,6 +630,8 @@ export function prefetchSpeech(word: string, language?: Language): void {
 export function stopSpeaking(): void {
   playToken++;
   activeTaps = 0;
+  activeSpeakKey = null;
+  activeSpeakPromise = null;
   prefetchQueue = [];
   if (prefetchTimer) {
     clearTimeout(prefetchTimer);
