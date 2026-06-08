@@ -187,7 +187,7 @@ function GridCard({
         </Text>
         {subtitle ? (
           <Text
-            style={[styles.gridSub, { color: fg, fontFamily: "Inter_600SemiBold" }]}
+            style={[styles.gridSub, { color: fg, fontFamily: "Inter_700Bold" }]}
             numberOfLines={2}
           >
             {subtitle}
