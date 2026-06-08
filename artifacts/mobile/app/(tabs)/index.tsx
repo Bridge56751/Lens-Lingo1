@@ -740,7 +740,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     marginTop: 2,
   },
-  gridCtaLabel: { fontSize: 12.5, letterSpacing: -0.3, flexShrink: 1 },
+  gridCtaLabel: { fontSize: 11.5, letterSpacing: -0.3, flex: 1, textAlign: "center" },
   statsRow: { flexDirection: "row", gap: 10 },
   tile: {
     flex: 1,
