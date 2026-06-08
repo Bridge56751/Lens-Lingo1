@@ -659,7 +659,7 @@ export default function ConversationScreen() {
               />
             )}
             contentContainerStyle={[styles.messageList, { paddingBottom: 16 }]}
-            keyboardDismissMode="interactive"
+            keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
             keyboardShouldPersistTaps="handled"
             onContentSizeChange={() =>
               flatListRef.current?.scrollToEnd({ animated: true })
