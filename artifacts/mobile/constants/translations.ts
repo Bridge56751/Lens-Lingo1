@@ -101,6 +101,8 @@ export type TKey =
   | "settings.about"
   | "settings.haptics"
   | "settings.hapticsSub"
+  | "settings.showRomanization"
+  | "settings.showRomanizationSub"
   | "settings.daily"
   | "settings.dailySub"
   | "settings.help"
@@ -273,6 +275,10 @@ export type TKey =
   | "conv.translating"
   | "conv.hideTranslation"
   | "conv.translateError"
+  | "conv.romanize"
+  | "conv.romanizing"
+  | "conv.hideRomanization"
+  | "conv.romanizeError"
   | "settings.difficulty"
   | "settings.chooseDifficulty"
   | "difficulty.Beginner"
@@ -509,6 +515,8 @@ const en: Record<TKey, string> = {
   "settings.about": "ABOUT",
   "settings.haptics": "Haptic feedback",
   "settings.hapticsSub": "Vibrate on actions",
+  "settings.showRomanization": "Show romanization",
+  "settings.showRomanizationSub": "Latin spelling for Japanese, Chinese, etc.",
   "settings.daily": "Daily reminder",
   "settings.dailySub": "Practice every day",
   "settings.help": "Help & support",
@@ -681,6 +689,10 @@ const en: Record<TKey, string> = {
   "conv.translating": "Translating\u2026",
   "conv.hideTranslation": "Hide translation",
   "conv.translateError": "Couldn\u2019t translate that. Please try again.",
+  "conv.romanize": "Romanize",
+  "conv.romanizing": "Romanizing\u2026",
+  "conv.hideRomanization": "Hide romanization",
+  "conv.romanizeError": "Couldn\u2019t romanize that. Please try again.",
   "settings.difficulty": "Difficulty",
   "settings.chooseDifficulty": "Choose difficulty",
   "difficulty.Beginner": "Beginner",

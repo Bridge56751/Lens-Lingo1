@@ -27,6 +27,23 @@ export function safeLanguage(value: string | undefined | null): string | undefin
   return SUPPORTED_LANGUAGES.has(trimmed) ? trimmed : undefined;
 }
 
+// Supported languages written in a non-Latin script, where a Latin-alphabet
+// romanization (romaji, pinyin, romaja, etc.) is a useful reading aid. The
+// remaining supported languages already use the Latin alphabet and need none.
+export const NON_LATIN_LANGUAGES = new Set([
+  "Japanese",
+  "Chinese",
+  "Korean",
+  "Arabic",
+  "Russian",
+  "Hindi",
+]);
+
+// Whether a romanization reading aid makes sense for the given language.
+export function isNonLatin(value: string | undefined | null): boolean {
+  return NON_LATIN_LANGUAGES.has((value ?? "").trim());
+}
+
 // Shared "speaking-first" guidance interpolated into the tutor system prompts
 // and per-turn reminder. The app is built around spoken practice (mic →
 // transcribe → auto-send → spoken reply), so the tutor should behave like a

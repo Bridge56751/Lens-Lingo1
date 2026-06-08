@@ -28,6 +28,7 @@ import {
 } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { usePreferences } from "@/hooks/usePreferences";
+import { useRomanizations } from "@/hooks/useRomanizations";
 import { useT } from "@/hooks/useT";
 import { speakWord, prefetchSpeech, stopSpeaking } from "@/lib/speech";
 
@@ -49,6 +50,11 @@ export default function VocabSearch() {
 
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<VocabBankWord[] | null>(null);
+  const roman = useRomanizations(
+    (results ?? []).map((w) => w.word),
+    target,
+    prefs.showRomanization,
+  );
 
   const { data: selections } = useListVocabSelections({ targetLanguage: target });
 
@@ -225,6 +231,14 @@ export default function VocabSearch() {
                   >
                     {w.word}
                   </Text>
+                  {roman.get(w.word) ? (
+                    <Text
+                      style={[styles.translation, { color: colors.primary, fontStyle: "italic", fontFamily: "Inter_400Regular" }]}
+                      numberOfLines={1}
+                    >
+                      {roman.get(w.word)}
+                    </Text>
+                  ) : null}
                   <Text
                     style={[styles.translation, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}
                     numberOfLines={1}

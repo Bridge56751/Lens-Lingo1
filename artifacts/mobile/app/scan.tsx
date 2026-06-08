@@ -29,6 +29,7 @@ import Animated, {
 import { Ionicons } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColors";
 import { usePreferences, DIFFICULTIES, type Difficulty } from "@/hooks/usePreferences";
+import { useRomanizations } from "@/hooks/useRomanizations";
 import { useT } from "@/hooks/useT";
 import { getDeviceIdSync } from "@/lib/device";
 import { speakWord, stopSpeaking, prefetchSpeech } from "@/lib/speech";
@@ -50,6 +51,11 @@ export default function ScanScreen() {
     conversationId: number;
     initialMessage: string;
   } | null>(null);
+  const itemRoman = useRomanizations(
+    scanResult ? [scanResult.itemNameTranslated] : [],
+    selectedLanguage,
+    prefs.showRomanization,
+  );
 
   const pulseAnim = useSharedValue(1);
 
@@ -252,6 +258,11 @@ export default function ScanScreen() {
               <Text style={[styles.resultTranslation, { color: colors.primary, fontFamily: "Inter_700Bold" }]}>
                 {scanResult.itemNameTranslated}
               </Text>
+              {itemRoman.get(scanResult.itemNameTranslated) ? (
+                <Text style={[styles.resultLanguage, { color: colors.primary, fontStyle: "italic", fontFamily: "Inter_500Medium" }]}>
+                  {itemRoman.get(scanResult.itemNameTranslated)}
+                </Text>
+              ) : null}
               <Text style={[styles.resultLanguage, { color: colors.mutedForeground, fontFamily: "Inter_500Medium" }]}>
                 {selectedLanguage}
               </Text>

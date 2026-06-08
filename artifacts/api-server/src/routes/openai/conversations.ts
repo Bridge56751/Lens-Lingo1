@@ -11,6 +11,7 @@ import {
 import {
   SUPPORTED_LANGUAGES,
   safeLanguage,
+  isNonLatin,
 } from "../../lib/languages";
 import {
   freeChatTutorSystemPrompt,
@@ -190,6 +191,125 @@ router.post("/openai/translate", async (req, res) => {
   } catch (err) {
     req.log.error({ err }, "Translation failed");
     res.status(502).json({ error: "Translation failed" });
+  }
+});
+
+// Standard romanization scheme to request per supported non-Latin language so
+// the model emits the conventional reading aid learners expect, not an ad-hoc one.
+const ROMANIZATION_SCHEME: Record<string, string> = {
+  Japanese: "Hepburn romaji",
+  Chinese: "Hanyu Pinyin with tone marks",
+  Korean: "the Revised Romanization of Korean",
+  Russian: "the BGN/PCGN romanization",
+  Arabic: "a standard Arabic transliteration including short vowels",
+  Hindi: "IAST transliteration",
+};
+
+function romanizeSystemPrompt(language: string): string {
+  const scheme =
+    ROMANIZATION_SCHEME[language] ?? "its standard Latin-alphabet romanization";
+  return (
+    `You are a romanization engine for ${language}. Convert the user's ${language} text into ` +
+    `${scheme}. Respond with ONLY the romanization written in the Latin alphabet — no ` +
+    `translation, no ${language} script, no quotes, no notes, no explanations. Preserve the ` +
+    `original word order.`
+  );
+}
+
+// POST /openai/romanize - transliterate non-Latin target-language text into the
+// Latin alphabet (romaji / pinyin / romaja / etc.) as an optional reading aid.
+// Accepts a single { text } or a batch { texts }. Latin-script languages pass
+// through unchanged. Mirrors /openai/translate: on-demand, not persisted.
+router.post("/openai/romanize", async (req, res) => {
+  const body = req.body as { text?: string; texts?: unknown; language?: string };
+  const language = safeLanguage(body.language);
+  if (!language) {
+    res.status(400).json({ error: "A supported language is required" });
+    return;
+  }
+
+  const isBatch = Array.isArray(body.texts);
+  const single = typeof body.text === "string" ? body.text.trim() : "";
+  const batchRaw = isBatch ? (body.texts as unknown[]) : [];
+
+  if (!isBatch && !single) {
+    res.status(400).json({ error: "text is required" });
+    return;
+  }
+  if (isBatch && batchRaw.length > 60) {
+    res.status(413).json({ error: "Too many items" });
+    return;
+  }
+  if (single.length > 2000) {
+    res.status(413).json({ error: "Text is too long" });
+    return;
+  }
+
+  const texts = isBatch
+    ? batchRaw.map((t) => (typeof t === "string" ? t.trim() : "")).slice(0, 60)
+    : [single];
+
+  // Latin-script languages need no romanization: echo the input back unchanged.
+  if (!isNonLatin(language)) {
+    if (isBatch) res.json({ romanizations: texts });
+    else res.json({ romanization: single });
+    return;
+  }
+
+  try {
+    if (!isBatch) {
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        temperature: 0,
+        messages: [
+          { role: "system", content: romanizeSystemPrompt(language) },
+          { role: "user", content: single },
+        ],
+      });
+      const romanization = completion.choices[0]?.message?.content?.trim() ?? "";
+      if (!romanization) {
+        res.status(502).json({ error: "Romanization failed" });
+        return;
+      }
+      res.json({ romanization });
+      return;
+    }
+
+    // Batch: request a JSON object with the romanizations in input order so one
+    // call covers a whole word/sentence list.
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      temperature: 0,
+      response_format: { type: "json_object" },
+      messages: [
+        {
+          role: "system",
+          content:
+            romanizeSystemPrompt(language) +
+            ` You are given a JSON array of ${language} strings. Respond with a JSON object ` +
+            `{"items": [...]} whose "items" array holds the romanization of each input string, ` +
+            `in the same order and with the same number of elements.`,
+        },
+        { role: "user", content: JSON.stringify(texts) },
+      ],
+    });
+    const content = completion.choices[0]?.message?.content?.trim() ?? "";
+    let items: unknown[] = [];
+    try {
+      const parsed = JSON.parse(content) as { items?: unknown };
+      if (Array.isArray(parsed.items)) items = parsed.items;
+    } catch {
+      items = [];
+    }
+    // Align to input length; fall back to the original text when an entry is missing.
+    const romanizations = texts.map((t, i) => {
+      const r = items[i];
+      return typeof r === "string" && r.trim() ? r.trim() : t;
+    });
+    res.json({ romanizations });
+  } catch (err) {
+    req.log.error({ err }, "Romanization failed");
+    res.status(502).json({ error: "Romanization failed" });
   }
 });
 

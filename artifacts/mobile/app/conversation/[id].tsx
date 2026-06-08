@@ -37,6 +37,7 @@ import { useT } from "@/hooks/useT";
 import { usePreferences, type Language } from "@/hooks/usePreferences";
 import { getDeviceIdSync } from "@/lib/device";
 import { authHeader } from "@/lib/authToken";
+import { romanizeText, isNonLatinLanguage } from "@/lib/romanize";
 import { speakWord, stopSpeaking, prefetchSpeech } from "@/lib/speech";
 import { fetch as expoFetch } from "expo/fetch";
 
@@ -99,16 +100,40 @@ function MessageBubble({
   colors,
   language,
   nativeLanguage,
+  showRomanization,
 }: {
   message: Message;
   colors: ReturnType<typeof useColors>;
   language: Language;
   nativeLanguage: string;
+  showRomanization: boolean;
 }) {
   const t = useT();
   const isUser = message.role === "user";
   const [translation, setTranslation] = useState<string | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
+  const [romanization, setRomanization] = useState<string | null>(null);
+  const [isRomanizing, setIsRomanizing] = useState(false);
+  // The romanize aid only makes sense for AI turns written in a non-Latin
+  // target language, and only when the user has opted in via Settings.
+  const canRomanize = showRomanization && isNonLatinLanguage(language);
+
+  const toggleRomanization = useCallback(async () => {
+    Haptics.selectionAsync();
+    if (romanization !== null) {
+      setRomanization(null);
+      return;
+    }
+    if (isRomanizing) return;
+    setIsRomanizing(true);
+    try {
+      setRomanization(await romanizeText(message.content, language));
+    } catch {
+      Alert.alert(t("conv.romanizeError"));
+    } finally {
+      setIsRomanizing(false);
+    }
+  }, [romanization, isRomanizing, message.content, language, t]);
 
   const toggleTranslation = useCallback(async () => {
     Haptics.selectionAsync();
@@ -182,6 +207,19 @@ function MessageBubble({
         >
           {message.content}
         </Text>
+        {canRomanize && romanization !== null ? (
+          <View style={[styles.translationBox, { borderTopColor: colors.border }]}>
+            <Text
+              style={[
+                styles.bubbleText,
+                styles.translationText,
+                { color: colors.mutedForeground, fontFamily: "Inter_400Regular" },
+              ]}
+            >
+              {romanization}
+            </Text>
+          </View>
+        ) : null}
         {translation !== null ? (
           <View style={[styles.translationBox, { borderTopColor: colors.border }]}>
             <Text
@@ -230,6 +268,28 @@ function MessageBubble({
                   : t("conv.translate")}
             </Text>
           </TouchableOpacity>
+          {canRomanize ? (
+            <TouchableOpacity
+              style={styles.speakButton}
+              onPress={toggleRomanization}
+              disabled={isRomanizing}
+              hitSlop={8}
+              activeOpacity={0.7}
+            >
+              {isRomanizing ? (
+                <ActivityIndicator size="small" color={colors.primary} />
+              ) : (
+                <Ionicons name="text" size={16} color={colors.primary} />
+              )}
+              <Text style={[styles.speakLabel, { color: colors.primary, fontFamily: "Inter_500Medium" }]}>
+                {isRomanizing
+                  ? t("conv.romanizing")
+                  : romanization !== null
+                    ? t("conv.hideRomanization")
+                    : t("conv.romanize")}
+              </Text>
+            </TouchableOpacity>
+          ) : null}
         </View>
       </View>
       <SparkleIcon color={colors.primary} />
@@ -656,6 +716,7 @@ export default function ConversationScreen() {
                 colors={colors}
                 language={language}
                 nativeLanguage={prefs.nativeLanguage}
+                showRomanization={prefs.showRomanization}
               />
             )}
             contentContainerStyle={[styles.messageList, { paddingBottom: 16 }]}

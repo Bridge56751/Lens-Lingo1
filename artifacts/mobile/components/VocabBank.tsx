@@ -26,6 +26,7 @@ import {
 } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { usePreferences } from "@/hooks/usePreferences";
+import { useRomanizations } from "@/hooks/useRomanizations";
 import { useT } from "@/hooks/useT";
 import { speakWord, prefetchSpeech, stopSpeaking } from "@/lib/speech";
 import { getBundledVocabBank } from "@/lib/offlineAssets";
@@ -155,6 +156,11 @@ export default function VocabBank() {
   const isEmptyBank = LEVELS.every((level) => grouped[level].length === 0);
   const [selectedLevel, setSelectedLevel] = useState<Level>("beginner");
   const visibleWords = grouped[selectedLevel];
+  const roman = useRomanizations(
+    (visibleWords ?? []).map((w) => w.word),
+    target,
+    prefs.showRomanization,
+  );
 
   if (isLoading) {
     return (
@@ -260,6 +266,14 @@ export default function VocabBank() {
                   >
                     {w.word}
                   </Text>
+                  {roman.get(w.word) ? (
+                    <Text
+                      style={[styles.translation, { color: colors.primary, fontStyle: "italic", fontFamily: "Inter_400Regular" }]}
+                      numberOfLines={1}
+                    >
+                      {roman.get(w.word)}
+                    </Text>
+                  ) : null}
                   <Text
                     style={[styles.translation, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}
                     numberOfLines={1}

@@ -31,6 +31,7 @@ import {
 } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { usePreferences } from "@/hooks/usePreferences";
+import { useRomanizations } from "@/hooks/useRomanizations";
 import { useT } from "@/hooks/useT";
 import { speakWord, prefetchSpeech, stopSpeaking } from "@/lib/speech";
 import {
@@ -80,6 +81,16 @@ export default function VocabStudyScreen() {
 
   // Per-card UI state.
   const [example, setExample] = useState<VocabExample | null>(null);
+  const wordRoman = useRomanizations(
+    card ? [card.word] : [],
+    target,
+    prefs.showRomanization,
+  );
+  const exampleRoman = useRomanizations(
+    example ? [example.sentence] : [],
+    target,
+    prefs.showRomanization,
+  );
   const [sentence, setSentence] = useState("");
   const [feedback, setFeedback] = useState<VocabCheck | null>(null);
 
@@ -386,6 +397,11 @@ export default function VocabStudyScreen() {
           <Text style={[styles.word, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
             {card.word}
           </Text>
+          {wordRoman.get(card.word) ? (
+            <Text style={[styles.translation, { color: colors.primary, fontStyle: "italic", fontFamily: "Inter_400Regular" }]}>
+              {wordRoman.get(card.word)}
+            </Text>
+          ) : null}
           <Text style={[styles.translation, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
             {card.translation}
           </Text>
@@ -417,6 +433,11 @@ export default function VocabStudyScreen() {
                   <Ionicons name="volume-high" size={18} color={colors.primary} />
                 </TouchableOpacity>
               </View>
+              {exampleRoman.get(example.sentence) ? (
+                <Text style={[styles.exampleTranslation, { color: colors.primary, fontStyle: "italic", fontFamily: "Inter_400Regular" }]}>
+                  {exampleRoman.get(example.sentence)}
+                </Text>
+              ) : null}
               <Text style={[styles.exampleTranslation, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
                 {example.translation}
               </Text>

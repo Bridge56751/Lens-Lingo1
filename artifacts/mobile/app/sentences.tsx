@@ -19,6 +19,7 @@ import {
 } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { usePreferences } from "@/hooks/usePreferences";
+import { useRomanizations } from "@/hooks/useRomanizations";
 import { useT } from "@/hooks/useT";
 import { speakWord, prefetchSpeech, stopSpeaking } from "@/lib/speech";
 import { getBundledSentenceBank } from "@/lib/offlineAssets";
@@ -97,6 +98,11 @@ export default function SentencesScreen() {
 
   const [selectedCategory, setSelectedCategory] = useState<Category>("greetings");
   const visible = grouped[selectedCategory];
+  const roman = useRomanizations(
+    (visible ?? []).map((s) => s.phrase),
+    target,
+    prefs.showRomanization,
+  );
   const isEmptyBank = CATEGORIES.every((c) => grouped[c].length === 0);
 
   // Warm the TTS cache for every phrase in the open category so the first tap on
@@ -236,6 +242,13 @@ export default function SentencesScreen() {
                 >
                   {s.phrase}
                 </Text>
+                {roman.get(s.phrase) ? (
+                  <Text
+                    style={[styles.translation, { color: colors.primary, fontStyle: "italic", fontFamily: "Inter_400Regular" }]}
+                  >
+                    {roman.get(s.phrase)}
+                  </Text>
+                ) : null}
                 <Text
                   style={[styles.translation, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}
                 >
