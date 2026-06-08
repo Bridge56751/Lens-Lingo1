@@ -10,6 +10,7 @@ import {
   TextInput,
   Alert,
   Keyboard,
+  Pressable,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect } from "expo-router";
@@ -173,7 +174,7 @@ export default function VocabSearch() {
           </Text>
         </View>
       ) : results == null ? (
-        <View style={styles.center}>
+        <Pressable style={styles.center} onPress={Keyboard.dismiss} accessible={false}>
           <View style={[styles.emptyIcon, { backgroundColor: colors.primarySoft }]}>
             <Ionicons name="search" size={30} color={colors.primary} />
           </View>
@@ -183,18 +184,19 @@ export default function VocabSearch() {
           <Text style={[styles.bigSub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
             {t("vocab.searchEmptySub", { lang: target })}
           </Text>
-        </View>
+        </Pressable>
       ) : results.length === 0 ? (
-        <View style={styles.center}>
+        <Pressable style={styles.center} onPress={Keyboard.dismiss} accessible={false}>
           <Text style={[styles.bigSub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
             {t("vocab.searchNoResults")}
           </Text>
-        </View>
+        </Pressable>
       ) : (
         <ScrollView
           contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: bottomPadding }}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
         >
           {results.map((w, i) => {
             const added = selectedByWord.has(w.word);
