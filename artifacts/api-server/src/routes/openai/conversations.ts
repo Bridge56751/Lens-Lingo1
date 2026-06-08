@@ -541,28 +541,21 @@ router.post("/openai/conversations/:id/messages", async (req, res) => {
     { role: "user", content },
   ];
 
-  // Re-anchor the target language on every turn. The learning language is driven
-  // by the user's current app settings, sent on each request. We validate it
-  // against the supported allowlist (it gets interpolated into a system message)
-  // and, when it differs from what's stored, persist it so transcription and
-  // future turns stay consistent. Fall back to the stored column, then the title.
+  // A conversation's language is intrinsic: it is set at creation (scan/free
+  // chat) and the entire message history + original system prompt are written in
+  // it. We therefore anchor every turn to the conversation's OWN language and
+  // never overwrite it from the request — otherwise the late reminder could say
+  // "reply in X" while the stored prompt + history are in Y, and the model would
+  // blend the two languages. The request value is only a last-resort fallback
+  // for legacy conversations that have neither a stored column nor a title
+  // language. (`requestedLanguage` is validated against the allowlist before it
+  // can reach a prompt.)
   const settingsLanguage =
     typeof requestedLanguage === "string" && SUPPORTED_LANGUAGES.has(requestedLanguage.trim())
       ? requestedLanguage.trim()
       : undefined;
-  if (settingsLanguage && settingsLanguage !== owned.targetLanguage) {
-    // Best-effort: persisting the language must never abort the reply turn.
-    try {
-      await db
-        .update(conversations)
-        .set({ targetLanguage: settingsLanguage })
-        .where(eq(conversations.id, id));
-    } catch (err) {
-      req.log.error({ err }, "failed to persist conversation target language");
-    }
-  }
 
-  // Re-anchor the difficulty level on every turn the same way as the language:
+  // Re-anchor the difficulty level on every turn:
   // prefer the request value (current app setting), fall back to the stored
   // column, then the default. Persist it when it changes so it stays in sync.
   const requestedDifficulty = normalizeDifficulty(rawDifficulty);
@@ -580,9 +573,9 @@ router.post("/openai/conversations/:id/messages", async (req, res) => {
     requestedDifficulty ?? normalizeDifficulty(owned.difficulty) ?? DEFAULT_DIFFICULTY;
 
   const targetLanguage =
-    settingsLanguage ||
     safeLanguage(owned.targetLanguage) ||
-    safeLanguage((owned.title ?? "").split(" • ")[1]);
+    safeLanguage((owned.title ?? "").split(" • ")[1]) ||
+    settingsLanguage;
   if (targetLanguage) {
     chatMessages.push({
       role: "system",
@@ -707,12 +700,16 @@ router.post("/openai/conversations/:id/grade", async (req, res) => {
     typeof rawNative === "string" && SUPPORTED_LANGUAGES.has(rawNative.trim())
       ? rawNative.trim()
       : undefined;
+  // Grade against the conversation's OWN languages (intrinsic, set at creation),
+  // not the caller's current app settings — otherwise a learner who later
+  // switched their global language would be graded against the wrong language.
+  // The request values are only a last-resort fallback for legacy rows.
   const targetLanguage =
-    requestedTarget ||
     safeLanguage(owned.targetLanguage) ||
     safeLanguage((owned.title ?? "").split(" • ")[1]) ||
+    requestedTarget ||
     "the target language";
-  const nativeLanguage = requestedNative || safeLanguage(owned.nativeLanguage) || "English";
+  const nativeLanguage = safeLanguage(owned.nativeLanguage) || requestedNative || "English";
   const difficulty =
     normalizeDifficulty(rawDifficulty) ?? normalizeDifficulty(owned.difficulty) ?? DEFAULT_DIFFICULTY;
 

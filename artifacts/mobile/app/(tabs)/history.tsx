@@ -159,11 +159,11 @@ export default function HistoryScreen() {
   };
 
   const switchAndOpen = (lang: Language, id: number) => {
-    // Avoid leaving target === native: if the chat's language is the user's
-    // native language, swap native to the language they were just learning.
-    if (lang === prefs.nativeLanguage) {
-      update("nativeLanguage", prefs.targetLanguage);
-    }
+    // Switch the language being learned to this chat's language so the home
+    // indicator and new scans follow what the user just chose to practice.
+    // Never touch the native language here: it drives the app's UI locale, and
+    // swapping it (the old behavior) flipped the whole app to another language
+    // when opening a chat whose language happened to match the native one.
     update("targetLanguage", lang);
     Haptics.selectionAsync();
     router.push(`/conversation/${id}`);
