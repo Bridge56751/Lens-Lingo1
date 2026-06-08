@@ -786,9 +786,12 @@ export default function ConversationScreen() {
           {(() => {
             const hasText = !!inputText.trim();
             const busy = isStreaming || isTranscribing;
-            const bg = isRecording
-              ? colors.primary
-              : busy || !hasText
+            // The idle mic is bright orange so it stands out as the primary action.
+            const MIC_ORANGE = "#FF7A1A";
+            const isMicIdle = !isRecording && !busy && !hasText;
+            const bg = isMicIdle
+              ? MIC_ORANGE
+              : busy
                 ? colors.primarySoft
                 : colors.primary;
             const onPress = isRecording
@@ -811,7 +814,7 @@ export default function ConversationScreen() {
                   <Ionicons
                     name={hasText ? "send" : "mic"}
                     size={hasText ? 24 : 30}
-                    color={hasText ? "#FFFFFF" : colors.primary}
+                    color="#FFFFFF"
                   />
                 )}
               </TouchableOpacity>
