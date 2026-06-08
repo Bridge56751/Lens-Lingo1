@@ -216,7 +216,7 @@ function GridCard({
                   style={[styles.gridCtaLabel, { color: ctaFg, fontFamily: "Inter_700Bold" }]}
                   numberOfLines={1}
                   adjustsFontSizeToFit
-                  minimumFontScale={0.8}
+                  minimumFontScale={0.7}
                 >
                   {ctaLabel}
                 </Text>
