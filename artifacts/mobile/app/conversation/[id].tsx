@@ -809,11 +809,11 @@ export default function ConversationScreen() {
                 {busy ? (
                   <ActivityIndicator size="small" color={colors.primary} />
                 ) : isRecording ? (
-                  <Ionicons name="stop" size={26} color="#FFFFFF" />
+                  <Ionicons name="stop" size={24} color="#FFFFFF" />
                 ) : (
                   <Ionicons
                     name={hasText ? "send" : "mic"}
-                    size={hasText ? 24 : 30}
+                    size={hasText ? 22 : 26}
                     color="#FFFFFF"
                   />
                 )}
@@ -1126,9 +1126,9 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   sendButton: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     alignItems: "center",
     justifyContent: "center",
   },
