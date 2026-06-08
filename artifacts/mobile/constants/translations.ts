@@ -82,6 +82,13 @@ export type TKey =
   | "onboarding.abcDesc"
   | "onboarding.sentencesTitle"
   | "onboarding.sentencesDesc"
+  | "onboarding.welcomeTitle"
+  | "onboarding.welcomeDesc"
+  | "onboarding.langTitle"
+  | "onboarding.langDesc"
+  | "onboarding.levelTitle"
+  | "onboarding.levelDesc"
+  | "onboarding.continue"
   | "home.scanTag"
   | "home.scanCta"
   | "home.practicing"
@@ -494,6 +501,13 @@ const en: Record<TKey, string> = {
   "onboarding.abcDesc": "Learn the letters and sounds of your new language with bite-sized, interactive alphabet lessons.",
   "onboarding.sentencesTitle": "Speak in Sentences",
   "onboarding.sentencesDesc": "Pick up everyday phrases to greet people, ask questions, and get around — ready for real conversations.",
+  "onboarding.welcomeTitle": "Welcome to LinguaScan",
+  "onboarding.welcomeDesc": "Learn a language from the world around you. Answer two quick questions and we'll set you up.",
+  "onboarding.langTitle": "What do you want to learn?",
+  "onboarding.langDesc": "Pick a language to start with — you can change it anytime.",
+  "onboarding.levelTitle": "What's your level?",
+  "onboarding.levelDesc": "We'll match the difficulty of conversations and corrections to you.",
+  "onboarding.continue": "Continue",
   "home.scanTag": "SCAN",
   "home.scanCta": "Scan Object",
   "home.practicing": "Practicing {lang}",
