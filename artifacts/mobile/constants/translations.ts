@@ -218,6 +218,11 @@ export type TKey =
   | "progress.more"
   | "progress.activeDays"
   | "progress.last7"
+  | "progress.lastVoice"
+  | "progress.voiceNever"
+  | "progress.voiceToday"
+  | "progress.voiceYesterday"
+  | "progress.voiceDaysAgo"
   | "challenges.title"
   | "challenges.earned"
   | "challenges.keepGoing"
@@ -643,6 +648,11 @@ const en: Record<TKey, string> = {
   "progress.more": "{n} more to hit your goal",
   "progress.activeDays": "Active days",
   "progress.last7": "Last 7 days",
+  "progress.lastVoice": "Last voice chat",
+  "progress.voiceNever": "Not yet — try speaking!",
+  "progress.voiceToday": "Today",
+  "progress.voiceYesterday": "Yesterday",
+  "progress.voiceDaysAgo": "{n} days ago",
   "challenges.title": "Challenges",
   "challenges.earned": "BADGES EARNED",
   "challenges.keepGoing": "Keep scanning and chatting to unlock more.",

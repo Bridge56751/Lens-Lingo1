@@ -21,6 +21,7 @@ import { speakWord, prefetchSpeech, stopSpeaking } from "@/lib/speech";
 import { ALPHABETS, RTL_LANGUAGES } from "@/constants/alphabets";
 import { useAlphabetProgress } from "@/lib/alphabetProgress";
 import { letterSpoken, exampleSpoken } from "@/lib/alphabetSpeech";
+import { recordPractice } from "@/lib/activity";
 
 export default function AlphabetScreen() {
   const t = useT();
@@ -110,6 +111,7 @@ export default function AlphabetScreen() {
   const goNext = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     markCompleted(index);
+    void recordPractice();
     if (!isLast) animateTo(index + 1);
   };
 

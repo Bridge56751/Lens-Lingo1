@@ -14,6 +14,7 @@ import { useListOpenaiConversations } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { useT } from "@/hooks/useT";
 import { computeStreak } from "@/lib/streak";
+import { useActivity } from "@/hooks/useActivity";
 
 type Conversation = { id: number; title: string; createdAt: string };
 
@@ -30,21 +31,32 @@ export default function ProgressScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { data } = useListOpenaiConversations();
+  const { events, lastVoiceChat } = useActivity();
 
   const list = (data ?? []) as Conversation[];
+
+  // Every practice action counts toward streaks/progress, not just newly
+  // created conversations: merge server conversation timestamps with the local
+  // practice-activity log (messages, flashcards, alphabet, sentences, voice).
+  const allDates = useMemo(
+    () => [...list.map((c) => c.createdAt), ...events],
+    [list, events],
+  );
 
   const { todayCount, streak, weekData, totalDays } = useMemo(() => {
     const today = startOfDay(new Date());
     const dayKey = (d: Date) =>
       `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
     const daysWithActivity = new Map<string, number>();
-    for (const c of list) {
-      const d = startOfDay(new Date(c.createdAt));
+    for (const iso of allDates) {
+      const parsed = new Date(iso);
+      if (isNaN(parsed.getTime())) continue;
+      const d = startOfDay(parsed);
       const k = dayKey(d);
       daysWithActivity.set(k, (daysWithActivity.get(k) ?? 0) + 1);
     }
 
-    const streakCount = computeStreak(list.map((c) => c.createdAt));
+    const streakCount = computeStreak(allDates);
 
     const week: { label: string; count: number; isToday: boolean }[] = [];
     const labels = ["S", "M", "T", "W", "T", "F", "S"];
@@ -65,7 +77,22 @@ export default function ProgressScreen() {
       weekData: week,
       totalDays: daysWithActivity.size,
     };
-  }, [list]);
+  }, [allDates]);
+
+  const lastVoiceLabel = useMemo(() => {
+    if (!lastVoiceChat) return t("progress.voiceNever");
+    const diff = Math.max(
+      0,
+      Math.round(
+        (startOfDay(new Date()).getTime() -
+          startOfDay(new Date(lastVoiceChat)).getTime()) /
+          86400000,
+      ),
+    );
+    if (diff === 0) return t("progress.voiceToday");
+    if (diff === 1) return t("progress.voiceYesterday");
+    return t("progress.voiceDaysAgo", { n: diff });
+  }, [lastVoiceChat, t]);
 
   const topPadding = Platform.OS === "web" ? 16 : insets.top;
   const bottomPadding = Platform.OS === "web" ? 34 : insets.bottom + 16;
@@ -126,6 +153,21 @@ export default function ProgressScreen() {
             </Text>
             <Text style={[styles.statLabel, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
               {t("progress.activeDays")}
+            </Text>
+          </View>
+        </View>
+
+        {/* Last voice chat */}
+        <View style={[styles.voiceCard, { backgroundColor: colors.card }]}>
+          <View style={[styles.voiceIcon, { backgroundColor: "#DBEAFE" }]}>
+            <Ionicons name="mic" size={20} color="#2563EB" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.voiceLabel, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+              {t("progress.lastVoice")}
+            </Text>
+            <Text style={[styles.voiceValue, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
+              {lastVoiceLabel}
             </Text>
           </View>
         </View>
@@ -209,6 +251,23 @@ const styles = StyleSheet.create({
   },
   statValue: { fontSize: 24 },
   statLabel: { fontSize: 12 },
+
+  voiceCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    padding: 16,
+    borderRadius: 18,
+  },
+  voiceIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  voiceLabel: { fontSize: 12 },
+  voiceValue: { fontSize: 18, marginTop: 2 },
 
   chartCard: { padding: 18, borderRadius: 18, gap: 14 },
   chartTitle: { fontSize: 15 },

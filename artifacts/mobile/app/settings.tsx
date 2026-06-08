@@ -35,6 +35,7 @@ import { useAuth, useClerk, useUser } from "@clerk/expo";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { resetDeviceId } from "@/lib/device";
 import { computeStreak, computeBestStreak } from "@/lib/streak";
+import { useActivity } from "@/hooks/useActivity";
 import { StreakCards } from "@/components/StreakCards";
 import { LinearGradient } from "expo-linear-gradient";
 import {
@@ -153,6 +154,7 @@ export default function SettingsScreen() {
   const t = useT();
   const { prefs, update } = usePreferences();
   const { data: conversations } = useListOpenaiConversations();
+  const { events: activityEvents } = useActivity();
   const { isSignedIn } = useAuth();
   const { user } = useUser();
   const { signOut } = useClerk();
@@ -165,11 +167,16 @@ export default function SettingsScreen() {
   // mark that must never drop even if conversations are deleted, so persist it
   // in preferences (this used to live on the home screen).
   const { streak, bestStreak } = useMemo(() => {
-    const dates = (conversations ?? []).map((c) => c.createdAt);
+    // Count ANY practice toward the streak: merge server conversation
+    // timestamps with the local practice-activity log.
+    const dates = [
+      ...(conversations ?? []).map((c) => c.createdAt),
+      ...activityEvents,
+    ];
     const current = computeStreak(dates);
     const best = Math.max(computeBestStreak(dates), current, prefs.bestStreak ?? 0);
     return { streak: current, bestStreak: best };
-  }, [conversations, prefs.bestStreak]);
+  }, [conversations, activityEvents, prefs.bestStreak]);
 
   useEffect(() => {
     if (bestStreak > (prefs.bestStreak ?? 0)) {

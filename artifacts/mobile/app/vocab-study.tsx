@@ -43,6 +43,7 @@ import {
   EmptyTranscriptError,
 } from "@/lib/audio";
 import { getOfflineExample, setOfflineExample } from "@/lib/offlineExamples";
+import { recordPractice, markVoiceChat } from "@/lib/activity";
 
 // Target languages whose scripts a default Latin/QWERTY keyboard can't type, so
 // the learner needs to add that keyboard to their device (or use the mic).
@@ -213,6 +214,7 @@ export default function VocabStudyScreen() {
       });
       // Ignore a result that arrives after the user has moved to another card.
       if (currentWordRef.current !== wordAtRequest) return;
+      void recordPractice();
       setFeedback(result);
       Haptics.notificationAsync(
         result.correct
@@ -258,6 +260,7 @@ export default function VocabStudyScreen() {
       const transcript = await transcribeAudio(uri, target);
       // Ignore a transcript that arrives after the user moved to another card.
       if (currentWordRef.current !== wordAtRequest) return;
+      void markVoiceChat();
       // Drop the transcription into the input so the learner can review and
       // edit before submitting it for the (strict) grade.
       setSentence((prev) => (prev.trim() ? `${prev.trim()} ${transcript}` : transcript));

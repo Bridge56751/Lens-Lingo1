@@ -1,7 +1,7 @@
 - [Supabase from Replit](supabase-connection.md) — direct DB host is IPv6-only/unreachable; must use Session pooler + split-password env pattern.
 - [Expo voice flow](expo-voice-flow.md) — web blob: audio read, auto-send after transcribe, send mutex; test mic on device not web preview.
 - [Tutor language anchoring](tutor-language-anchoring.md) — always reply in target language via strong prompt + post-user system reminder; persist target/native lang as columns, sanitize vision labels.
-- [Day streak](day-streak.md) — derived from conversation createdAt dates (no DB column); consecutive-days-ending-today/yesterday semantics; celebrate animation once per new calendar day.
+- [Day streak](day-streak.md) — derived from conversation createdAt + local practice-activity log (any practice counts); no DB column; consecutive-days semantics; serialize activity writes; don't double-count voice.
 - [Practice flashcards](practice-flashcards.md) — don't rebuild card deck on React Query refetch (resets progress); shared TTS lives in lib/speech.ts.
 - [SSE streaming contract](sse-streaming-contract.md) — chat stream emits {content}/{done}/{error}; client MUST handle {error} or server failures look like a silent no-reply.
 - [TTS architecture](web-tts.md) — natural voice via OpenAI POST /api/openai/tts (gpt-4o-mini-tts) played by shared speakWord, device synth fallback; never call expo-speech/synth in screens.

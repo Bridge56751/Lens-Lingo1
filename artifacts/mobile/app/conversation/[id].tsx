@@ -39,6 +39,7 @@ import { getDeviceIdSync } from "@/lib/device";
 import { authHeader } from "@/lib/authToken";
 import { romanizeText, isNonLatinLanguage } from "@/lib/romanize";
 import { speakWord, stopSpeaking, prefetchSpeech } from "@/lib/speech";
+import { recordPractice, markVoiceChat } from "@/lib/activity";
 import { fetch as expoFetch } from "expo/fetch";
 
 type Message = {
@@ -522,6 +523,7 @@ export default function ConversationScreen() {
       const data = (await response.json()) as { text?: string };
       const transcript = data.text?.trim();
       if (transcript) {
+        void markVoiceChat();
         // Auto-send so speaking is a natural back-and-forth: stop talking → AI replies.
         const existing = inputTextRef.current.trim();
         setInputText("");
@@ -541,6 +543,7 @@ export default function ConversationScreen() {
     const text = raw.trim();
     if (!text || sendingRef.current) return;
     sendingRef.current = true;
+    void recordPractice();
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 

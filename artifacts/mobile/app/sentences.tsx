@@ -24,6 +24,7 @@ import { RomanizeToggle } from "@/components/RomanizeToggle";
 import { useT } from "@/hooks/useT";
 import { speakWord, prefetchSpeech, stopSpeaking } from "@/lib/speech";
 import { getBundledSentenceBank } from "@/lib/offlineAssets";
+import { recordPractice } from "@/lib/activity";
 
 const CATEGORIES = [
   "greetings",
@@ -118,6 +119,7 @@ export default function SentencesScreen() {
 
   const hear = async (phrase: string) => {
     Haptics.selectionAsync();
+    void recordPractice();
     const id = ++speakReq.current;
     setLoadingPhrase(phrase);
     try {
