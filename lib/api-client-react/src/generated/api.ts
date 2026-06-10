@@ -24,6 +24,7 @@ import type {
   AccountLinkInput,
   AccountLinkResult,
   ApiError,
+  GetMyPlanParams,
   GetSentenceBankParams,
   GetVocabBankParams,
   HealthStatus,
@@ -1558,22 +1559,29 @@ export const useLinkAccount = <TError = ErrorType<OpenaiError>,
       return useMutation(getLinkAccountMutationOptions(options));
     }
 
-export const getGetMyPlanUrl = () => {
+export const getGetMyPlanUrl = (params?: GetMyPlanParams,) => {
+  const normalizedParams = new URLSearchParams();
 
+  Object.entries(params || {}).forEach(([key, value]) => {
 
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
 
+  const stringifiedParams = normalizedParams.toString();
 
-  return `/api/me/plan`
+  return stringifiedParams.length > 0 ? `/api/me/plan?${stringifiedParams}` : `/api/me/plan`
 }
 
 /**
- * Returns the plan ('free' | 'pro') and proSince timestamp the server has recorded for the resolved customer (signed-in account row or anonymous device row). The server keeps this in sync from RevenueCat webhooks, so it is the authoritative, tamper-resistant view of entitlement for server-side surfaces. Resolves to 'free' when no customer is attached.
+ * Returns the plan ('free' | 'pro') and proSince timestamp the server has recorded for the resolved customer (signed-in account row or anonymous device row). The server keeps this in sync from RevenueCat webhooks, so it is the authoritative, tamper-resistant view of entitlement for server-side surfaces. Resolves to 'free' when no customer is attached. Pass `refresh=true` right after a purchase/restore to bypass the server's short cache and force a live RevenueCat reconcile.
 
  * @summary Get the server's view of the caller's subscription plan
  */
-export const getMyPlan = async ( options?: RequestInit): Promise<PlanStatus> => {
+export const getMyPlan = async (params?: GetMyPlanParams, options?: RequestInit): Promise<PlanStatus> => {
 
-  return customFetch<PlanStatus>(getGetMyPlanUrl(),
+  return customFetch<PlanStatus>(getGetMyPlanUrl(params),
   {
     ...options,
     method: 'GET'
@@ -1586,23 +1594,23 @@ export const getMyPlan = async ( options?: RequestInit): Promise<PlanStatus> => 
 
 
 
-export const getGetMyPlanQueryKey = () => {
+export const getGetMyPlanQueryKey = (params?: GetMyPlanParams,) => {
     return [
-    `/api/me/plan`
+    `/api/me/plan`, ...(params ? [params] : [])
     ] as const;
     }
 
 
-export const getGetMyPlanQueryOptions = <TData = Awaited<ReturnType<typeof getMyPlan>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMyPlan>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetMyPlanQueryOptions = <TData = Awaited<ReturnType<typeof getMyPlan>>, TError = ErrorType<unknown>>(params?: GetMyPlanParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMyPlan>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetMyPlanQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getGetMyPlanQueryKey(params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyPlan>>> = ({ signal }) => getMyPlan({ signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyPlan>>> = ({ signal }) => getMyPlan(params, { signal, ...requestOptions });
 
 
 
@@ -1620,11 +1628,11 @@ export type GetMyPlanQueryError = ErrorType<unknown>
  */
 
 export function useGetMyPlan<TData = Awaited<ReturnType<typeof getMyPlan>>, TError = ErrorType<unknown>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMyPlan>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+ params?: GetMyPlanParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMyPlan>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getGetMyPlanQueryOptions(options)
+  const queryOptions = getGetMyPlanQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

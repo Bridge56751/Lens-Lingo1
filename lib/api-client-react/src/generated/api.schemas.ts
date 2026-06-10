@@ -237,3 +237,11 @@ targetLanguage: string;
 nativeLanguage: string;
 };
 
+export type GetMyPlanParams = {
+/**
+ * When true, bypasses the server's plan cache and forces a live RevenueCat pull so a just-completed purchase/restore reflects immediately.
+
+ */
+refresh?: boolean;
+};
+

@@ -4,6 +4,7 @@ import Purchases, { type PurchasesPackage } from "react-native-purchases";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import Constants from "expo-constants";
 import { useAuth } from "@clerk/expo";
+import { getMyPlan } from "@workspace/api-client-react";
 import { getDeviceIdSync } from "@/lib/device";
 
 const REVENUECAT_TEST_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_TEST_API_KEY;
@@ -48,6 +49,18 @@ export function initializeRevenueCat() {
   console.log("Configured RevenueCat");
 }
 
+/**
+ * Forces the server to pull the latest entitlement from RevenueCat's REST API
+ * and reconcile `customers.plan`, bypassing the server's short plan cache via
+ * `?refresh=true`. Best-effort: failures are swallowed so a flaky network
+ * never surfaces an error after an otherwise-successful purchase/restore.
+ */
+function refreshServerPlan() {
+  getMyPlan({ refresh: true }).catch((e) => {
+    console.warn("Server plan refresh failed", e);
+  });
+}
+
 function useSubscriptionContext() {
   const customerInfoQuery = useQuery({
     queryKey: ["revenuecat", "customer-info"],
@@ -72,14 +85,23 @@ function useSubscriptionContext() {
       const { customerInfo } = await Purchases.purchasePackage(packageToPurchase);
       return customerInfo;
     },
-    onSuccess: () => customerInfoQuery.refetch(),
+    onSuccess: () => {
+      customerInfoQuery.refetch();
+      // Force the server to reconcile its authoritative plan from RevenueCat
+      // immediately (bypassing its short cache) so Pro unlocks across every
+      // server-backed surface without waiting for the cache TTL.
+      refreshServerPlan();
+    },
   });
 
   const restoreMutation = useMutation({
     mutationFn: async () => {
       return Purchases.restorePurchases();
     },
-    onSuccess: () => customerInfoQuery.refetch(),
+    onSuccess: () => {
+      customerInfoQuery.refetch();
+      refreshServerPlan();
+    },
   });
 
   const isSubscribed =

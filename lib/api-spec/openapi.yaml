@@ -484,6 +484,18 @@ paths:
         device row). The server keeps this in sync from RevenueCat webhooks, so
         it is the authoritative, tamper-resistant view of entitlement for
         server-side surfaces. Resolves to 'free' when no customer is attached.
+        Pass `refresh=true` right after a purchase/restore to bypass the
+        server's short cache and force a live RevenueCat reconcile.
+      parameters:
+        - name: refresh
+          in: query
+          required: false
+          description: >
+            When true, bypasses the server's plan cache and forces a live
+            RevenueCat pull so a just-completed purchase/restore reflects
+            immediately.
+          schema:
+            type: boolean
       responses:
         "200":
           description: Plan status

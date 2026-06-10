@@ -10,6 +10,7 @@ export * from './accountDeleteResult';
 export * from './accountLinkInput';
 export * from './accountLinkResult';
 export * from './apiError';
+export * from './getMyPlanParams';
 export * from './getSentenceBankParams';
 export * from './getVocabBankParams';
 export * from './healthStatus';

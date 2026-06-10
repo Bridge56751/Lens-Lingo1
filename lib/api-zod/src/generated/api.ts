@@ -310,10 +310,14 @@ export const LinkAccountResponse = zod.object({
 
 
 /**
- * Returns the plan ('free' | 'pro') and proSince timestamp the server has recorded for the resolved customer (signed-in account row or anonymous device row). The server keeps this in sync from RevenueCat webhooks, so it is the authoritative, tamper-resistant view of entitlement for server-side surfaces. Resolves to 'free' when no customer is attached.
+ * Returns the plan ('free' | 'pro') and proSince timestamp the server has recorded for the resolved customer (signed-in account row or anonymous device row). The server keeps this in sync from RevenueCat webhooks, so it is the authoritative, tamper-resistant view of entitlement for server-side surfaces. Resolves to 'free' when no customer is attached. Pass `refresh=true` right after a purchase/restore to bypass the server's short cache and force a live RevenueCat reconcile.
 
  * @summary Get the server's view of the caller's subscription plan
  */
+export const GetMyPlanQueryParams = zod.object({
+  "refresh": zod.coerce.boolean().optional().describe('When true, bypasses the server\'s plan cache and forces a live RevenueCat pull so a just-completed purchase\/restore reflects immediately.\n')
+})
+
 export const GetMyPlanResponse = zod.object({
   "plan": zod.string().describe('Subscription tier — \'free\' or \'pro\'.'),
   "proSince": zod.coerce.date().nullish().describe('When the customer became pro; null while on the free plan.')
