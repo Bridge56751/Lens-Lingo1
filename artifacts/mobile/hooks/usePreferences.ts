@@ -19,6 +19,22 @@ export const LANGUAGES = [
 
 export type Language = (typeof LANGUAGES)[number];
 
+export const LANGUAGE_FLAGS: Record<Language, string> = {
+  English: "🇬🇧",
+  Spanish: "🇪🇸",
+  French: "🇫🇷",
+  German: "🇩🇪",
+  Italian: "🇮🇹",
+  Portuguese: "🇵🇹",
+  Japanese: "🇯🇵",
+  Chinese: "🇨🇳",
+  Korean: "🇰🇷",
+  Arabic: "🇸🇦",
+  Russian: "🇷🇺",
+  Hindi: "🇮🇳",
+  Dutch: "🇳🇱",
+};
+
 export const DIFFICULTIES = ["Beginner", "Intermediate", "Advanced"] as const;
 export type Difficulty = (typeof DIFFICULTIES)[number];
 

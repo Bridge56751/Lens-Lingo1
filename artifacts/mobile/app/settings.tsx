@@ -23,6 +23,7 @@ import { useColors } from "@/hooks/useColors";
 import {
   usePreferences,
   LANGUAGES,
+  LANGUAGE_FLAGS,
   DIFFICULTIES,
   type Language,
   type Difficulty,
@@ -929,6 +930,7 @@ export default function SettingsScreen() {
                     }}
                     activeOpacity={0.7}
                   >
+                    <Text style={styles.langFlag}>{LANGUAGE_FLAGS[lang as Language]}</Text>
                     <View style={{ flex: 1 }}>
                       <Text
                         style={[
@@ -1151,6 +1153,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 12,
   },
+  langFlag: { fontSize: 24, marginRight: 12 },
   langOptionText: { fontSize: 15 },
   langOptionSub: { fontSize: 11, marginTop: 2 },
 });

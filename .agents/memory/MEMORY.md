@@ -17,4 +17,5 @@
 - [Pre-bundled offline](prebundled-offline.md) — all 12 langs' content+TTS ship in-app (no Download tap); generate FOREGROUND chunked (env SIGKILLs bg procs), atomic writes, enforce 6/12 cardinality, gate error UI on isError&&!data.
 - [Offline learning pack](offline-pack.md) — Settings Download caches text (persisted RQ cache) + audio (cacheAudioClips); content screens MUST gate errors on isError&&!data; download is run-token guarded.
 - [Expo iOS permissions](expo-ios-permissions.md) — app uses camera/mic/photo only; declare iOS strings in ios.infoPlist; image-picker cameraPermission:false BLOCKS perms; don't ship unused expo-* deps (auto-inject usage strings).
+- [Language flags](language-flags.md) — per-language flags come from one shared LANGUAGE_FLAGS map; emoji flags render on iOS/web but NOT Android (shows region code) — use images if Android matters.
 - [Romanization aid](romanization-aid.md) — optional non-Latin reading aid (on-demand /openai/romanize); disabled React Query still exposes cached data, so gate reads/renders on the live toggle, not just query.data.

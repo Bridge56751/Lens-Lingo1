@@ -20,7 +20,7 @@ import {
   useStartOpenaiChat,
 } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
-import { usePreferences, LANGUAGES, type Language } from "@/hooks/usePreferences";
+import { usePreferences, LANGUAGES, LANGUAGE_FLAGS, type Language } from "@/hooks/usePreferences";
 import { useT } from "@/hooks/useT";
 import { usePro } from "@/hooks/usePro";
 import { LOCALE_NATIVE_NAMES, type Locale } from "@/constants/translations";
@@ -574,6 +574,7 @@ export default function HomeScreen() {
                     }}
                     activeOpacity={0.7}
                   >
+                    <Text style={styles.langFlag}>{LANGUAGE_FLAGS[lang as Language]}</Text>
                     <View style={{ flex: 1 }}>
                       <Text
                         style={[
@@ -649,6 +650,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 12,
   },
+  langFlag: { fontSize: 24, marginRight: 12 },
   langOptionText: { fontSize: 15 },
   langOptionSub: { fontSize: 11, marginTop: 2 },
   greetingRight: { flexDirection: "row", alignItems: "center", gap: 10 },

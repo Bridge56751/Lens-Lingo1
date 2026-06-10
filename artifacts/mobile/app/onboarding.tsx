@@ -19,6 +19,7 @@ import { useColors } from "@/hooks/useColors";
 import {
   usePreferences,
   LANGUAGES,
+  LANGUAGE_FLAGS,
   DIFFICULTIES,
   type Language,
   type Difficulty,
@@ -270,6 +271,7 @@ export default function OnboardingScreen() {
                   style={styles.chipCheck}
                 />
               ) : null}
+              <Text style={styles.chipFlag}>{LANGUAGE_FLAGS[lang]}</Text>
               <Text
                 numberOfLines={1}
                 style={[
@@ -458,6 +460,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   chipCheck: { position: "absolute", top: 10, right: 10 },
+  chipFlag: { fontSize: 30, marginBottom: 8 },
   chipNative: { fontSize: 19, letterSpacing: -0.3 },
   chipName: { fontSize: 13, marginTop: 2 },
   levelList: { gap: 12 },
