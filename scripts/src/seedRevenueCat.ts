@@ -17,6 +17,8 @@ import {
   listPackages,
   createPackages,
   attachProductsToPackage,
+  detachProductsFromPackage,
+  getProductsFromPackage,
   type App,
   type Product,
   type Project,
@@ -33,8 +35,16 @@ const APP_STORE_BUNDLE_ID = "com.lenslingo.mobile";
 const PLAY_STORE_APP_NAME = "Lens Lingo (Android)";
 const PLAY_STORE_PACKAGE_NAME = "com.lenslingo.mobile";
 
-const ENTITLEMENT_IDENTIFIER = "pro";
-const ENTITLEMENT_DISPLAY_NAME = "Lens Lingo Pro";
+// NOTE: The connection's access token is scoped to this single pre-existing
+// project, so a fresh project is not possible. The project already contains a
+// legacy entitlement whose display_name is "Lens Lingo Pro". RevenueCat
+// enforces uniqueness on the entitlement display_name (and surfaces a
+// misleading `resource_already_exists` error pointing at `lookup_key`), so the
+// new entitlement must use a DISTINCT display_name. We provision a clean
+// "pro_access" entitlement (display "Pro Access") as the Pro feature gate; the
+// client checks the "pro_access" identifier.
+const ENTITLEMENT_IDENTIFIER = "pro_access";
+const ENTITLEMENT_DISPLAY_NAME = "Pro Access";
 
 const OFFERING_IDENTIFIER = "default";
 const OFFERING_DISPLAY_NAME = "Lens Lingo Pro";
@@ -368,6 +378,31 @@ async function seedRevenueCat() {
       if (error) throw new Error(`Failed to create package ${tier.packageIdentifier}`);
       console.log(`Created package ${tier.packageIdentifier}:`, newPackage.id);
       pkg = newPackage;
+    }
+
+    // The package may already hold legacy products (one per store). Only one
+    // product per store can be attached, so detach anything that isn't one of
+    // our intended products before attaching the new, correctly-priced set.
+    const desiredProductIds = new Set([testStoreProduct.id, appStoreProduct.id, playStoreProduct.id]);
+    const { data: currentPkgProducts } = await getProductsFromPackage({
+      client,
+      path: { project_id: project.id, package_id: pkg.id },
+      query: { limit: 50 },
+    });
+    const staleProductIds = (currentPkgProducts?.items ?? [])
+      .map((assoc) => (assoc as { product?: { id?: string } }).product?.id)
+      .filter((id): id is string => !!id && !desiredProductIds.has(id));
+
+    if (staleProductIds.length > 0) {
+      const { error: detachError } = await detachProductsFromPackage({
+        client,
+        path: { project_id: project.id, package_id: pkg.id },
+        body: { product_ids: staleProductIds },
+      });
+      if (detachError) {
+        throw new Error(`Failed to detach legacy products from package ${tier.packageIdentifier}`);
+      }
+      console.log(`Detached ${staleProductIds.length} legacy product(s) from package ${tier.packageIdentifier}`);
     }
 
     const { error: attachPackageError } = await attachProductsToPackage({

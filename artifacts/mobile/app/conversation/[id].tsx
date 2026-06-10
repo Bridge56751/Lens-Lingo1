@@ -34,6 +34,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { getGetOpenaiConversationQueryKey } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { useT } from "@/hooks/useT";
+import { ProGuard } from "@/components/ProGuard";
 import { usePreferences, type Language } from "@/hooks/usePreferences";
 import { getDeviceIdSync } from "@/lib/device";
 import { authHeader } from "@/lib/authToken";
@@ -308,6 +309,14 @@ function TypingIndicator({ colors }: { colors: ReturnType<typeof useColors> }) {
 }
 
 export default function ConversationScreen() {
+  return (
+    <ProGuard>
+      <ConversationScreenInner />
+    </ProGuard>
+  );
+}
+
+function ConversationScreenInner() {
   const t = useT();
   const { prefs } = usePreferences();
   const colors = useColors();

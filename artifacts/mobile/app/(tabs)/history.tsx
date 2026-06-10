@@ -20,6 +20,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { getListOpenaiConversationsQueryKey } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { useT } from "@/hooks/useT";
+import { usePro } from "@/hooks/usePro";
 import { usePreferences, LANGUAGES, type Language } from "@/hooks/usePreferences";
 
 type Conversation = {
@@ -133,6 +134,7 @@ export default function HistoryScreen() {
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
   const { prefs, update } = usePreferences();
+  const { requirePro } = usePro();
 
   const { data: conversations, isLoading, refetch } = useListOpenaiConversations();
   const { mutate: deleteConversation } = useDeleteOpenaiConversation();
@@ -172,6 +174,8 @@ export default function HistoryScreen() {
   };
 
   const handleOpen = (item: Conversation) => {
+    // Continuing any past conversation is a Pro feature.
+    if (!requirePro()) return;
     const chatLang = resolveLanguage(item.title);
     // Open directly when it matches the current learning language (or we can't
     // recognize what language the chat is in).

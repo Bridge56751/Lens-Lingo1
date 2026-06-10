@@ -34,6 +34,7 @@ isValidation = true
 [agent]
 stack = "PNPM_WORKSPACE"
 expertMode = true
+integrations = ["revenuecat:1.0.0"]
 
 [postMerge]
 path = "scripts/post-merge.sh"
@@ -61,3 +62,14 @@ externalPort = 3001
 
 [nix]
 channel = "stable-25_05"
+
+[userenv]
+
+[userenv.shared]
+REVENUECAT_PROJECT_ID = "proj2151b34d"
+REVENUECAT_TEST_STORE_APP_ID = "appe152d5d663"
+REVENUECAT_APPLE_APP_STORE_APP_ID = "appcfd9e1fb53"
+REVENUECAT_GOOGLE_PLAY_STORE_APP_ID = "app48462c1065"
+EXPO_PUBLIC_REVENUECAT_TEST_API_KEY = "test_JUauyYpBkNCCZEQoOsoknqIGPkd"
+EXPO_PUBLIC_REVENUECAT_IOS_API_KEY = "appl_keeMQALfNFfsqAaEamIXdNlrDYX"
+EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY = "goog_FHRzVHSHiYSdHEdwTgEqJcgEnck"

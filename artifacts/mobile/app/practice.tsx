@@ -15,6 +15,7 @@ import { useListVocabulary } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { usePreferences } from "@/hooks/usePreferences";
 import { useT } from "@/hooks/useT";
+import { ProGuard } from "@/components/ProGuard";
 import { speakWord, stopSpeaking } from "@/lib/speech";
 
 type Entry = {
@@ -40,6 +41,14 @@ function shuffle<T>(arr: T[]): T[] {
 const cardKey = (e: Entry) => `${e.language}::${e.word}`;
 
 export default function PracticeScreen() {
+  return (
+    <ProGuard>
+      <PracticeScreenInner />
+    </ProGuard>
+  );
+}
+
+function PracticeScreenInner() {
   const t = useT();
   const colors = useColors();
   const insets = useSafeAreaInsets();

@@ -12,6 +12,7 @@
 - [Account deletion ordering](account-deletion.md) — delete server account row before Clerk user.delete() (token revokes); user.delete() failure must surface; resetDeviceId must also setDeviceId on the API client.
 - [Optional Clerk auth](optional-clerk-auth.md) — never gate the app tree behind ClerkLoaded; first-sign-in account/link must wait for a token + only close on success or device data is silently dropped.
 - [Expo Router tab list refresh](expo-router-tab-refetch.md) — tabs stay mounted, so list queries don't auto-refetch on tab focus; use useFocusEffect(refetch) after items are created elsewhere.
+- [Expo Router typed routes](expo-router-typed-routes.md) — a newly-added app/*.tsx route fails typecheck until the Expo dev server regenerates route types; restart the mobile workflow before the final typecheck.
 - [Drizzle push is all-or-nothing](drizzle-push-blocked.md) — one interactive (truncate) prompt aborts the whole push; land a lone additive column via manual ALTER + run it on prod too.
 - [Pre-bundled offline](prebundled-offline.md) — all 12 langs' content+TTS ship in-app (no Download tap); generate FOREGROUND chunked (env SIGKILLs bg procs), atomic writes, enforce 6/12 cardinality, gate error UI on isError&&!data.
 - [Offline learning pack](offline-pack.md) — Settings Download caches text (persisted RQ cache) + audio (cacheAudioClips); content screens MUST gate errors on isError&&!data; download is run-token guarded.

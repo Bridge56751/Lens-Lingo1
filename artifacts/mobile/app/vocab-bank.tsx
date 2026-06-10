@@ -5,9 +5,18 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColors";
 import { useT } from "@/hooks/useT";
+import { ProGuard } from "@/components/ProGuard";
 import VocabBank from "@/components/VocabBank";
 
 export default function VocabBankScreen() {
+  return (
+    <ProGuard>
+      <VocabBankScreenInner />
+    </ProGuard>
+  );
+}
+
+function VocabBankScreenInner() {
   const t = useT();
   const colors = useColors();
   const insets = useSafeAreaInsets();

@@ -23,6 +23,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { getOrCreateDeviceId } from "@/lib/device";
 import { setMobileAuthTokenGetter } from "@/lib/authToken";
 import { setAuthTokenGetter, setBaseUrl, setDeviceId } from "@workspace/api-client-react";
+import { initializeRevenueCat, SubscriptionProvider } from "@/lib/revenuecat";
 
 const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 const CLERK_PROXY_URL = process.env.EXPO_PUBLIC_CLERK_PROXY_URL || undefined;
@@ -30,6 +31,15 @@ const CLERK_PROXY_URL = process.env.EXPO_PUBLIC_CLERK_PROXY_URL || undefined;
 // Configure API base URL for Expo (runs outside the web proxy)
 if (process.env.EXPO_PUBLIC_DOMAIN) {
   setBaseUrl(`https://${process.env.EXPO_PUBLIC_DOMAIN}`);
+}
+
+// Configure RevenueCat once at startup. Wrapped in try/catch so a missing key or
+// unsupported environment never crashes the app — entitlement checks then simply
+// resolve to "not subscribed".
+try {
+  initializeRevenueCat();
+} catch (e) {
+  console.warn("RevenueCat init failed", e);
 }
 
 SplashScreen.preventAutoHideAsync();
@@ -98,6 +108,10 @@ function RootLayoutNav() {
       <Stack.Screen name="practice" options={{ presentation: "card" }} />
       <Stack.Screen name="progress" options={{ presentation: "card" }} />
       <Stack.Screen name="conversation/[id]" options={{ presentation: "card" }} />
+      <Stack.Screen
+        name="paywall"
+        options={{ presentation: "modal", animation: "slide_from_bottom" }}
+      />
     </Stack>
   );
 }
@@ -142,11 +156,13 @@ export default function RootLayout() {
             client={queryClient}
             persistOptions={{ persister: asyncStoragePersister, maxAge: OFFLINE_MAX_AGE }}
           >
-            <GestureHandlerRootView>
-              <KeyboardProvider>
-                <RootLayoutNav />
-              </KeyboardProvider>
-            </GestureHandlerRootView>
+            <SubscriptionProvider>
+              <GestureHandlerRootView>
+                <KeyboardProvider>
+                  <RootLayoutNav />
+                </KeyboardProvider>
+              </GestureHandlerRootView>
+            </SubscriptionProvider>
           </PersistQueryClientProvider>
         </ErrorBoundary>
       </SafeAreaProvider>

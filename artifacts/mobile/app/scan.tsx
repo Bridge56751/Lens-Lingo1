@@ -32,6 +32,7 @@ import { usePreferences, DIFFICULTIES, type Difficulty } from "@/hooks/usePrefer
 import { useRomanizations } from "@/hooks/useRomanizations";
 import { RomanizeToggle } from "@/components/RomanizeToggle";
 import { useT } from "@/hooks/useT";
+import { usePro } from "@/hooks/usePro";
 import { getDeviceIdSync } from "@/lib/device";
 import { speakWord, stopSpeaking, prefetchSpeech } from "@/lib/speech";
 
@@ -42,6 +43,7 @@ export default function ScanScreen() {
   const cameraRef = useRef<CameraView>(null);
   const [permission, requestPermission] = useCameraPermissions();
   const { prefs, update } = usePreferences();
+  const { requirePro } = usePro();
   const selectedLanguage = prefs.targetLanguage;
   const [levelPickerOpen, setLevelPickerOpen] = useState(false);
   const [scannedImage, setScannedImage] = useState<string | null>(null);
@@ -191,6 +193,8 @@ export default function ScanScreen() {
 
   const openConversation = () => {
     if (!scanResult || isOpeningRef.current) return;
+    // Tutor chat is a Pro feature — route free users to the paywall.
+    if (!requirePro()) return;
     isOpeningRef.current = true;
     setIsOpening(true);
     // Unmount the live camera before navigating. The native camera preview
@@ -218,6 +222,8 @@ export default function ScanScreen() {
 
   const speakSample = () => {
     if (!scanResult) return;
+    // Hearing the example sentence aloud is Pro; reading it stays free.
+    if (!requirePro()) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     speakWord(scanResult.initialMessage, selectedLanguage);
   };

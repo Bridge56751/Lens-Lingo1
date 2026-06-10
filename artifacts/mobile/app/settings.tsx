@@ -28,6 +28,7 @@ import {
   type Difficulty,
 } from "@/hooks/usePreferences";
 import { useT } from "@/hooks/useT";
+import { useSubscription, REVENUECAT_ENTITLEMENT_IDENTIFIER } from "@/lib/revenuecat";
 import { LOCALE_NATIVE_NAMES, type Locale } from "@/constants/translations";
 import { useListOpenaiConversations, useDeleteAccount, setDeviceId } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -153,6 +154,7 @@ export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const t = useT();
   const { prefs, update } = usePreferences();
+  const { isSubscribed, restore, isRestoring } = useSubscription();
   const { data: conversations } = useListOpenaiConversations();
   const { events: activityEvents } = useActivity();
   const { isSignedIn } = useAuth();
@@ -188,6 +190,22 @@ export default function SettingsScreen() {
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState(prefs.displayName);
   const [deleting, setDeleting] = useState(false);
+  const [restoreResult, setRestoreResult] = useState<
+    "restored" | "nothing" | "error" | null
+  >(null);
+
+  const handleRestore = async () => {
+    if (isRestoring) return;
+    Haptics.selectionAsync();
+    try {
+      const info = await restore();
+      const active =
+        info?.entitlements?.active?.[REVENUECAT_ENTITLEMENT_IDENTIFIER] !== undefined;
+      setRestoreResult(active ? "restored" : "nothing");
+    } catch {
+      setRestoreResult("error");
+    }
+  };
 
   // Offline download state, scoped to the current language pair.
   const queryClient = useQueryClient();
@@ -472,6 +490,149 @@ export default function SettingsScreen() {
           )}
         </LinearGradient>
 
+        {/* Membership */}
+        <Section
+          title={t("pro.section")}
+          icon="sparkles"
+          iconBg={colors.primary}
+          iconColor="#FFFFFF"
+          defaultOpen
+        >
+          <Row
+            icon={isSubscribed ? "checkmark-circle" : "sparkles"}
+            iconBg={colors.primary}
+            iconColor="#FFFFFF"
+            title={isSubscribed ? t("pro.statusActiveTitle") : t("pro.upgradeTitle")}
+            subtitle={isSubscribed ? t("pro.statusActiveSub") : t("pro.upgradeSub")}
+            right={
+              isSubscribed ? undefined : (
+                <Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />
+              )
+            }
+            onPress={
+              isSubscribed
+                ? undefined
+                : () => {
+                    Haptics.selectionAsync();
+                    router.push("/paywall");
+                  }
+            }
+          />
+          <Row
+            icon="refresh"
+            iconBg="#64748B"
+            iconColor="#FFFFFF"
+            title={t("pro.restoreTitle")}
+            subtitle={t("pro.restoreSub")}
+            right={
+              isRestoring ? (
+                <ActivityIndicator size="small" color={colors.mutedForeground} />
+              ) : (
+                <Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />
+              )
+            }
+            onPress={handleRestore}
+          />
+        </Section>
+
+        {/* Restore result (custom modal, not Alert) */}
+        <Modal
+          visible={restoreResult !== null}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setRestoreResult(null)}
+        >
+          <Pressable
+            style={{
+              flex: 1,
+              backgroundColor: "rgba(0,0,0,0.45)",
+              justifyContent: "center",
+              paddingHorizontal: 36,
+            }}
+            onPress={() => setRestoreResult(null)}
+          >
+            <Pressable
+              style={{
+                borderRadius: 22,
+                padding: 22,
+                alignItems: "center",
+                gap: 10,
+                backgroundColor: colors.card,
+              }}
+              onPress={(e) => e.stopPropagation()}
+            >
+              <View
+                style={{
+                  width: 60,
+                  height: 60,
+                  borderRadius: 30,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: restoreResult === "error" ? "#FEE2E2" : colors.primarySoft,
+                }}
+              >
+                <Ionicons
+                  name={
+                    restoreResult === "restored"
+                      ? "checkmark-circle"
+                      : restoreResult === "error"
+                        ? "alert-circle"
+                        : "information-circle"
+                  }
+                  size={32}
+                  color={restoreResult === "error" ? "#DC2626" : colors.primary}
+                />
+              </View>
+              <Text
+                style={{
+                  fontSize: 17,
+                  textAlign: "center",
+                  color: colors.foreground,
+                  fontFamily: "Inter_700Bold",
+                }}
+              >
+                {restoreResult === "restored"
+                  ? t("paywall.restoredTitle")
+                  : restoreResult === "nothing"
+                    ? t("paywall.nothingTitle")
+                    : t("paywall.errorTitle")}
+              </Text>
+              <Text
+                style={{
+                  fontSize: 14,
+                  textAlign: "center",
+                  lineHeight: 20,
+                  color: colors.mutedForeground,
+                  fontFamily: "Inter_400Regular",
+                }}
+              >
+                {restoreResult === "restored"
+                  ? t("paywall.restoredBody")
+                  : restoreResult === "nothing"
+                    ? t("paywall.nothingBody")
+                    : t("paywall.errorBody")}
+              </Text>
+              <TouchableOpacity
+                style={{
+                  alignSelf: "stretch",
+                  height: 46,
+                  borderRadius: 999,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginTop: 8,
+                  backgroundColor: colors.primary,
+                }}
+                onPress={() => setRestoreResult(null)}
+                activeOpacity={0.9}
+              >
+                <Text style={{ fontSize: 15, color: "#FFFFFF", fontFamily: "Inter_700Bold" }}>
+                  {t("paywall.gotIt")}
+                </Text>
+              </TouchableOpacity>
+            </Pressable>
+          </Pressable>
+        </Modal>
+
         {/* Activity */}
         <StreakCards streak={streak} bestStreak={bestStreak} />
         <Row
@@ -730,6 +891,12 @@ export default function SettingsScreen() {
                     onPress={() => {
                       if (active) {
                         setPicker(null);
+                        return;
+                      }
+                      // Free users are locked to one language; switching is Pro.
+                      if (!isSubscribed) {
+                        setPicker(null);
+                        router.push("/paywall");
                         return;
                       }
                       const apply = () => {

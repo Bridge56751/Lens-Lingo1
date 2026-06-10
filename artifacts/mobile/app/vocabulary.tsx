@@ -17,12 +17,21 @@ import {
 import { useColors } from "@/hooks/useColors";
 import { usePreferences } from "@/hooks/usePreferences";
 import { useT } from "@/hooks/useT";
+import { ProGuard } from "@/components/ProGuard";
 import VocabBank from "@/components/VocabBank";
 import VocabSearch from "@/components/VocabSearch";
 
 type Tab = "myWords" | "bank" | "search";
 
 export default function VocabularyScreen() {
+  return (
+    <ProGuard>
+      <VocabularyScreenInner />
+    </ProGuard>
+  );
+}
+
+function VocabularyScreenInner() {
   const t = useT();
   const colors = useColors();
   const insets = useSafeAreaInsets();

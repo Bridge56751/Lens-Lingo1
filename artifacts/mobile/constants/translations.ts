@@ -384,7 +384,50 @@ export type TKey =
   | "sentences.directions"
   | "sentences.dining"
   | "sentences.shopping"
-  | "sentences.emergency";
+  | "sentences.emergency"
+  | "pro.badge"
+  | "pro.guardTitle"
+  | "pro.guardBody"
+  | "pro.upgradeCta"
+  | "pro.maybeLater"
+  | "pro.section"
+  | "pro.statusActiveTitle"
+  | "pro.statusActiveSub"
+  | "pro.upgradeTitle"
+  | "pro.upgradeSub"
+  | "pro.restoreTitle"
+  | "pro.restoreSub"
+  | "paywall.title"
+  | "paywall.subtitle"
+  | "paywall.feature.chat"
+  | "paywall.feature.voice"
+  | "paywall.feature.vocab"
+  | "paywall.feature.audio"
+  | "paywall.feature.languages"
+  | "paywall.weekly"
+  | "paywall.monthly"
+  | "paywall.annual"
+  | "paywall.perWeek"
+  | "paywall.perMonth"
+  | "paywall.perYear"
+  | "paywall.bestValue"
+  | "paywall.loading"
+  | "paywall.unavailable"
+  | "paywall.subscribe"
+  | "paywall.restore"
+  | "paywall.terms"
+  | "paywall.successTitle"
+  | "paywall.successBody"
+  | "paywall.restoredTitle"
+  | "paywall.restoredBody"
+  | "paywall.nothingTitle"
+  | "paywall.nothingBody"
+  | "paywall.errorTitle"
+  | "paywall.errorBody"
+  | "paywall.gotIt"
+  | "paywall.activeTitle"
+  | "paywall.activeBody"
+  | "paywall.done";
 
 const en: Record<TKey, string> = {
   "vocab.bankTitle": "Word Bank",
@@ -754,6 +797,52 @@ const en: Record<TKey, string> = {
   "badge.consistent.desc": "Practice on 7 different days",
   "badge.century.title": "Century",
   "badge.century.desc": "Collect 100 unique words",
+  "pro.badge": "PRO",
+  "pro.guardTitle": "This is a Pro feature",
+  "pro.guardBody":
+    "Upgrade to LinguaScan Pro to unlock tutor chat, voice practice, your Word Bank, and all 12 languages.",
+  "pro.upgradeCta": "Upgrade to Pro",
+  "pro.maybeLater": "Maybe later",
+  "pro.section": "Membership",
+  "pro.statusActiveTitle": "LinguaScan Pro",
+  "pro.statusActiveSub": "You have full access — thank you!",
+  "pro.upgradeTitle": "Upgrade to Pro",
+  "pro.upgradeSub": "Unlock tutor chat, voice, Word Bank & all languages",
+  "pro.restoreTitle": "Restore purchases",
+  "pro.restoreSub": "Already subscribed? Restore your Pro access",
+  "paywall.title": "Unlock LinguaScan Pro",
+  "paywall.subtitle":
+    "Learn faster with your AI tutor, voice practice, and every language.",
+  "paywall.feature.chat": "Chat with your AI language tutor",
+  "paywall.feature.voice": "Speaking practice with the mic, everywhere",
+  "paywall.feature.vocab": "Build your personal Word Bank",
+  "paywall.feature.audio": "Hear every example sentence aloud",
+  "paywall.feature.languages": "All 12 languages, switch anytime",
+  "paywall.weekly": "Weekly",
+  "paywall.monthly": "Monthly",
+  "paywall.annual": "Annual",
+  "paywall.perWeek": " / week",
+  "paywall.perMonth": " / month",
+  "paywall.perYear": " / year",
+  "paywall.bestValue": "BEST VALUE",
+  "paywall.loading": "Loading plans…",
+  "paywall.unavailable": "Plans aren't available right now. Please try again later.",
+  "paywall.subscribe": "Subscribe",
+  "paywall.restore": "Restore purchases",
+  "paywall.terms":
+    "Subscriptions renew automatically until cancelled. Manage or cancel anytime in your store account settings.",
+  "paywall.successTitle": "You're Pro!",
+  "paywall.successBody": "Everything is unlocked. Enjoy your learning!",
+  "paywall.restoredTitle": "Purchases restored",
+  "paywall.restoredBody": "Your Pro access is active again.",
+  "paywall.nothingTitle": "Nothing to restore",
+  "paywall.nothingBody": "We couldn't find a previous purchase on this account.",
+  "paywall.errorTitle": "Something went wrong",
+  "paywall.errorBody": "We couldn't complete that just now. Please try again.",
+  "paywall.gotIt": "Got it",
+  "paywall.activeTitle": "You're already Pro",
+  "paywall.activeBody": "You have full access to every feature.",
+  "paywall.done": "Done",
 };
 
 type Dict = Partial<Record<TKey, string>>;

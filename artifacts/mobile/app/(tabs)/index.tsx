@@ -22,6 +22,7 @@ import {
 import { useColors } from "@/hooks/useColors";
 import { usePreferences, LANGUAGES, type Language } from "@/hooks/usePreferences";
 import { useT } from "@/hooks/useT";
+import { usePro } from "@/hooks/usePro";
 import { LOCALE_NATIVE_NAMES, type Locale } from "@/constants/translations";
 import { useAlphabetProgress } from "@/lib/alphabetProgress";
 
@@ -243,6 +244,7 @@ export default function HomeScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { prefs, update } = usePreferences();
+  const { isPro, requirePro } = usePro();
   const [langPickerOpen, setLangPickerOpen] = useState(false);
   const { languageProgress } = useAlphabetProgress();
   const alphabet = languageProgress(prefs.targetLanguage);
@@ -275,6 +277,8 @@ export default function HomeScreen() {
   const startChat = useStartOpenaiChat();
   const goFreeChat = () => {
     if (startChat.isPending) return;
+    // Tutor chat is Pro-only — route free users to the paywall.
+    if (!requirePro()) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     startChat.mutate(
       {
@@ -441,7 +445,7 @@ export default function HomeScreen() {
               ctaBg="#FFFFFF"
               ctaFg="#047857"
               watermarkIcon="book"
-              onPress={() => router.push("/vocabulary")}
+              onPress={() => requirePro(() => router.push("/vocabulary"))}
             />
           </View>
         </View>
@@ -516,6 +520,12 @@ export default function HomeScreen() {
                     onPress={() => {
                       if (active) {
                         setLangPickerOpen(false);
+                        return;
+                      }
+                      // Free users are locked to one language; switching is Pro.
+                      if (!isPro) {
+                        setLangPickerOpen(false);
+                        router.push("/paywall");
                         return;
                       }
                       const apply = () => {

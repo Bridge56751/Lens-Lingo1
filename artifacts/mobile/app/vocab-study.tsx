@@ -36,6 +36,7 @@ import { usePreferences } from "@/hooks/usePreferences";
 import { useRomanizations } from "@/hooks/useRomanizations";
 import { RomanizeToggle } from "@/components/RomanizeToggle";
 import { useT } from "@/hooks/useT";
+import { ProGuard } from "@/components/ProGuard";
 import { speakWord, prefetchSpeech, stopSpeaking } from "@/lib/speech";
 import {
   transcribeAudio,
@@ -59,6 +60,14 @@ const NON_LATIN_LANGS = new Set([
 const INPUT_ACCESSORY_ID = "vocabSentenceInput";
 
 export default function VocabStudyScreen() {
+  return (
+    <ProGuard>
+      <VocabStudyScreenInner />
+    </ProGuard>
+  );
+}
+
+function VocabStudyScreenInner() {
   const t = useT();
   const colors = useColors();
   const insets = useSafeAreaInsets();
