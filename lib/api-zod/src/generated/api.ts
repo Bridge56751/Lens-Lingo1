@@ -310,6 +310,17 @@ export const LinkAccountResponse = zod.object({
 
 
 /**
+ * Returns the plan ('free' | 'pro') and proSince timestamp the server has recorded for the resolved customer (signed-in account row or anonymous device row). The server keeps this in sync from RevenueCat webhooks, so it is the authoritative, tamper-resistant view of entitlement for server-side surfaces. Resolves to 'free' when no customer is attached.
+
+ * @summary Get the server's view of the caller's subscription plan
+ */
+export const GetMyPlanResponse = zod.object({
+  "plan": zod.string().describe('Subscription tier — \'free\' or \'pro\'.'),
+  "proSince": zod.coerce.date().nullish().describe('When the customer became pro; null while on the free plan.')
+})
+
+
+/**
  * Deletes the customer row resolved for the caller (either the signed-in account row or the anonymous device row), cascade-deleting all of their conversations, messages, and vocabulary selections. Idempotent — when no customer row is resolved it is a clean no-op. Clerk user deletion and local-storage wiping are handled client-side.
 
  * @summary Permanently delete the caller's account and all associated data

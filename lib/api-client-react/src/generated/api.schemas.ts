@@ -28,6 +28,13 @@ export interface AccountDeleteResult {
   deleted: boolean;
 }
 
+export interface PlanStatus {
+  /** Subscription tier — 'free' or 'pro'. */
+  plan: string;
+  /** When the customer became pro; null while on the free plan. */
+  proSince?: string | null;
+}
+
 export interface ScanRequest {
   /** Base64-encoded image data */
   imageBase64: string;

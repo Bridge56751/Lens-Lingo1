@@ -1,8 +1,10 @@
-import React, { createContext, useContext } from "react";
+import React, { createContext, useContext, useEffect } from "react";
 import { Platform } from "react-native";
 import Purchases, { type PurchasesPackage } from "react-native-purchases";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import Constants from "expo-constants";
+import { useAuth } from "@clerk/expo";
+import { getDeviceIdSync } from "@/lib/device";
 
 const REVENUECAT_TEST_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_TEST_API_KEY;
 const REVENUECAT_IOS_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY;
@@ -98,9 +100,39 @@ function useSubscriptionContext() {
 type SubscriptionContextValue = ReturnType<typeof useSubscriptionContext>;
 const Context = createContext<SubscriptionContextValue | null>(null);
 
+/**
+ * Associates the RevenueCat app user id with our customer identity so the
+ * server's RevenueCat webhook can resolve the right `customers` row. We log in
+ * with the signed-in Clerk user id when available, otherwise the anonymous
+ * device id — the same keys the server matches on (`auth_user_id` / `device_id`).
+ * Calling logIn when signed out (no Clerk session) falls back to the device id
+ * so an anonymous purchaser is still keyed to a row the server can find.
+ */
+function RevenueCatIdentitySync() {
+  const { isLoaded, userId } = useAuth();
+
+  useEffect(() => {
+    // Wait for Clerk to resolve so we don't briefly log in as the device id and
+    // then immediately switch to the user id on a signed-in cold start.
+    if (!isLoaded) return;
+    const appUserId = userId ?? getDeviceIdSync();
+    if (!appUserId) return;
+    Purchases.logIn(appUserId).catch((e) => {
+      console.warn("RevenueCat logIn failed", e);
+    });
+  }, [isLoaded, userId]);
+
+  return null;
+}
+
 export function SubscriptionProvider({ children }: { children: React.ReactNode }) {
   const value = useSubscriptionContext();
-  return <Context.Provider value={value}>{children}</Context.Provider>;
+  return (
+    <Context.Provider value={value}>
+      <RevenueCatIdentitySync />
+      {children}
+    </Context.Provider>
+  );
 }
 
 export function useSubscription() {

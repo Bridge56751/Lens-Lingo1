@@ -7,6 +7,7 @@ import sentencesRouter from "./sentences";
 import openaiConversationsRouter from "./openai/conversations";
 import openaiTtsRouter from "./openai/tts";
 import accountRouter from "./account";
+import revenuecatRouter from "./revenuecat";
 
 const router: IRouter = Router();
 
@@ -18,5 +19,6 @@ router.use(sentencesRouter);
 router.use(openaiConversationsRouter);
 router.use(openaiTtsRouter);
 router.use(accountRouter);
+router.use(revenuecatRouter);
 
 export default router;

@@ -36,6 +36,7 @@ import type {
   OpenaiGradeInput,
   OpenaiMessage,
   OpenaiMessageInput,
+  PlanStatus,
   ScanRequest,
   ScanResult,
   SentenceBank,
@@ -1556,6 +1557,85 @@ export const useLinkAccount = <TError = ErrorType<OpenaiError>,
       > => {
       return useMutation(getLinkAccountMutationOptions(options));
     }
+
+export const getGetMyPlanUrl = () => {
+
+
+
+
+  return `/api/me/plan`
+}
+
+/**
+ * Returns the plan ('free' | 'pro') and proSince timestamp the server has recorded for the resolved customer (signed-in account row or anonymous device row). The server keeps this in sync from RevenueCat webhooks, so it is the authoritative, tamper-resistant view of entitlement for server-side surfaces. Resolves to 'free' when no customer is attached.
+
+ * @summary Get the server's view of the caller's subscription plan
+ */
+export const getMyPlan = async ( options?: RequestInit): Promise<PlanStatus> => {
+
+  return customFetch<PlanStatus>(getGetMyPlanUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMyPlanQueryKey = () => {
+    return [
+    `/api/me/plan`
+    ] as const;
+    }
+
+
+export const getGetMyPlanQueryOptions = <TData = Awaited<ReturnType<typeof getMyPlan>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMyPlan>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMyPlanQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyPlan>>> = ({ signal }) => getMyPlan({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMyPlan>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMyPlanQueryResult = NonNullable<Awaited<ReturnType<typeof getMyPlan>>>
+export type GetMyPlanQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get the server's view of the caller's subscription plan
+ */
+
+export function useGetMyPlan<TData = Awaited<ReturnType<typeof getMyPlan>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMyPlan>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMyPlanQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 
 export const getDeleteAccountUrl = () => {
 

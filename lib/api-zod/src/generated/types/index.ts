@@ -23,6 +23,7 @@ export * from './openaiGradeInput';
 export * from './openaiGradeMistake';
 export * from './openaiMessage';
 export * from './openaiMessageInput';
+export * from './planStatus';
 export * from './scanRequest';
 export * from './scanResult';
 export * from './sentenceBank';
