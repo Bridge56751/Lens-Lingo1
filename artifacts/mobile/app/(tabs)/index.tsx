@@ -240,15 +240,15 @@ function GridCard({
     </TouchableOpacity>
   );
 
-  if (!badge) return card;
-
   return (
     <View style={styles.gridCardWrap}>
       {card}
-      <View style={styles.gridBadge} pointerEvents="none">
-        <Ionicons name="star" size={10} color="#FFFFFF" />
-        <Text style={styles.gridBadgeText}>{badge}</Text>
-      </View>
+      {badge ? (
+        <View style={styles.gridBadge} pointerEvents="none">
+          <Ionicons name="star" size={10} color="#FFFFFF" />
+          <Text style={styles.gridBadgeText}>{badge}</Text>
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -761,7 +761,9 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_700Bold",
   },
   gridCard: {
-    flex: 1,
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: "auto",
     minHeight: 210,
     borderRadius: 22,
     padding: 16,
