@@ -466,9 +466,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   chipCheck: { position: "absolute", top: 10, right: 10 },
-  chipFlag: { fontSize: 30, marginBottom: 8 },
-  chipNative: { fontSize: 19, letterSpacing: -0.3 },
-  chipName: { fontSize: 13, marginTop: 2 },
+  chipFlag: { fontSize: 30, marginBottom: 8, textAlign: "left", writingDirection: "ltr" },
+  chipNative: { fontSize: 19, letterSpacing: -0.3, textAlign: "left", writingDirection: "ltr" },
+  chipName: { fontSize: 13, marginTop: 2, textAlign: "left", writingDirection: "ltr" },
   lockNote: {
     flexDirection: "row",
     alignItems: "center",
