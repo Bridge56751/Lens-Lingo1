@@ -135,6 +135,7 @@ function GridCard({
   progress,
   onPress,
   loading,
+  badge,
 }: {
   tag: string;
   title: string;
@@ -152,8 +153,9 @@ function GridCard({
   progress?: number;
   onPress: () => void;
   loading?: boolean;
+  badge?: string;
 }) {
-  return (
+  const card = (
     <TouchableOpacity
       style={[styles.gridCard, { backgroundColor: bg, opacity: loading ? 0.7 : 1 }]}
       onPress={() => {
@@ -236,6 +238,18 @@ function GridCard({
         )}
       </View>
     </TouchableOpacity>
+  );
+
+  if (!badge) return card;
+
+  return (
+    <View style={styles.gridCardWrap}>
+      {card}
+      <View style={styles.gridBadge} pointerEvents="none">
+        <Ionicons name="sparkles" size={11} color="#B45309" />
+        <Text style={styles.gridBadgeText}>{badge}</Text>
+      </View>
+    </View>
   );
 }
 
@@ -413,6 +427,7 @@ export default function HomeScreen() {
               ctaBg="#FFFFFF"
               ctaFg="#C2410C"
               watermark="AI"
+              badge={t("home.recommendedBadge")}
               onPress={goFreeChat}
               loading={startChat.isPending}
             />
@@ -445,6 +460,7 @@ export default function HomeScreen() {
               ctaBg="#FFFFFF"
               ctaFg="#047857"
               watermarkIcon="book"
+              badge={t("home.recommendedBadge")}
               onPress={() => requirePro(() => router.push("/vocabulary"))}
             />
           </View>
@@ -719,6 +735,31 @@ const styles = StyleSheet.create({
   pathProgressTrack: { height: 8, borderRadius: 4, overflow: "hidden" },
   pathProgressFill: { height: "100%", borderRadius: 4 },
   gridRow: { flexDirection: "row", gap: 14 },
+  gridCardWrap: { flex: 1 },
+  gridBadge: {
+    position: "absolute",
+    top: -9,
+    right: 10,
+    zIndex: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#000",
+    shadowOpacity: 0.18,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 5,
+  },
+  gridBadgeText: {
+    fontSize: 10,
+    letterSpacing: 0.5,
+    color: "#B45309",
+    fontFamily: "Inter_700Bold",
+  },
   gridCard: {
     flex: 1,
     minHeight: 210,

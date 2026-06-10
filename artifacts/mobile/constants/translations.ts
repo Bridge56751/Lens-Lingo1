@@ -64,6 +64,7 @@ export type TKey =
   | "home.pathChatTag"
   | "home.pathChatTitle"
   | "home.pathChatSub"
+  | "home.recommendedBadge"
   | "home.pathChatCta"
   | "home.chatErrorTitle"
   | "home.chatErrorBody"
@@ -535,6 +536,7 @@ const en: Record<TKey, string> = {
   "home.pathSentencesSub": "Greet \u00b7 Ask \u00b7 Get Around",
   "home.pathSentencesCta": "Learn Phrases",
   "home.pathChatTag": "AI POWERED",
+  "home.recommendedBadge": "RECOMMENDED",
   "home.pathChatTitle": "Full Conversation",
   "home.pathChatSub": "Talk freely with your AI tutor",
   "home.pathChatCta": "Start Chat",
