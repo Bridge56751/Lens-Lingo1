@@ -246,7 +246,7 @@ function GridCard({
     <View style={styles.gridCardWrap}>
       {card}
       <View style={styles.gridBadge} pointerEvents="none">
-        <Ionicons name="sparkles" size={11} color="#B45309" />
+        <Ionicons name="star" size={10} color="#FFFFFF" />
         <Text style={styles.gridBadgeText}>{badge}</Text>
       </View>
     </View>
@@ -427,7 +427,7 @@ export default function HomeScreen() {
               ctaBg="#FFFFFF"
               ctaFg="#C2410C"
               watermark="AI"
-              badge={t("home.recommendedBadge")}
+              badge={t("pro.badge")}
               onPress={goFreeChat}
               loading={startChat.isPending}
             />
@@ -460,7 +460,7 @@ export default function HomeScreen() {
               ctaBg="#FFFFFF"
               ctaFg="#047857"
               watermarkIcon="book"
-              badge={t("home.recommendedBadge")}
+              badge={t("pro.badge")}
               onPress={() => requirePro(() => router.push("/vocabulary"))}
             />
           </View>
@@ -747,17 +747,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 9,
     paddingVertical: 4,
     borderRadius: 999,
-    backgroundColor: "#FFFFFF",
-    shadowColor: "#000",
-    shadowOpacity: 0.18,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 5,
+    backgroundColor: "#7C5CFF",
+    shadowColor: "#7C5CFF",
+    shadowOpacity: 0.45,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 6,
   },
   gridBadgeText: {
     fontSize: 10,
-    letterSpacing: 0.5,
-    color: "#B45309",
+    letterSpacing: 0.6,
+    color: "#FFFFFF",
     fontFamily: "Inter_700Bold",
   },
   gridCard: {
