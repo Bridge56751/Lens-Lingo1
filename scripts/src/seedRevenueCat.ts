@@ -250,7 +250,8 @@ async function seedRevenueCat() {
         throw new Error(`Failed to add test store prices for ${tier.key}`);
       }
     } else {
-      console.log(`Added test store price for ${tier.key}:`, JSON.stringify(priceData?.prices));
+      const prices = (priceData as TestStorePricesResponse | undefined)?.prices;
+      console.log(`Added test store price for ${tier.key}:`, JSON.stringify(prices));
     }
   };
 

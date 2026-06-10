@@ -15,7 +15,16 @@ async function getAccessToken(): Promise<string> {
     throw new Error("X_REPLIT_TOKEN / REPLIT_CONNECTORS_HOSTNAME not found for repl/depl");
   }
 
-  const connectionSettings = await fetch(
+  type ConnectionResponse = {
+    items?: Array<{
+      settings?: {
+        access_token?: string;
+        oauth?: { credentials?: { access_token?: string } };
+      };
+    }>;
+  };
+
+  const body = (await fetch(
     "https://" +
       hostname +
       "/api/v2/connection?include_secrets=true&connector_names=revenuecat",
@@ -25,13 +34,11 @@ async function getAccessToken(): Promise<string> {
         X_REPLIT_TOKEN: xReplitToken,
       },
     },
-  )
-    .then((res) => res.json())
-    .then((data) => data.items?.[0]);
+  ).then((res) => res.json())) as ConnectionResponse;
 
+  const settings = body.items?.[0]?.settings;
   const accessToken =
-    connectionSettings?.settings?.access_token ||
-    connectionSettings?.settings?.oauth?.credentials?.access_token;
+    settings?.access_token || settings?.oauth?.credentials?.access_token;
 
   if (!accessToken) {
     throw new Error("RevenueCat not connected");
