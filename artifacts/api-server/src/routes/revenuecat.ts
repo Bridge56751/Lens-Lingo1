@@ -13,6 +13,42 @@ const router = Router();
 const PRO_ENTITLEMENT_ID = "pro_access";
 
 /**
+ * How long a successful RevenueCat pull stays "fresh". Within this window
+ * `/me/plan` serves the already-reconciled stored plan without hitting
+ * RevenueCat's REST API (~1–2s round-trip), making repeat reads near-instant
+ * and cutting outbound calls / rate-limit pressure when the app polls.
+ */
+const PLAN_CACHE_TTL_MS = 45_000;
+
+/**
+ * Per-RevenueCat-customer freshness map: appUserId → epoch ms of the last
+ * successful RevenueCat reconcile. Module-level so it survives across requests
+ * (single-process server). Entries are pruned lazily once expired.
+ */
+const planFreshUntil = new Map<string, number>();
+
+function isPlanFresh(appUserId: string): boolean {
+  const until = planFreshUntil.get(appUserId);
+  if (until == null) return false;
+  if (until <= Date.now()) {
+    planFreshUntil.delete(appUserId);
+    return false;
+  }
+  return true;
+}
+
+function markPlanFresh(appUserId: string): void {
+  // Opportunistically drop expired entries so the map can't grow unbounded.
+  if (planFreshUntil.size > 1000) {
+    const now = Date.now();
+    for (const [key, until] of planFreshUntil) {
+      if (until <= now) planFreshUntil.delete(key);
+    }
+  }
+  planFreshUntil.set(appUserId, Date.now() + PLAN_CACHE_TTL_MS);
+}
+
+/**
  * Asks RevenueCat (its REST API, the authoritative source) whether the given
  * app user id currently holds the Pro entitlement.
  *
@@ -97,10 +133,15 @@ router.get("/me/plan", async (req, res) => {
 
   // The RevenueCat app user id is the same id the mobile client logged in with.
   const appUserId = req.authUserId ?? req.deviceId;
-  if (appUserId) {
+  // Clients append `?refresh=1` right after a purchase/restore to bypass the
+  // cache and reflect the new entitlement immediately.
+  const forceRefresh =
+    req.query.refresh === "1" || req.query.refresh === "true";
+  if (appUserId && (forceRefresh || !isPlanFresh(appUserId))) {
     try {
       const pro = await fetchProFromRevenueCat(appUserId);
       await syncPlan(customerId, pro);
+      markPlanFresh(appUserId);
     } catch (err) {
       // RevenueCat unavailable — serve the last-known stored plan instead of 5xx.
       req.log.warn(
