@@ -136,6 +136,7 @@ function GridCard({
   onPress,
   loading,
   badge,
+  glow,
 }: {
   tag: string;
   title: string;
@@ -154,10 +155,11 @@ function GridCard({
   onPress: () => void;
   loading?: boolean;
   badge?: string;
+  glow?: boolean;
 }) {
   const card = (
     <TouchableOpacity
-      style={[styles.gridCard, { backgroundColor: bg, opacity: loading ? 0.7 : 1 }]}
+      style={[styles.gridCard, glow && styles.gridCardGlowBorder, { backgroundColor: bg, opacity: loading ? 0.7 : 1 }]}
       onPress={() => {
         if (loading) return;
         Haptics.selectionAsync();
@@ -242,9 +244,9 @@ function GridCard({
 
   return (
     <View style={styles.gridCardWrap}>
-      {card}
+      {glow ? <View style={styles.gridGlowWrap}>{card}</View> : card}
       {badge ? (
-        <View style={styles.gridBadge} pointerEvents="none">
+        <View style={[styles.gridBadge, glow && styles.gridBadgeNeon]} pointerEvents="none">
           <Ionicons name="star" size={10} color="#FFFFFF" />
           <Text style={styles.gridBadgeText}>{badge}</Text>
         </View>
@@ -428,6 +430,7 @@ export default function HomeScreen() {
               ctaFg="#C2410C"
               watermark="AI"
               badge={t("pro.badge")}
+              glow
               onPress={goFreeChat}
               loading={startChat.isPending}
             />
@@ -461,6 +464,7 @@ export default function HomeScreen() {
               ctaFg="#047857"
               watermarkIcon="book"
               badge={t("pro.badge")}
+              glow
               onPress={() => requirePro(() => router.push("/vocabulary"))}
             />
           </View>
@@ -761,6 +765,23 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
     color: "#FFFFFF",
     fontFamily: "Inter_700Bold",
+  },
+  gridGlowWrap: {
+    borderRadius: 22,
+    backgroundColor: "#FF2D87",
+    shadowColor: "#FF2D87",
+    shadowOpacity: 0.75,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 16,
+  },
+  gridCardGlowBorder: {
+    borderWidth: 2,
+    borderColor: "#FF2D87",
+  },
+  gridBadgeNeon: {
+    backgroundColor: "#FF2D87",
+    shadowColor: "#FF2D87",
   },
   gridCard: {
     flexGrow: 1,
