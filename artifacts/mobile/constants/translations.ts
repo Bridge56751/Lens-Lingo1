@@ -88,6 +88,7 @@ export type TKey =
   | "onboarding.welcomeDesc"
   | "onboarding.langTitle"
   | "onboarding.langDesc"
+  | "onboarding.langLockNote"
   | "onboarding.levelTitle"
   | "onboarding.levelDesc"
   | "onboarding.continue"
@@ -560,7 +561,8 @@ const en: Record<TKey, string> = {
   "onboarding.welcomeTitle": "Welcome to Lens Lingo",
   "onboarding.welcomeDesc": "Learn a language from the world around you. Answer two quick questions and we'll set you up.",
   "onboarding.langTitle": "What do you want to learn?",
-  "onboarding.langDesc": "Pick a language to start with — you can change it anytime.",
+  "onboarding.langDesc": "Pick the language you want to learn first.",
+  "onboarding.langLockNote": "The free plan includes one language. Switching to a different language later is a Pro feature, so choose the one you want to learn.",
   "onboarding.levelTitle": "What's your level?",
   "onboarding.levelDesc": "We'll match the difficulty of conversations and corrections to you.",
   "onboarding.continue": "Continue",

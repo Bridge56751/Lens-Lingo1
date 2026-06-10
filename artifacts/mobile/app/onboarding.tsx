@@ -293,6 +293,12 @@ export default function OnboardingScreen() {
           );
         })}
       </View>
+      <View style={[styles.lockNote, { backgroundColor: colors.primarySoft }]}>
+        <Ionicons name="lock-closed" size={16} color={colors.primary} />
+        <Text style={[styles.lockNoteText, { color: colors.primary, fontFamily: "Inter_500Medium" }]}>
+          {t("onboarding.langLockNote")}
+        </Text>
+      </View>
     </ScrollView>
   );
 
@@ -463,6 +469,16 @@ const styles = StyleSheet.create({
   chipFlag: { fontSize: 30, marginBottom: 8 },
   chipNative: { fontSize: 19, letterSpacing: -0.3 },
   chipName: { fontSize: 13, marginTop: 2 },
+  lockNote: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+  },
+  lockNoteText: { flex: 1, fontSize: 13, lineHeight: 18 },
   levelList: { gap: 12 },
   levelCard: {
     borderWidth: 1.5,
