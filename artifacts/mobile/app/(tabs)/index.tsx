@@ -388,6 +388,20 @@ export default function HomeScreen() {
         <View style={{ gap: 14 }}>
           <View style={styles.gridRow}>
             <GridCard
+              tag={t("home.pathSentencesTag")}
+              title={t("home.pathSentencesTitle")}
+              subtitle={t("home.pathSentencesSub")}
+              ctaLabel={t("home.pathSentencesCta")}
+              bg="#2563EB"
+              fg="#FFFFFF"
+              tagBg="#FFFFFF"
+              tagFg="#1D4ED8"
+              ctaBg="#FFFFFF"
+              ctaFg="#1D4ED8"
+              watermark="Hi"
+              onPress={() => router.push("/sentences")}
+            />
+            <GridCard
               tag={t("home.pathChatTag")}
               title={t("home.pathChatTitle")}
               subtitle={t("home.pathChatSub")}
@@ -401,20 +415,6 @@ export default function HomeScreen() {
               watermark="AI"
               onPress={goFreeChat}
               loading={startChat.isPending}
-            />
-            <GridCard
-              tag={t("home.vocabTag")}
-              title={t("home.vocabulary")}
-              subtitle={t("home.pathVocabSub")}
-              ctaLabel={t("home.pathVocabCta")}
-              bg="#047857"
-              fg="#FFFFFF"
-              tagBg="#FFFFFF"
-              tagFg="#047857"
-              ctaBg="#FFFFFF"
-              ctaFg="#047857"
-              watermarkIcon="book"
-              onPress={() => requirePro(() => router.push("/vocabulary"))}
             />
           </View>
           <View style={styles.gridRow}>
@@ -434,18 +434,18 @@ export default function HomeScreen() {
               onPress={() => router.push("/alphabet")}
             />
             <GridCard
-              tag={t("home.pathSentencesTag")}
-              title={t("home.pathSentencesTitle")}
-              subtitle={t("home.pathSentencesSub")}
-              ctaLabel={t("home.pathSentencesCta")}
-              bg="#2563EB"
+              tag={t("home.vocabTag")}
+              title={t("home.vocabulary")}
+              subtitle={t("home.pathVocabSub")}
+              ctaLabel={t("home.pathVocabCta")}
+              bg="#047857"
               fg="#FFFFFF"
               tagBg="#FFFFFF"
-              tagFg="#1D4ED8"
+              tagFg="#047857"
               ctaBg="#FFFFFF"
-              ctaFg="#1D4ED8"
-              watermark="Hi"
-              onPress={() => router.push("/sentences")}
+              ctaFg="#047857"
+              watermarkIcon="book"
+              onPress={() => requirePro(() => router.push("/vocabulary"))}
             />
           </View>
         </View>
