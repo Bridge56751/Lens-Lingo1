@@ -33,6 +33,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { getGetOpenaiConversationQueryKey } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
+import { MODULE_ACCENTS } from "@/constants/colors";
 import { useT } from "@/hooks/useT";
 import { ProGuard } from "@/components/ProGuard";
 import { usePreferences, type Language } from "@/hooks/usePreferences";
@@ -48,6 +49,11 @@ type Message = {
   role: "user" | "assistant";
   content: string;
 };
+
+// AI-conversation module accent (orange) — matches the chat Home card so the
+// chat screen, grade UI, and AI bubbles read as one orange module instead of
+// the global purple.
+const accent = MODULE_ACCENTS.chat;
 
 const WHISPER_LANG: Record<string, string> = {
   English: "en",
@@ -196,7 +202,7 @@ function MessageBubble({
         style={[
           styles.bubble,
           styles.aiBubble,
-          { backgroundColor: colors.aiBubble },
+          { backgroundColor: accent.soft },
         ]}
       >
         <Text
@@ -243,8 +249,8 @@ function MessageBubble({
             hitSlop={8}
             activeOpacity={0.7}
           >
-            <Ionicons name="volume-medium" size={16} color={colors.primary} />
-            <Text style={[styles.speakLabel, { color: colors.primary, fontFamily: "Inter_500Medium" }]}>
+            <Ionicons name="volume-medium" size={16} color={accent.color} />
+            <Text style={[styles.speakLabel, { color: accent.color, fontFamily: "Inter_500Medium" }]}>
               {t("alphabet.tapToHear")}
             </Text>
           </TouchableOpacity>
@@ -256,11 +262,11 @@ function MessageBubble({
             activeOpacity={0.7}
           >
             {isTranslating ? (
-              <ActivityIndicator size="small" color={colors.primary} />
+              <ActivityIndicator size="small" color={accent.color} />
             ) : (
-              <Ionicons name="language" size={16} color={colors.primary} />
+              <Ionicons name="language" size={16} color={accent.color} />
             )}
-            <Text style={[styles.speakLabel, { color: colors.primary, fontFamily: "Inter_500Medium" }]}>
+            <Text style={[styles.speakLabel, { color: accent.color, fontFamily: "Inter_500Medium" }]}>
               {isTranslating
                 ? t("conv.translating")
                 : translation !== null
@@ -277,11 +283,11 @@ function MessageBubble({
               activeOpacity={0.7}
             >
               {isRomanizing ? (
-                <ActivityIndicator size="small" color={colors.primary} />
+                <ActivityIndicator size="small" color={accent.color} />
               ) : (
-                <Ionicons name="text" size={16} color={colors.primary} />
+                <Ionicons name="text" size={16} color={accent.color} />
               )}
-              <Text style={[styles.speakLabel, { color: colors.primary, fontFamily: "Inter_500Medium" }]}>
+              <Text style={[styles.speakLabel, { color: accent.color, fontFamily: "Inter_500Medium" }]}>
                 {isRomanizing
                   ? t("conv.romanizing")
                   : romanization !== null
@@ -292,7 +298,7 @@ function MessageBubble({
           ) : null}
         </View>
       </View>
-      <SparkleIcon color={colors.primary} />
+      <SparkleIcon color={accent.color} />
     </View>
   );
 }
@@ -300,10 +306,10 @@ function MessageBubble({
 function TypingIndicator({ colors }: { colors: ReturnType<typeof useColors> }) {
   return (
     <View style={[styles.bubbleRow, styles.aiRow]}>
-      <View style={[styles.bubble, styles.aiBubble, { backgroundColor: colors.aiBubble }]}>
-        <ActivityIndicator size="small" color={colors.primary} />
+      <View style={[styles.bubble, styles.aiBubble, { backgroundColor: accent.soft }]}>
+        <ActivityIndicator size="small" color={accent.color} />
       </View>
-      <SparkleIcon color={colors.primary} />
+      <SparkleIcon color={accent.color} />
     </View>
   );
 }
@@ -713,7 +719,7 @@ function ConversationScreenInner() {
       >
         {isLoading ? (
           <View style={styles.centered}>
-            <ActivityIndicator size="large" color={colors.primary} />
+            <ActivityIndicator size="large" color={accent.color} />
           </View>
         ) : (
           <FlatList
@@ -744,9 +750,9 @@ function ConversationScreenInner() {
         )}
 
         {isRecording ? (
-          <View style={[styles.recordingBanner, { backgroundColor: colors.primarySoft }]}>
-            <View style={[styles.recordingDot, { backgroundColor: colors.primary }]} />
-            <Text style={[styles.recordingText, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
+          <View style={[styles.recordingBanner, { backgroundColor: accent.soft }]}>
+            <View style={[styles.recordingDot, { backgroundColor: accent.color }]} />
+            <Text style={[styles.recordingText, { color: accent.color, fontFamily: "Inter_600SemiBold" }]}>
               {t("conv.listening")}
             </Text>
           </View>
@@ -755,7 +761,7 @@ function ConversationScreenInner() {
         <TouchableOpacity
           style={[
             styles.gradeBarButton,
-            { backgroundColor: colors.primarySoft, borderColor: colors.primary },
+            { backgroundColor: accent.soft, borderColor: accent.color },
           ]}
           onPress={() => {
             setGradeError(null);
@@ -763,8 +769,8 @@ function ConversationScreenInner() {
           }}
           activeOpacity={0.85}
         >
-          <Ionicons name={grade ? "ribbon" : "ribbon-outline"} size={18} color={colors.primary} />
-          <Text style={[styles.gradeBarText, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
+          <Ionicons name={grade ? "ribbon" : "ribbon-outline"} size={18} color={accent.color} />
+          <Text style={[styles.gradeBarText, { color: accent.color, fontFamily: "Inter_600SemiBold" }]}>
             {t("conv.grade")}
           </Text>
         </TouchableOpacity>
@@ -804,8 +810,8 @@ function ConversationScreenInner() {
             const bg = isMicIdle
               ? MIC_ORANGE
               : busy
-                ? colors.primarySoft
-                : colors.primary;
+                ? accent.soft
+                : accent.color;
             const onPress = isRecording
               ? stopAndTranscribe
               : hasText
@@ -819,7 +825,7 @@ function ConversationScreenInner() {
                 activeOpacity={0.85}
               >
                 {busy ? (
-                  <ActivityIndicator size="small" color={colors.primary} />
+                  <ActivityIndicator size="small" color={accent.color} />
                 ) : isRecording ? (
                   <Ionicons name="stop" size={24} color="#FFFFFF" />
                 ) : (
@@ -863,7 +869,7 @@ function ConversationScreenInner() {
 
             {isGrading ? (
               <View style={styles.gradeLoading}>
-                <ActivityIndicator size="large" color={colors.primary} />
+                <ActivityIndicator size="large" color={accent.color} />
                 <Text style={[styles.gradeLoadingText, { color: colors.mutedForeground, fontFamily: "Inter_500Medium" }]}>
                   {t("conv.grading")}
                 </Text>
@@ -871,7 +877,7 @@ function ConversationScreenInner() {
             ) : grade ? (
               <ScrollView style={{ maxHeight: 460 }} showsVerticalScrollIndicator={false}>
                 <View style={styles.scoreWrap}>
-                  <Text style={[styles.scoreValue, { color: colors.primary, fontFamily: "Inter_700Bold" }]}>
+                  <Text style={[styles.scoreValue, { color: accent.color, fontFamily: "Inter_700Bold" }]}>
                     {grade.score}
                   </Text>
                   <Text style={[styles.scoreOutOf, { color: colors.mutedForeground, fontFamily: "Inter_500Medium" }]}>
@@ -911,8 +917,8 @@ function ConversationScreenInner() {
                           {m.error}
                         </Text>
                         <View style={styles.gradeItemRow}>
-                          <Ionicons name="arrow-forward" size={14} color={colors.primary} />
-                          <Text style={[styles.mistakeCorrection, { color: colors.primary, fontFamily: "Inter_500Medium" }]}>
+                          <Ionicons name="arrow-forward" size={14} color={accent.color} />
+                          <Text style={[styles.mistakeCorrection, { color: accent.color, fontFamily: "Inter_500Medium" }]}>
                             {m.correction}
                           </Text>
                         </View>
@@ -927,12 +933,12 @@ function ConversationScreenInner() {
 
                 {grade.suggestions.length > 0 ? (
                   <View style={styles.gradeSection}>
-                    <Text style={[styles.gradeSectionLabel, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
+                    <Text style={[styles.gradeSectionLabel, { color: accent.color, fontFamily: "Inter_600SemiBold" }]}>
                       {t("conv.gradeSuggestions")}
                     </Text>
                     {grade.suggestions.map((s, i) => (
                       <View key={`sg-${i}`} style={styles.gradeItemRow}>
-                        <Ionicons name="bulb-outline" size={16} color={colors.primary} />
+                        <Ionicons name="bulb-outline" size={16} color={accent.color} />
                         <Text style={[styles.gradeItemText, { color: colors.foreground, fontFamily: "Inter_400Regular" }]}>
                           {s}
                         </Text>
@@ -942,12 +948,12 @@ function ConversationScreenInner() {
                 ) : null}
 
                 <TouchableOpacity
-                  style={[styles.gradeButton, { backgroundColor: colors.primarySoft }]}
+                  style={[styles.gradeButton, { backgroundColor: accent.soft }]}
                   onPress={runGrade}
                   activeOpacity={0.85}
                 >
-                  <Ionicons name="refresh" size={18} color={colors.primary} />
-                  <Text style={[styles.gradeButtonTextAlt, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
+                  <Ionicons name="refresh" size={18} color={accent.color} />
+                  <Text style={[styles.gradeButtonTextAlt, { color: accent.color, fontFamily: "Inter_600SemiBold" }]}>
                     {t("conv.gradeAgain")}
                   </Text>
                 </TouchableOpacity>
@@ -958,7 +964,7 @@ function ConversationScreenInner() {
                   {t("conv.gradePromptBody")}
                 </Text>
                 <TouchableOpacity
-                  style={[styles.gradeButton, { backgroundColor: colors.primary }]}
+                  style={[styles.gradeButton, { backgroundColor: accent.color }]}
                   onPress={runGrade}
                   activeOpacity={0.85}
                 >

@@ -47,6 +47,7 @@ const colors = {
 // `ink` equals `color`; for the bright yellow alphabet accent both `on` and
 // `ink` are a dark brown so text stays legible.
 export const MODULE_ACCENTS = {
+  chat: { color: "#EA580C", soft: "rgba(234,88,12,0.12)", on: "#FFFFFF", ink: "#EA580C" },
   sentences: { color: "#2563EB", soft: "rgba(37,99,235,0.12)", on: "#FFFFFF", ink: "#2563EB" },
   vocab: { color: "#047857", soft: "rgba(4,120,87,0.12)", on: "#FFFFFF", ink: "#047857" },
   alphabet: { color: "#FBBF24", soft: "rgba(251,191,36,0.22)", on: "#422006", ink: "#422006" },
