@@ -667,8 +667,8 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   heroLeft: { flex: 1, gap: 10 },
-  heroTitle: { fontSize: 21, letterSpacing: -0.5, lineHeight: 25 },
-  heroBody: { fontSize: 12, lineHeight: 17 },
+  heroTitle: { fontSize: 26, letterSpacing: -0.5, lineHeight: 31 },
+  heroBody: { fontSize: 13, lineHeight: 18 },
   heroButton: {
     flexDirection: "row",
     alignItems: "center",
