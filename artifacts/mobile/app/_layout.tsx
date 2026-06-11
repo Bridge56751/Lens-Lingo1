@@ -111,7 +111,7 @@ function RootLayoutNav() {
       <Stack.Screen name="conversation/[id]" options={{ presentation: "card" }} />
       <Stack.Screen
         name="paywall"
-        options={{ presentation: "modal", animation: "slide_from_bottom" }}
+        options={{ presentation: "fullScreenModal", animation: "slide_from_bottom" }}
       />
     </Stack>
   );
