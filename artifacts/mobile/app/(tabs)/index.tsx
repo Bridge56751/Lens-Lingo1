@@ -179,8 +179,15 @@ function GridCard({
       <View style={{ gap: 8 }}>
         {badge ? (
           <View style={styles.gridProPill}>
-            <MaterialCommunityIcons name="crown" size={14} color="#F5C518" />
-            <Text style={styles.gridProPillText}>{badge}</Text>
+            <MaterialCommunityIcons name="crown" size={13} color="#F5C518" />
+            <Text
+              style={styles.gridProPillText}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.8}
+            >
+              {badge}
+            </Text>
           </View>
         ) : (
           <View style={[styles.pathTag, { backgroundColor: tagBg, marginBottom: 0 }]}>
@@ -739,8 +746,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     alignSelf: "flex-start",
-    gap: 5,
-    paddingHorizontal: 11,
+    gap: 4,
+    paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 999,
     backgroundColor: "#FFFFFF",
@@ -751,10 +758,11 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   gridProPillText: {
-    fontSize: 11,
-    letterSpacing: 0.5,
+    fontSize: 10,
+    letterSpacing: 0.2,
     color: "#1A1B2E",
     fontFamily: "Inter_700Bold",
+    flexShrink: 1,
   },
   gridCard: {
     flexGrow: 1,
