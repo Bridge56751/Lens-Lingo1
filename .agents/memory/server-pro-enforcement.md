@@ -22,6 +22,14 @@ and `/openai/tts` sound premium but are used by FREE screens (scan result,
 alphabet, sentences), so they must stay open. Guessing from the name either locks
 out free users or leaks a paid feature to direct-API callers.
 
+**Trap — conversation DELETE is FREE, not Pro.** It is tempting (and a planning
+matrix once said) to gate `DELETE /openai/conversations/:id`. Don't. The free
+flow is: scan (free) creates a conversation server-side → it shows in History
+(the list route is free) → the History delete button calls the delete mutation
+with NO `requirePro()` client gate. Only *opening/continuing* a past chat is Pro
+(History `handleOpen` gates). Gating delete would stop free users from removing
+their own scanned history — a NEW restriction, which this feature must never add.
+
 ## Fail-closed vs fail-open
 `requirePro` fails **closed**: `customerHasPro` resolves to `false` on any error
 (incl. a hard DB read error) so a gate never leaks access. BUT a RevenueCat outage
