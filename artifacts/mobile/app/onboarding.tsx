@@ -116,14 +116,16 @@ export default function OnboardingScreen() {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     update("onboardingSeen", true);
     // When opened manually (e.g. "Take tour" from home) onboarding is pushed on
-    // top of the existing tabs, so pop back to avoid stacking a new tabs screen
-    // each time. On first launch it's reached via Redirect (no back stack), so
-    // fall back to replacing into the tabs.
+    // top of the existing tabs, so just pop back. A returning user has already
+    // been through the first-run paywall and shouldn't be funneled into it again.
     if (router.canGoBack()) {
       router.back();
-    } else {
-      router.replace("/(tabs)");
+      return;
     }
+    // First launch (reached via Redirect, no back stack): land on the tabs, then
+    // present the paywall over them so dismissing it reveals the app underneath.
+    router.replace("/(tabs)");
+    router.push("/paywall");
   };
 
   const goTo = (next: number) => {
