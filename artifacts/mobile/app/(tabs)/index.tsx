@@ -135,6 +135,7 @@ function GridCard({
   progress,
   onPress,
   loading,
+  locked,
 }: {
   tag: string;
   title: string;
@@ -152,6 +153,7 @@ function GridCard({
   progress?: number;
   onPress: () => void;
   loading?: boolean;
+  locked?: boolean;
 }) {
   const card = (
     <TouchableOpacity
@@ -235,6 +237,20 @@ function GridCard({
           </View>
         )}
       </View>
+
+      {locked && (
+        <>
+          <View style={styles.lockScrim} pointerEvents="none" />
+          <View style={styles.lockCenter} pointerEvents="none">
+            <View style={styles.lockCircle}>
+              <Ionicons name="lock-closed" size={20} color={bg} />
+            </View>
+            <View style={styles.lockProPill}>
+              <Text style={[styles.lockProText, { color: bg }]}>PRO</Text>
+            </View>
+          </View>
+        </>
+      )}
     </TouchableOpacity>
   );
 
@@ -246,7 +262,7 @@ export default function HomeScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { prefs, update } = usePreferences();
-  const { isPro, requirePro } = usePro();
+  const { isPro, isLoading: planLoading, requirePro } = usePro();
   const [langPickerOpen, setLangPickerOpen] = useState(false);
   const { languageProgress } = useAlphabetProgress();
   const alphabet = languageProgress(prefs.targetLanguage);
@@ -421,6 +437,7 @@ export default function HomeScreen() {
               watermark="AI"
               onPress={goFreeChat}
               loading={startChat.isPending}
+              locked={!isPro && !planLoading}
             />
           </View>
           <View style={styles.gridRow}>
@@ -452,6 +469,7 @@ export default function HomeScreen() {
               ctaFg="#047857"
               watermarkIcon="book"
               onPress={() => requirePro(() => router.push("/vocabulary"))}
+              locked={!isPro && !planLoading}
             />
           </View>
         </View>
@@ -762,6 +780,36 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   gridCtaLabel: { fontSize: 11.5, letterSpacing: -0.3, flex: 1, textAlign: "center" },
+  lockScrim: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(17,17,27,0.34)",
+  },
+  lockCenter: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 7,
+  },
+  lockCircle: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.18,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  lockProPill: {
+    paddingHorizontal: 9,
+    paddingVertical: 2,
+    borderRadius: 999,
+    backgroundColor: "#FFFFFF",
+  },
+  lockProText: { fontSize: 10.5, letterSpacing: 0.8, fontFamily: "Inter_700Bold" },
   statsRow: { flexDirection: "row", gap: 10 },
   tile: {
     flex: 1,
