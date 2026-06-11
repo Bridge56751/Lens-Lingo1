@@ -25,6 +25,7 @@ import {
   type Difficulty,
 } from "@/hooks/usePreferences";
 import { useT } from "@/hooks/useT";
+import { usePro } from "@/hooks/usePro";
 import { LOCALE_NATIVE_NAMES, type Locale, type TKey } from "@/constants/translations";
 
 const { width } = Dimensions.get("window");
@@ -104,6 +105,7 @@ export default function OnboardingScreen() {
   const insets = useSafeAreaInsets();
   const t = useT();
   const { prefs, update } = usePreferences();
+  const { requirePro } = usePro();
   const scrollRef = useRef<ScrollView>(null);
   const [index, setIndex] = useState(0);
 
@@ -148,10 +150,21 @@ export default function OnboardingScreen() {
   };
 
   const pickLanguage = (lang: Language) => {
-    if (lang !== prefs.targetLanguage) {
+    if (lang === prefs.targetLanguage) return;
+    const apply = () => {
       Haptics.selectionAsync();
       update("targetLanguage", lang);
+    };
+    // First-run onboarding: the user picks their starting language for free.
+    // On a replay ("Take tour", which keeps onboardingSeen=true), switching the
+    // locked language is a Pro feature — otherwise re-entering onboarding is a
+    // paywall bypass. requirePro also no-ops while plan status is still loading
+    // so a genuine Pro user isn't bounced on a cold start.
+    if (!prefs.onboardingSeen) {
+      apply();
+      return;
     }
+    requirePro(apply);
   };
 
   const pickLevel = (level: Difficulty) => {
