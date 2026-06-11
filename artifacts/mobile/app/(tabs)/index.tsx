@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import {
   useListOpenaiConversations,
@@ -179,7 +179,7 @@ function GridCard({
       <View style={{ gap: 8 }}>
         {badge ? (
           <View style={styles.gridProPill}>
-            <Ionicons name="star" size={13} color="#FFFFFF" />
+            <MaterialCommunityIcons name="crown" size={14} color="#F5C518" />
             <Text style={styles.gridProPillText}>{badge}</Text>
           </View>
         ) : (
@@ -743,12 +743,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 11,
     paddingVertical: 6,
     borderRadius: 999,
-    backgroundColor: "#7C5CFF",
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#FFFFFF",
+    shadowOpacity: 1,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 8,
   },
   gridProPillText: {
     fontSize: 11,
     letterSpacing: 0.5,
-    color: "#FFFFFF",
+    color: "#1A1B2E",
     fontFamily: "Inter_700Bold",
   },
   gridCard: {
