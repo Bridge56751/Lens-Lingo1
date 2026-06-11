@@ -137,7 +137,7 @@ function GridCard({
   loading,
   badge,
   glow,
-  glowColor = "#EC4899",
+  accentColor = "#F5C518",
 }: {
   tag: string;
   title: string;
@@ -157,7 +157,7 @@ function GridCard({
   loading?: boolean;
   badge?: string;
   glow?: boolean;
-  glowColor?: string;
+  accentColor?: string;
 }) {
   const card = (
     <TouchableOpacity
@@ -249,10 +249,10 @@ function GridCard({
       {card}
       {badge ? (
         <View
-          style={[styles.gridBadge, glow && { backgroundColor: glowColor, shadowColor: glowColor }]}
+          style={[styles.gridBadge, glow && styles.gridBadgePremium]}
           pointerEvents="none"
         >
-          <Ionicons name="star" size={10} color="#FFFFFF" />
+          <Ionicons name="star" size={10} color={glow ? accentColor : "#FFFFFF"} />
           <Text style={styles.gridBadgeText}>{badge}</Text>
         </View>
       ) : null}
@@ -436,7 +436,6 @@ export default function HomeScreen() {
               watermark="AI"
               badge={t("home.pathChatBadge")}
               glow
-              glowColor="#8B5CF6"
               onPress={goFreeChat}
               loading={startChat.isPending}
             />
@@ -471,7 +470,6 @@ export default function HomeScreen() {
               watermarkIcon="book"
               badge={t("home.vocabBadge")}
               glow
-              glowColor="#EC4899"
               onPress={() => requirePro(() => router.push("/vocabulary"))}
             />
           </View>
@@ -772,6 +770,16 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
     color: "#FFFFFF",
     fontFamily: "Inter_700Bold",
+  },
+  gridBadgePremium: {
+    backgroundColor: "#0B0B12",
+    borderWidth: 1,
+    borderColor: "rgba(245,197,24,0.5)",
+    shadowColor: "#000000",
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 6,
   },
   gridCard: {
     flexGrow: 1,
