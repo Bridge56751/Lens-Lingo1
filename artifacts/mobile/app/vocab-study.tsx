@@ -45,6 +45,7 @@ import {
 } from "@/lib/audio";
 import { getOfflineExample, setOfflineExample } from "@/lib/offlineExamples";
 import { recordPractice, markVoiceChat } from "@/lib/activity";
+import { MODULE_ACCENTS } from "@/constants/colors";
 
 // Target languages whose scripts a default Latin/QWERTY keyboard can't type, so
 // the learner needs to add that keyboard to their device (or use the mic).
@@ -58,6 +59,8 @@ const NON_LATIN_LANGS = new Set([
 ]);
 
 const INPUT_ACCESSORY_ID = "vocabSentenceInput";
+
+const accent = MODULE_ACCENTS.vocab;
 
 export default function VocabStudyScreen() {
   return (
@@ -315,7 +318,7 @@ function VocabStudyScreenInner() {
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         {Header}
         <View style={styles.center}>
-          <ActivityIndicator color={colors.primary} />
+          <ActivityIndicator color={accent.color} />
         </View>
       </View>
     );
@@ -326,8 +329,8 @@ function VocabStudyScreenInner() {
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         {Header}
         <View style={styles.center}>
-          <View style={[styles.bigIcon, { backgroundColor: colors.primarySoft }]}>
-            <Ionicons name="albums" size={32} color={colors.primary} />
+          <View style={[styles.bigIcon, { backgroundColor: accent.soft }]}>
+            <Ionicons name="albums" size={32} color={accent.color} />
           </View>
           <Text style={[styles.bigTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
             {t("vocab.studyEmpty")}
@@ -336,7 +339,7 @@ function VocabStudyScreenInner() {
             {t("vocab.studyEmptySub", { lang: target })}
           </Text>
           <TouchableOpacity
-            style={[styles.primaryBtn, { backgroundColor: colors.primary }]}
+            style={[styles.primaryBtn, { backgroundColor: accent.color }]}
             onPress={() => router.replace("/vocab-bank")}
             activeOpacity={0.85}
           >
@@ -366,7 +369,7 @@ function VocabStudyScreenInner() {
             {t("vocab.doneSub")}
           </Text>
           <TouchableOpacity
-            style={[styles.primaryBtn, { backgroundColor: colors.primary }]}
+            style={[styles.primaryBtn, { backgroundColor: accent.color }]}
             onPress={restart}
             activeOpacity={0.85}
           >
@@ -392,7 +395,7 @@ function VocabStudyScreenInner() {
 
       <View style={styles.progressWrap}>
         <View style={[styles.progressTrack, { backgroundColor: colors.muted }]}>
-          <View style={[styles.progressFill, { width: `${progress * 100}%`, backgroundColor: colors.primary }]} />
+          <View style={[styles.progressFill, { width: `${progress * 100}%`, backgroundColor: accent.color }]} />
         </View>
         <Text style={[styles.progressText, { color: colors.mutedForeground, fontFamily: "Inter_500Medium" }]}>
           {t("vocab.progress", { current: pos + 1, total: deck.length })}
@@ -409,7 +412,7 @@ function VocabStudyScreenInner() {
         {/* Word card */}
         <View style={[styles.card, { backgroundColor: colors.card }]}>
           <TouchableOpacity
-            style={[styles.speaker, { backgroundColor: colors.primary }]}
+            style={[styles.speaker, { backgroundColor: accent.color }]}
             onPress={() => hear(card.word)}
             activeOpacity={0.85}
             hitSlop={10}
@@ -420,7 +423,7 @@ function VocabStudyScreenInner() {
             {card.word}
           </Text>
           {wordRoman.get(card.word) ? (
-            <Text style={[styles.translation, { color: colors.primary, fontStyle: "italic", fontFamily: "Inter_400Regular" }]}>
+            <Text style={[styles.translation, { color: accent.color, fontStyle: "italic", fontFamily: "Inter_400Regular" }]}>
               {wordRoman.get(card.word)}
             </Text>
           ) : null}
@@ -428,8 +431,8 @@ function VocabStudyScreenInner() {
             {card.translation}
           </Text>
           <TouchableOpacity onPress={() => hear(card.word)} activeOpacity={0.7} style={styles.replayLink}>
-            <Ionicons name="refresh" size={14} color={colors.primary} />
-            <Text style={[styles.replayText, { color: colors.primary, fontFamily: "Inter_500Medium" }]}>
+            <Ionicons name="refresh" size={14} color={accent.color} />
+            <Text style={[styles.replayText, { color: accent.color, fontFamily: "Inter_500Medium" }]}>
               {t("vocab.tapHear")}
             </Text>
           </TouchableOpacity>
@@ -453,16 +456,16 @@ function VocabStudyScreenInner() {
                   {example.sentence}
                 </Text>
                 <TouchableOpacity
-                  style={[styles.speakerSmall, { backgroundColor: colors.primarySoft }]}
+                  style={[styles.speakerSmall, { backgroundColor: accent.soft }]}
                   onPress={() => hear(example.sentence)}
                   activeOpacity={0.8}
                   hitSlop={8}
                 >
-                  <Ionicons name="volume-high" size={18} color={colors.primary} />
+                  <Ionicons name="volume-high" size={18} color={accent.color} />
                 </TouchableOpacity>
               </View>
               {exampleRoman.get(example.sentence) ? (
-                <Text style={[styles.exampleTranslation, { color: colors.primary, fontStyle: "italic", fontFamily: "Inter_400Regular" }]}>
+                <Text style={[styles.exampleTranslation, { color: accent.color, fontStyle: "italic", fontFamily: "Inter_400Regular" }]}>
                   {exampleRoman.get(example.sentence)}
                 </Text>
               ) : null}
@@ -479,15 +482,15 @@ function VocabStudyScreenInner() {
             >
               {exampleMutation.isPending ? (
                 <>
-                  <ActivityIndicator size="small" color={colors.primary} />
+                  <ActivityIndicator size="small" color={accent.color} />
                   <Text style={[styles.secondaryBtnText, { color: colors.mutedForeground, fontFamily: "Inter_500Medium" }]}>
                     {t("vocab.loadingExample")}
                   </Text>
                 </>
               ) : (
                 <>
-                  <Ionicons name="sparkles" size={16} color={colors.primary} />
-                  <Text style={[styles.secondaryBtnText, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
+                  <Ionicons name="sparkles" size={16} color={accent.color} />
+                  <Text style={[styles.secondaryBtnText, { color: accent.color, fontFamily: "Inter_600SemiBold" }]}>
                     {t("vocab.showExample")}
                   </Text>
                 </>
@@ -547,7 +550,7 @@ function VocabStudyScreenInner() {
           >
             {isTranscribing ? (
               <>
-                <ActivityIndicator size="small" color={colors.primary} />
+                <ActivityIndicator size="small" color={accent.color} />
                 <Text style={[styles.micBtnText, { color: colors.mutedForeground, fontFamily: "Inter_500Medium" }]}>
                   {t("vocab.transcribing")}
                 </Text>
@@ -561,8 +564,8 @@ function VocabStudyScreenInner() {
               </>
             ) : (
               <>
-                <Ionicons name="mic" size={18} color={colors.primary} />
-                <Text style={[styles.micBtnText, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
+                <Ionicons name="mic" size={18} color={accent.color} />
+                <Text style={[styles.micBtnText, { color: accent.color, fontFamily: "Inter_600SemiBold" }]}>
                   {t("vocab.speak")}
                 </Text>
               </>
@@ -571,7 +574,7 @@ function VocabStudyScreenInner() {
           <TouchableOpacity
             style={[
               styles.primaryBtn,
-              { backgroundColor: colors.primary, opacity: sentence.trim() && !checkMutation.isPending ? 1 : 0.5 },
+              { backgroundColor: accent.color, opacity: sentence.trim() && !checkMutation.isPending ? 1 : 0.5 },
             ]}
             onPress={checkSentence}
             activeOpacity={0.85}
@@ -627,12 +630,12 @@ function VocabStudyScreenInner() {
                     {feedback.correction}
                   </Text>
                   <TouchableOpacity
-                    style={[styles.speakerSmall, { backgroundColor: colors.primarySoft }]}
+                    style={[styles.speakerSmall, { backgroundColor: accent.soft }]}
                     onPress={() => hear(feedback.correction)}
                     activeOpacity={0.8}
                     hitSlop={8}
                   >
-                    <Ionicons name="volume-high" size={18} color={colors.primary} />
+                    <Ionicons name="volume-high" size={18} color={accent.color} />
                   </TouchableOpacity>
                 </View>
               ) : null}
@@ -641,15 +644,15 @@ function VocabStudyScreenInner() {
         </View>
 
         <TouchableOpacity
-          style={[styles.nextBtn, { backgroundColor: colors.primarySoft, opacity: isRecording || isTranscribing ? 0.5 : 1 }]}
+          style={[styles.nextBtn, { backgroundColor: accent.soft, opacity: isRecording || isTranscribing ? 0.5 : 1 }]}
           onPress={next}
           activeOpacity={0.85}
           disabled={isRecording || isTranscribing}
         >
-          <Text style={[styles.nextBtnText, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
+          <Text style={[styles.nextBtnText, { color: accent.color, fontFamily: "Inter_600SemiBold" }]}>
             {t("vocab.next")}
           </Text>
-          <Ionicons name="arrow-forward" size={18} color={colors.primary} />
+          <Ionicons name="arrow-forward" size={18} color={accent.color} />
         </TouchableOpacity>
       </ScrollView>
 
@@ -657,7 +660,7 @@ function VocabStudyScreenInner() {
         <InputAccessoryView nativeID={INPUT_ACCESSORY_ID}>
           <View style={[styles.accessoryBar, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
             <TouchableOpacity onPress={() => Keyboard.dismiss()} hitSlop={10} activeOpacity={0.7}>
-              <Text style={[styles.accessoryDone, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
+              <Text style={[styles.accessoryDone, { color: accent.color, fontFamily: "Inter_600SemiBold" }]}>
                 {t("vocab.doneTyping")}
               </Text>
             </TouchableOpacity>

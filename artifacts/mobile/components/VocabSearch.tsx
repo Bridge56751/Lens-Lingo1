@@ -32,6 +32,9 @@ import { useRomanizations } from "@/hooks/useRomanizations";
 import { RomanizeToggle } from "@/components/RomanizeToggle";
 import { useT } from "@/hooks/useT";
 import { speakWord, prefetchSpeech, stopSpeaking } from "@/lib/speech";
+import { MODULE_ACCENTS } from "@/constants/colors";
+
+const accent = MODULE_ACCENTS.vocab;
 
 /**
  * The Search tab of the Vocabulary screen: type any word (in either language),
@@ -162,7 +165,7 @@ export default function VocabSearch() {
         <TouchableOpacity
           style={[
             styles.searchBtn,
-            { backgroundColor: colors.primary, opacity: query.trim() && !isSearching ? 1 : 0.5 },
+            { backgroundColor: accent.color, opacity: query.trim() && !isSearching ? 1 : 0.5 },
           ]}
           onPress={runSearch}
           activeOpacity={0.85}
@@ -185,15 +188,15 @@ export default function VocabSearch() {
 
       {isSearching ? (
         <View style={styles.center}>
-          <ActivityIndicator color={colors.primary} />
+          <ActivityIndicator color={accent.color} />
           <Text style={[styles.bigSub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
             {t("vocab.searching")}
           </Text>
         </View>
       ) : results == null ? (
         <Pressable style={styles.center} onPress={Keyboard.dismiss} accessible={false}>
-          <View style={[styles.emptyIcon, { backgroundColor: colors.primarySoft }]}>
-            <Ionicons name="search" size={30} color={colors.primary} />
+          <View style={[styles.emptyIcon, { backgroundColor: accent.soft }]}>
+            <Ionicons name="search" size={30} color={accent.color} />
           </View>
           <Text style={[styles.emptyTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
             {t("vocab.searchEmptyTitle")}
@@ -223,16 +226,16 @@ export default function VocabSearch() {
                 style={[styles.wordCard, { backgroundColor: colors.card }]}
               >
                 <TouchableOpacity
-                  style={[styles.speakerSmall, { backgroundColor: colors.primarySoft }]}
+                  style={[styles.speakerSmall, { backgroundColor: accent.soft }]}
                   onPress={() => hear(w.word)}
                   activeOpacity={0.8}
                   hitSlop={8}
                   disabled={loadingWord === w.word}
                 >
                   {loadingWord === w.word ? (
-                    <ActivityIndicator size="small" color={colors.primary} />
+                    <ActivityIndicator size="small" color={accent.color} />
                   ) : (
-                    <Ionicons name="volume-high" size={20} color={colors.primary} />
+                    <Ionicons name="volume-high" size={20} color={accent.color} />
                   )}
                 </TouchableOpacity>
                 <View style={styles.wordTextWrap}>
@@ -244,7 +247,7 @@ export default function VocabSearch() {
                   </Text>
                   {roman.get(w.word) ? (
                     <Text
-                      style={[styles.translation, { color: colors.primary, fontStyle: "italic", fontFamily: "Inter_400Regular" }]}
+                      style={[styles.translation, { color: accent.color, fontStyle: "italic", fontFamily: "Inter_400Regular" }]}
                       numberOfLines={1}
                     >
                       {roman.get(w.word)}
@@ -260,7 +263,7 @@ export default function VocabSearch() {
                 <TouchableOpacity
                   style={[
                     styles.addBtn,
-                    added ? { backgroundColor: "#DCFCE7" } : { backgroundColor: colors.primary },
+                    added ? { backgroundColor: "#DCFCE7" } : { backgroundColor: accent.color },
                   ]}
                   onPress={() => toggle(w)}
                   activeOpacity={0.85}

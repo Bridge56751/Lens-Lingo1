@@ -31,6 +31,9 @@ import { RomanizeToggle } from "@/components/RomanizeToggle";
 import { useT } from "@/hooks/useT";
 import { speakWord, prefetchSpeech, stopSpeaking } from "@/lib/speech";
 import { getBundledVocabBank } from "@/lib/offlineAssets";
+import { MODULE_ACCENTS } from "@/constants/colors";
+
+const accent = MODULE_ACCENTS.vocab;
 
 const LEVELS = ["beginner", "intermediate", "advanced", "expert"] as const;
 type Level = (typeof LEVELS)[number];
@@ -168,7 +171,7 @@ export default function VocabBank() {
     return (
       <View style={styles.flex}>
         <View style={styles.center}>
-          <ActivityIndicator color={colors.primary} />
+          <ActivityIndicator color={accent.color} />
         </View>
       </View>
     );
@@ -182,7 +185,7 @@ export default function VocabBank() {
             {t("vocab.bankError")}
           </Text>
           <TouchableOpacity
-            style={[styles.primaryBtn, { backgroundColor: colors.primary }]}
+            style={[styles.primaryBtn, { backgroundColor: accent.color }]}
             onPress={() => refetch()}
             activeOpacity={0.85}
           >
@@ -256,16 +259,16 @@ export default function VocabBank() {
                 style={[styles.wordCard, { backgroundColor: colors.card }]}
               >
                 <TouchableOpacity
-                  style={[styles.speakerSmall, { backgroundColor: colors.primarySoft }]}
+                  style={[styles.speakerSmall, { backgroundColor: accent.soft }]}
                   onPress={() => hear(w.word)}
                   activeOpacity={0.8}
                   hitSlop={8}
                   disabled={loadingWord === w.word}
                 >
                   {loadingWord === w.word ? (
-                    <ActivityIndicator size="small" color={colors.primary} />
+                    <ActivityIndicator size="small" color={accent.color} />
                   ) : (
-                    <Ionicons name="volume-high" size={20} color={colors.primary} />
+                    <Ionicons name="volume-high" size={20} color={accent.color} />
                   )}
                 </TouchableOpacity>
                 <View style={styles.wordTextWrap}>
@@ -277,7 +280,7 @@ export default function VocabBank() {
                   </Text>
                   {roman.get(w.word) ? (
                     <Text
-                      style={[styles.translation, { color: colors.primary, fontStyle: "italic", fontFamily: "Inter_400Regular" }]}
+                      style={[styles.translation, { color: accent.color, fontStyle: "italic", fontFamily: "Inter_400Regular" }]}
                       numberOfLines={1}
                     >
                       {roman.get(w.word)}
@@ -295,7 +298,7 @@ export default function VocabBank() {
                     styles.addBtn,
                     added
                       ? { backgroundColor: "#DCFCE7" }
-                      : { backgroundColor: colors.primary },
+                      : { backgroundColor: accent.color },
                   ]}
                   onPress={() => toggle(w)}
                   activeOpacity={0.85}

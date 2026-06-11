@@ -22,6 +22,9 @@ import { ALPHABETS, RTL_LANGUAGES } from "@/constants/alphabets";
 import { useAlphabetProgress } from "@/lib/alphabetProgress";
 import { letterSpoken, exampleSpoken } from "@/lib/alphabetSpeech";
 import { recordPractice } from "@/lib/activity";
+import { MODULE_ACCENTS } from "@/constants/colors";
+
+const accent = MODULE_ACCENTS.alphabet;
 
 export default function AlphabetScreen() {
   const t = useT();
@@ -166,7 +169,7 @@ export default function AlphabetScreen() {
                   style={[
                     styles.scriptTab,
                     {
-                      backgroundColor: active ? colors.primary : colors.muted,
+                      backgroundColor: active ? accent.color : colors.muted,
                     },
                   ]}
                   activeOpacity={0.85}
@@ -175,7 +178,7 @@ export default function AlphabetScreen() {
                     style={[
                       styles.scriptTabText,
                       {
-                        color: active ? "#FFFFFF" : colors.foreground,
+                        color: active ? accent.on : colors.foreground,
                         fontFamily: "Inter_600SemiBold",
                       },
                     ]}
@@ -200,7 +203,7 @@ export default function AlphabetScreen() {
             <View
               style={[
                 styles.progressFill,
-                { backgroundColor: colors.primary, width: `${progress * 100}%` },
+                { backgroundColor: accent.color, width: `${progress * 100}%` },
               ]}
             />
           </View>
@@ -215,9 +218,9 @@ export default function AlphabetScreen() {
         showsVerticalScrollIndicator={false}
       >
         {isDone && (
-          <View style={[styles.doneCard, { backgroundColor: colors.primarySoft }]}>
-            <View style={[styles.doneBadge, { backgroundColor: colors.primary }]}>
-              <Ionicons name="trophy" size={36} color="#FFFFFF" />
+          <View style={[styles.doneCard, { backgroundColor: accent.soft }]}>
+            <View style={[styles.doneBadge, { backgroundColor: accent.color }]}>
+              <Ionicons name="trophy" size={36} color={accent.on} />
             </View>
             <Text style={[styles.doneTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
               {t("alphabet.complete")}
@@ -226,12 +229,12 @@ export default function AlphabetScreen() {
               {t("alphabet.completeBody", { lang: script?.name ?? prefs.targetLanguage })}
             </Text>
             <TouchableOpacity
-              style={[styles.primaryBtn, { backgroundColor: colors.primary }]}
+              style={[styles.primaryBtn, { backgroundColor: accent.color }]}
               onPress={restart}
               activeOpacity={0.85}
             >
-              <Ionicons name="refresh" size={16} color="#FFFFFF" />
-              <Text style={[styles.primaryBtnText, { fontFamily: "Inter_600SemiBold" }]}>
+              <Ionicons name="refresh" size={16} color={accent.on} />
+              <Text style={[styles.primaryBtnText, { fontFamily: "Inter_600SemiBold", color: accent.on }]}>
                 {t("alphabet.startOver")}
               </Text>
             </TouchableOpacity>
@@ -246,15 +249,15 @@ export default function AlphabetScreen() {
                   if (!current) return;
                   speak(letterSpoken(current, prefs.targetLanguage));
                 }}
-                style={[styles.letterCard, { backgroundColor: colors.card, borderColor: colors.primarySoft }]}
+                style={[styles.letterCard, { backgroundColor: colors.card, borderColor: accent.soft }]}
               >
-              <View style={[styles.speakerPill, { backgroundColor: colors.primarySoft }]}>
+              <View style={[styles.speakerPill, { backgroundColor: accent.soft }]}>
                 {loadingKind === "letter" ? (
-                  <ActivityIndicator size="small" color={colors.primary} />
+                  <ActivityIndicator size="small" color={accent.ink} />
                 ) : (
-                  <Ionicons name="volume-medium" size={14} color={colors.primary} />
+                  <Ionicons name="volume-medium" size={14} color={accent.ink} />
                 )}
-                <Text style={[styles.speakerText, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
+                <Text style={[styles.speakerText, { color: accent.ink, fontFamily: "Inter_600SemiBold" }]}>
                   {t("alphabet.tapToHear")}
                 </Text>
               </View>
@@ -307,11 +310,11 @@ export default function AlphabetScreen() {
                     {current?.exampleMeaning}
                   </Text>
                 </View>
-                <View style={[styles.speakerIcon, { backgroundColor: colors.primarySoft }]}>
+                <View style={[styles.speakerIcon, { backgroundColor: accent.soft }]}>
                   {loadingKind === "example" ? (
-                    <ActivityIndicator size="small" color={colors.primary} />
+                    <ActivityIndicator size="small" color={accent.ink} />
                   ) : (
-                    <Ionicons name="volume-medium" size={18} color={colors.primary} />
+                    <Ionicons name="volume-medium" size={18} color={accent.ink} />
                   )}
                 </View>
               </TouchableOpacity>
@@ -340,14 +343,14 @@ export default function AlphabetScreen() {
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.primaryBtn, { backgroundColor: colors.primary, flex: 1 }]}
+            style={[styles.primaryBtn, { backgroundColor: accent.color, flex: 1 }]}
             onPress={goNext}
             activeOpacity={0.85}
           >
-            <Text style={[styles.primaryBtnText, { fontFamily: "Inter_600SemiBold" }]}>
+            <Text style={[styles.primaryBtnText, { fontFamily: "Inter_600SemiBold", color: accent.on }]}>
               {isLast ? t("alphabet.complete") : t("alphabet.next")}
             </Text>
-            <Ionicons name={isLast ? "checkmark" : "chevron-forward"} size={18} color="#FFFFFF" />
+            <Ionicons name={isLast ? "checkmark" : "chevron-forward"} size={18} color={accent.on} />
           </TouchableOpacity>
         </View>
     </View>

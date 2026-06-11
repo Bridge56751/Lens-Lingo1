@@ -39,4 +39,17 @@ const colors = {
   radius: 18,
 };
 
+// Per-module accent colors that match each learning module's Home card, so a
+// module's screen feels like an extension of the card you tapped. `color` is the
+// solid accent (fills / primary), `soft` the tinted background, `on` the text/
+// icon color that sits ON the solid accent, and `ink` the accent used as a text/
+// icon color on light surfaces. For dark accents (blue/green) `on` is white and
+// `ink` equals `color`; for the bright yellow alphabet accent both `on` and
+// `ink` are a dark brown so text stays legible.
+export const MODULE_ACCENTS = {
+  sentences: { color: "#2563EB", soft: "rgba(37,99,235,0.12)", on: "#FFFFFF", ink: "#2563EB" },
+  vocab: { color: "#047857", soft: "rgba(4,120,87,0.12)", on: "#FFFFFF", ink: "#047857" },
+  alphabet: { color: "#FBBF24", soft: "rgba(251,191,36,0.22)", on: "#422006", ink: "#422006" },
+} as const;
+
 export default colors;

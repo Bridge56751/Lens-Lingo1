@@ -25,6 +25,9 @@ import { useT } from "@/hooks/useT";
 import { speakWord, prefetchSpeech, stopSpeaking } from "@/lib/speech";
 import { getBundledSentenceBank } from "@/lib/offlineAssets";
 import { recordPractice } from "@/lib/activity";
+import { MODULE_ACCENTS } from "@/constants/colors";
+
+const accent = MODULE_ACCENTS.sentences;
 
 const CATEGORIES = [
   "greetings",
@@ -146,7 +149,7 @@ export default function SentencesScreen() {
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         {Header}
         <View style={styles.center}>
-          <ActivityIndicator color={colors.primary} />
+          <ActivityIndicator color={accent.color} />
           <Text style={[styles.loadingText, { color: colors.mutedForeground, fontFamily: "Inter_500Medium" }]}>
             {t("sentences.sub", { lang: target })}
           </Text>
@@ -166,7 +169,7 @@ export default function SentencesScreen() {
             {t("sentences.error")}
           </Text>
           <TouchableOpacity
-            style={[styles.primaryBtn, { backgroundColor: colors.primary }]}
+            style={[styles.primaryBtn, { backgroundColor: accent.color }]}
             onPress={() => refetch()}
             activeOpacity={0.85}
           >
@@ -254,7 +257,7 @@ export default function SentencesScreen() {
                 </Text>
                 {roman.get(s.phrase) ? (
                   <Text
-                    style={[styles.translation, { color: colors.primary, fontStyle: "italic", fontFamily: "Inter_400Regular" }]}
+                    style={[styles.translation, { color: accent.color, fontStyle: "italic", fontFamily: "Inter_400Regular" }]}
                   >
                     {roman.get(s.phrase)}
                   </Text>
@@ -266,12 +269,12 @@ export default function SentencesScreen() {
                 </Text>
               </View>
               <View
-                style={[styles.speaker, { backgroundColor: colors.primarySoft }]}
+                style={[styles.speaker, { backgroundColor: accent.soft }]}
               >
                 {loadingPhrase === s.phrase ? (
-                  <ActivityIndicator size="small" color={colors.primary} />
+                  <ActivityIndicator size="small" color={accent.color} />
                 ) : (
-                  <Ionicons name="volume-high" size={20} color={colors.primary} />
+                  <Ionicons name="volume-high" size={20} color={accent.color} />
                 )}
               </View>
             </TouchableOpacity>

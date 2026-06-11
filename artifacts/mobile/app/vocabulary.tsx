@@ -20,6 +20,9 @@ import { useT } from "@/hooks/useT";
 import { ProGuard } from "@/components/ProGuard";
 import VocabBank from "@/components/VocabBank";
 import VocabSearch from "@/components/VocabSearch";
+import { MODULE_ACCENTS } from "@/constants/colors";
+
+const accent = MODULE_ACCENTS.vocab;
 
 type Tab = "myWords" | "bank" | "search";
 
@@ -129,8 +132,8 @@ function VocabularyScreenInner() {
       <View style={[styles.flex, !showMyWords && styles.hidden, { pointerEvents: showMyWords ? "auto" : "none" }]}>
         {pickedCount === 0 ? (
           <View style={styles.empty}>
-            <View style={[styles.emptyIcon, { backgroundColor: colors.primarySoft }]}>
-              <Ionicons name="albums" size={32} color={colors.primary} />
+            <View style={[styles.emptyIcon, { backgroundColor: accent.soft }]}>
+              <Ionicons name="albums" size={32} color={accent.color} />
             </View>
             <Text style={[styles.emptyTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
               {t("vocab.studyEmpty")}
@@ -139,7 +142,7 @@ function VocabularyScreenInner() {
               {t("vocab.studyEmptySub", { lang: prefs.targetLanguage })}
             </Text>
             <TouchableOpacity
-              style={[styles.primaryBtn, { backgroundColor: colors.primary }]}
+              style={[styles.primaryBtn, { backgroundColor: accent.color }]}
               onPress={() => setActiveTab("bank")}
               activeOpacity={0.85}
             >
@@ -154,7 +157,7 @@ function VocabularyScreenInner() {
             <TouchableOpacity
               style={[
                 styles.studyBtn,
-                { backgroundColor: colors.primary, opacity: studyIds.size > 0 ? 1 : 0.5 },
+                { backgroundColor: accent.color, opacity: studyIds.size > 0 ? 1 : 0.5 },
               ]}
               onPress={startStudy}
               activeOpacity={0.85}
@@ -176,7 +179,7 @@ function VocabularyScreenInner() {
                 {t("vocab.tapToSelect")}
               </Text>
               <TouchableOpacity onPress={toggleAll} activeOpacity={0.7} hitSlop={8}>
-                <Text style={[styles.selectAll, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
+                <Text style={[styles.selectAll, { color: accent.color, fontFamily: "Inter_600SemiBold" }]}>
                   {allSelected ? t("vocab.clearSel") : t("vocab.selectAll")}
                 </Text>
               </TouchableOpacity>
@@ -199,7 +202,7 @@ function VocabularyScreenInner() {
                       style={[
                         styles.checkbox,
                         checked
-                          ? { backgroundColor: colors.primary, borderColor: colors.primary }
+                          ? { backgroundColor: accent.color, borderColor: accent.color }
                           : { borderColor: colors.border ?? colors.mutedForeground },
                       ]}
                     >
@@ -216,8 +219,8 @@ function VocabularyScreenInner() {
                         {w.translation}
                       </Text>
                     </View>
-                    <View style={[styles.levelPill, { backgroundColor: colors.primarySoft }]}>
-                      <Text style={[styles.levelText, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
+                    <View style={[styles.levelPill, { backgroundColor: accent.soft }]}>
+                      <Text style={[styles.levelText, { color: accent.color, fontFamily: "Inter_600SemiBold" }]}>
                         {w.level}
                       </Text>
                     </View>
@@ -276,7 +279,7 @@ function SegmentButton({
           {label}
         </Text>
         {badge != null && badge > 0 && (
-          <View style={[styles.segBadge, { backgroundColor: colors.primary }]}>
+          <View style={[styles.segBadge, { backgroundColor: accent.color }]}>
             <Text style={styles.segBadgeText}>{badge}</Text>
           </View>
         )}
