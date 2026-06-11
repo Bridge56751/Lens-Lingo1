@@ -137,6 +137,7 @@ function GridCard({
   loading,
   badge,
   glow,
+  glowColor = "#E11D48",
 }: {
   tag: string;
   title: string;
@@ -156,10 +157,16 @@ function GridCard({
   loading?: boolean;
   badge?: string;
   glow?: boolean;
+  glowColor?: string;
 }) {
   const card = (
     <TouchableOpacity
-      style={[styles.gridCard, glow && styles.gridCardGlowBorder, { backgroundColor: bg, opacity: loading ? 0.7 : 1 }]}
+      style={[
+        styles.gridCard,
+        glow && styles.gridCardGlowBorder,
+        glow && { borderColor: glowColor },
+        { backgroundColor: bg, opacity: loading ? 0.7 : 1 },
+      ]}
       onPress={() => {
         if (loading) return;
         Haptics.selectionAsync();
@@ -244,9 +251,18 @@ function GridCard({
 
   return (
     <View style={styles.gridCardWrap}>
-      {glow ? <View style={styles.gridGlowWrap}>{card}</View> : card}
+      {glow ? (
+        <View style={[styles.gridGlowWrap, { backgroundColor: glowColor, shadowColor: glowColor }]}>
+          {card}
+        </View>
+      ) : (
+        card
+      )}
       {badge ? (
-        <View style={[styles.gridBadge, glow && styles.gridBadgeNeon]} pointerEvents="none">
+        <View
+          style={[styles.gridBadge, glow && { backgroundColor: glowColor, shadowColor: glowColor }]}
+          pointerEvents="none"
+        >
           <Ionicons name="star" size={10} color="#FFFFFF" />
           <Text style={styles.gridBadgeText}>{badge}</Text>
         </View>
@@ -431,6 +447,7 @@ export default function HomeScreen() {
               watermark="AI"
               badge={t("home.pathChatBadge")}
               glow
+              glowColor="#0EA5E9"
               onPress={goFreeChat}
               loading={startChat.isPending}
             />
@@ -768,8 +785,6 @@ const styles = StyleSheet.create({
   },
   gridGlowWrap: {
     borderRadius: 22,
-    backgroundColor: "#E11D48",
-    shadowColor: "#E11D48",
     shadowOpacity: 0.8,
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 0 },
@@ -777,11 +792,6 @@ const styles = StyleSheet.create({
   },
   gridCardGlowBorder: {
     borderWidth: 2,
-    borderColor: "#E11D48",
-  },
-  gridBadgeNeon: {
-    backgroundColor: "#E11D48",
-    shadowColor: "#E11D48",
   },
   gridCard: {
     flexGrow: 1,
