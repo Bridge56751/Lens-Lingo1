@@ -429,7 +429,7 @@ export default function HomeScreen() {
               ctaBg="#FFFFFF"
               ctaFg="#C2410C"
               watermark="AI"
-              badge={t("pro.badge")}
+              badge={t("home.pathChatBadge")}
               glow
               onPress={goFreeChat}
               loading={startChat.isPending}
@@ -463,7 +463,7 @@ export default function HomeScreen() {
               ctaBg="#FFFFFF"
               ctaFg="#047857"
               watermarkIcon="book"
-              badge={t("pro.badge")}
+              badge={t("home.vocabBadge")}
               glow
               onPress={() => requirePro(() => router.push("/vocabulary"))}
             />
