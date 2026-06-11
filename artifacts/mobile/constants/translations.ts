@@ -435,6 +435,7 @@ export type TKey =
   | "paywall.spotChatB1"
   | "paywall.spotChatB2"
   | "paywall.spotChatB3"
+  | "paywall.spotChatB4"
   | "paywall.spotVocabTitle"
   | "paywall.spotVocabDesc"
   | "paywall.spotVocabB1"
@@ -878,10 +879,11 @@ const en: Record<TKey, string> = {
   "paywall.fLangsDesc": "Learn all 12 languages",
   "paywall.spotChatTitle": "Full Conversations",
   "paywall.spotChatDesc":
-    "Go past a couple of free replies. Chat without limits with your AI tutor about anything you scan — it adapts to your level, gently corrects your mistakes, and always keeps the conversation going in the language you're learning.",
+    "Go past a couple of free replies. Chat without limits with your AI tutor about anything you scan — it adapts to your level, gently corrects your mistakes, and always keeps the conversation going in the language you're learning. When you're ready, grade your chat for a score out of 100 plus pointers on exactly what to improve.",
   "paywall.spotChatB1": "Unlimited back-and-forth messages",
   "paywall.spotChatB2": "Gentle real-time corrections as you go",
   "paywall.spotChatB3": "Speak or type — your tutor always replies",
+  "paywall.spotChatB4": "Get graded with pointers on how to improve",
   "paywall.spotVocabTitle": "Vocabulary Mastery",
   "paywall.spotVocabDesc":
     "Go beyond memorizing. Look up any word, see it used in real example sentences, then prove you've got it by using it in your own sentence and getting instant AI feedback.",

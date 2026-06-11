@@ -62,7 +62,7 @@ const FEATURE_THEMES: Record<
     icon: keyof typeof Ionicons.glyphMap;
     titleKey: TKey;
     descKey: TKey;
-    bulletKeys: [TKey, TKey, TKey];
+    bulletKeys: readonly TKey[];
     gridTitleKey: TKey;
   }
 > = {
@@ -73,7 +73,12 @@ const FEATURE_THEMES: Record<
     icon: "chatbubbles",
     titleKey: "paywall.spotChatTitle",
     descKey: "paywall.spotChatDesc",
-    bulletKeys: ["paywall.spotChatB1", "paywall.spotChatB2", "paywall.spotChatB3"],
+    bulletKeys: [
+      "paywall.spotChatB1",
+      "paywall.spotChatB2",
+      "paywall.spotChatB3",
+      "paywall.spotChatB4",
+    ],
     gridTitleKey: "paywall.fChatTitle",
   },
   vocab: {
