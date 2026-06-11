@@ -436,6 +436,13 @@ export type TKey =
   | "paywall.save"
   | "paywall.continueWith"
   | "paywall.continueGeneric"
+  | "paywall.startTrial"
+  | "paywall.freeTrial"
+  | "paywall.trialNote"
+  | "paywall.unitDay"
+  | "paywall.unitWeek"
+  | "paywall.unitMonth"
+  | "paywall.unitYear"
   | "paywall.securePayment"
   | "paywall.tos"
   | "paywall.privacy"
@@ -857,6 +864,13 @@ const en: Record<TKey, string> = {
   "paywall.save": "Save {n}%",
   "paywall.continueWith": "Continue with {plan}",
   "paywall.continueGeneric": "Continue",
+  "paywall.startTrial": "Start Free Trial",
+  "paywall.freeTrial": "{n}-{unit} free trial",
+  "paywall.trialNote": "{n}-{unit} free, then {price} · cancel anytime",
+  "paywall.unitDay": "day",
+  "paywall.unitWeek": "week",
+  "paywall.unitMonth": "month",
+  "paywall.unitYear": "year",
   "paywall.securePayment": "Secure payment · Cancel anytime",
   "paywall.tos": "Terms of Service",
   "paywall.privacy": "Privacy Policy",

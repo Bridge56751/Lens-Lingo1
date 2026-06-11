@@ -1,6 +1,9 @@
 import React, { createContext, useContext, useEffect } from "react";
 import { Platform } from "react-native";
-import Purchases, { type PurchasesPackage } from "react-native-purchases";
+import Purchases, {
+  type PurchasesPackage,
+  INTRO_ELIGIBILITY_STATUS,
+} from "react-native-purchases";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import Constants from "expo-constants";
 import { useAuth } from "@clerk/expo";
@@ -80,6 +83,32 @@ function useSubscriptionContext() {
     staleTime: 300 * 1000,
   });
 
+  // iOS only: a free trial / intro offer can be advertised on a product even
+  // when the *current* user already consumed it, which would let the paywall
+  // promise a trial the App Store won't honor (an App Review risk). We resolve
+  // per-product eligibility and expose the product ids the user is NOT eligible
+  // for so the paywall can suppress the trial copy for them. Android always
+  // reports UNKNOWN and web has no native check, so we only gate on iOS and let
+  // the store's own purchase sheet be the source of truth elsewhere.
+  const currentOffering = offeringsQuery.data?.current ?? null;
+  const trialEligibilityQuery = useQuery({
+    queryKey: ["revenuecat", "trial-eligibility", currentOffering?.identifier ?? null],
+    enabled: Platform.OS === "ios" && !!currentOffering,
+    staleTime: 300 * 1000,
+    queryFn: async () => {
+      const ids = (currentOffering?.availablePackages ?? []).map((p) => p.product.identifier);
+      if (ids.length === 0) return [] as string[];
+      const map = await Purchases.checkTrialOrIntroductoryPriceEligibility(ids);
+      // INELIGIBLE = the user already redeemed this product's trial/intro offer,
+      // so we must not advertise it as free.
+      return Object.entries(map)
+        .filter(
+          ([, e]) => e.status === INTRO_ELIGIBILITY_STATUS.INTRO_ELIGIBILITY_STATUS_INELIGIBLE,
+        )
+        .map(([id]) => id);
+    },
+  });
+
   const purchaseMutation = useMutation({
     mutationFn: async (packageToPurchase: PurchasesPackage) => {
       const { customerInfo } = await Purchases.purchasePackage(packageToPurchase);
@@ -110,6 +139,11 @@ function useSubscriptionContext() {
   return {
     customerInfo: customerInfoQuery.data,
     offerings: offeringsQuery.data,
+    // Product ids the current user can NOT redeem a trial/intro offer for (iOS
+    // only; null elsewhere — let the store sheet decide). The paywall hides
+    // trial copy for these so it never promises a trial that won't be granted.
+    ineligibleTrialProductIds:
+      Platform.OS === "ios" ? trialEligibilityQuery.data ?? null : null,
     isSubscribed,
     isLoading: customerInfoQuery.isLoading || offeringsQuery.isLoading,
     purchase: purchaseMutation.mutateAsync,

@@ -60,12 +60,48 @@ function packageMeta(
   }
 }
 
+// Reads a free-trial introductory offer off a package, if any. A free trial is an
+// intro price of 0 — it is configured per product in App Store Connect / Google
+// Play and surfaced by RevenueCat (the app never grants it). Returns the trial
+// length so the UI can advertise it.
+function freeTrial(
+  pkg: PurchasesPackage,
+  ineligibleIds: string[] | null,
+): { count: number; unit: string } | null {
+  const intro = pkg.product.introPrice;
+  if (!intro || intro.price > 0 || intro.periodNumberOfUnits <= 0) return null;
+  // Suppress the trial for users who already redeemed it (iOS eligibility).
+  if (ineligibleIds?.includes(pkg.product.identifier)) return null;
+  return { count: intro.periodNumberOfUnits, unit: intro.periodUnit };
+}
+
+// Localized lowercase unit word for a RevenueCat periodUnit (DAY/WEEK/MONTH/YEAR).
+function unitWord(t: ReturnType<typeof useT>, unit: string): string {
+  switch (unit) {
+    case "DAY":
+      return t("paywall.unitDay");
+    case "WEEK":
+      return t("paywall.unitWeek");
+    case "MONTH":
+      return t("paywall.unitMonth");
+    case "YEAR":
+      return t("paywall.unitYear");
+    default:
+      return unit.toLowerCase();
+  }
+}
+
+function trialLabel(t: ReturnType<typeof useT>, info: { count: number; unit: string }): string {
+  return t("paywall.freeTrial", { n: info.count, unit: unitWord(t, info.unit) });
+}
+
 export default function PaywallScreen() {
   const t = useT();
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const {
     offerings,
+    ineligibleTrialProductIds,
     isSubscribed,
     isLoading,
     purchase,
@@ -159,9 +195,23 @@ export default function PaywallScreen() {
     if (wasUnlock) close();
   };
 
-  const ctaLabel = selectedPackage
-    ? t("paywall.continueWith", { plan: packageMeta(selectedPackage, t).name })
-    : t("paywall.continueGeneric");
+  const selectedTrial = selectedPackage ? freeTrial(selectedPackage, ineligibleTrialProductIds) : null;
+
+  const ctaLabel = selectedTrial
+    ? t("paywall.startTrial")
+    : selectedPackage
+      ? t("paywall.continueWith", { plan: packageMeta(selectedPackage, t).name })
+      : t("paywall.continueGeneric");
+
+  // Reassures the user what they'll be charged after a free trial ends.
+  const trialNote =
+    selectedTrial && selectedPackage
+      ? t("paywall.trialNote", {
+          n: selectedTrial.count,
+          unit: unitWord(t, selectedTrial.unit),
+          price: `${selectedPackage.product.priceString}${packageMeta(selectedPackage, t).suffix}`,
+        })
+      : null;
 
   // A Pro user reaching the paywall (e.g. opened from settings) sees a simple
   // confirmation rather than purchase options.
@@ -299,6 +349,7 @@ export default function PaywallScreen() {
               const meta = packageMeta(pkg, t);
               const isAnnual = pkg.packageType === "ANNUAL";
               const savings = isAnnual ? annualSavings(pkg) : null;
+              const trial = freeTrial(pkg, ineligibleTrialProductIds);
               return (
                 <TouchableOpacity
                   key={pkg.identifier}
@@ -339,6 +390,14 @@ export default function PaywallScreen() {
                       <Text style={[styles.planSub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
                         {meta.sub}
                       </Text>
+                      {trial && (
+                        <View style={[styles.trialChip, { backgroundColor: colors.primarySoft }]}>
+                          <Ionicons name="gift" size={11} color={colors.primary} />
+                          <Text style={[styles.trialChipText, { color: colors.primary, fontFamily: "Inter_700Bold" }]}>
+                            {trialLabel(t, trial)}
+                          </Text>
+                        </View>
+                      )}
                     </View>
                     <View style={styles.priceCol}>
                       <Text style={[styles.bigPrice, { color: colors.primary, fontFamily: "Inter_700Bold" }]}>
@@ -396,6 +455,12 @@ export default function PaywallScreen() {
             )}
           </LinearGradient>
         </TouchableOpacity>
+
+        {trialNote && (
+          <Text style={[styles.trialNote, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
+            {trialNote}
+          </Text>
+        )}
 
         <View style={styles.secureRow}>
           <Ionicons name="shield-checkmark" size={14} color={colors.mutedForeground} />
@@ -610,6 +675,19 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   radioDot: { width: 12, height: 12, borderRadius: 6 },
+
+  trialChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
+    gap: 4,
+    marginTop: 7,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  trialChipText: { fontSize: 10.5, letterSpacing: 0.2 },
+  trialNote: { fontSize: 13, textAlign: "center", marginTop: 12, lineHeight: 18 },
 
   ctaWrap: { marginTop: 20 },
   subscribeBtn: {
