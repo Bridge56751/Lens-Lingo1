@@ -42,6 +42,7 @@ import {
   transcribeAudio,
   AudioTooLongError,
   EmptyTranscriptError,
+  ProRequiredError,
 } from "@/lib/audio";
 import { getOfflineExample, setOfflineExample } from "@/lib/offlineExamples";
 import { recordPractice, markVoiceChat } from "@/lib/activity";
@@ -299,7 +300,10 @@ function VocabStudyScreenInner() {
       // edit before submitting it for the (strict) grade.
       setSentence((prev) => (prev.trim() ? `${prev.trim()} ${transcript}` : transcript));
     } catch (err) {
-      if (err instanceof AudioTooLongError) {
+      if (err instanceof ProRequiredError) {
+        // Paywall already opened by the helper; don't show a generic error.
+        return;
+      } else if (err instanceof AudioTooLongError) {
         Alert.alert(t("conv.micTooLongTitle"), t("conv.micTooLongBody"));
       } else if (err instanceof EmptyTranscriptError) {
         Alert.alert(t("conv.transcribeEmptyTitle"), t("conv.transcribeEmptyBody"));

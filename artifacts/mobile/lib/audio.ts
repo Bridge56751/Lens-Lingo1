@@ -3,6 +3,7 @@ import { File } from "expo-file-system";
 import { fetch as expoFetch } from "expo/fetch";
 import { getDeviceIdSync } from "@/lib/device";
 import { authHeader } from "@/lib/authToken";
+import { goToPaywallForProRequired } from "@/lib/proRequired";
 
 const MAX_AUDIO_BASE64_LEN = 7_000_000;
 
@@ -26,6 +27,12 @@ export const WHISPER_LANG: Record<string, string> = {
 export class AudioTooLongError extends Error {}
 /** Thrown when transcription returns no speech. */
 export class EmptyTranscriptError extends Error {}
+/**
+ * Thrown when the server denies transcription with `403 pro_required`. The
+ * paywall is already opened before this is thrown, so callers should just
+ * early-return without surfacing a generic error.
+ */
+export class ProRequiredError extends Error {}
 
 // Reads a recorded audio file into base64. On web, expo-file-system's File API
 // can't read the blob: URLs that expo-audio produces, so fetch the blob and
@@ -73,6 +80,19 @@ export async function transcribeAudio(uri: string, language: string): Promise<st
     body: JSON.stringify({ audioBase64: base64, mimeType, language: WHISPER_LANG[language] }),
   });
 
+  if (response.status === 403) {
+    // Transcription is Pro-only on the server; route to the paywall.
+    let body: { error?: string } | null = null;
+    try {
+      body = (await response.json()) as { error?: string };
+    } catch {
+      body = null;
+    }
+    if (body?.error === "pro_required") {
+      goToPaywallForProRequired();
+      throw new ProRequiredError();
+    }
+  }
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
   const data = (await response.json()) as { text?: string };
