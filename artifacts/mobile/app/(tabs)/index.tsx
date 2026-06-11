@@ -768,20 +768,20 @@ const styles = StyleSheet.create({
   },
   gridGlowWrap: {
     borderRadius: 22,
-    backgroundColor: "#FF2D87",
-    shadowColor: "#FF2D87",
-    shadowOpacity: 0.75,
+    backgroundColor: "#E11D48",
+    shadowColor: "#E11D48",
+    shadowOpacity: 0.8,
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 0 },
     elevation: 16,
   },
   gridCardGlowBorder: {
     borderWidth: 2,
-    borderColor: "#FF2D87",
+    borderColor: "#E11D48",
   },
   gridBadgeNeon: {
-    backgroundColor: "#FF2D87",
-    shadowColor: "#FF2D87",
+    backgroundColor: "#E11D48",
+    shadowColor: "#E11D48",
   },
   gridCard: {
     flexGrow: 1,
