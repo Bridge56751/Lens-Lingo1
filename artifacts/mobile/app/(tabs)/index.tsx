@@ -363,7 +363,12 @@ export default function HomeScreen() {
               activeOpacity={0.85}
             >
               <Ionicons name="scan" size={16} color={colors.primary} />
-              <Text style={[styles.heroButtonText, { color: colors.primary, fontFamily: "Inter_700Bold" }]}>
+              <Text
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.7}
+                style={[styles.heroButtonText, { color: colors.primary, fontFamily: "Inter_700Bold" }]}
+              >
                 {t("home.scanCta")}
               </Text>
               <Ionicons name="arrow-forward" size={16} color={colors.primary} />
@@ -372,9 +377,9 @@ export default function HomeScreen() {
 
           <View style={styles.heroRight}>
             <View style={styles.heroBracket}>
-              <CornerBrackets color="#FFFFFF" size={16} />
+              <CornerBrackets color="#FFFFFF" size={20} />
               <View style={[styles.heroIconCircle, { backgroundColor: "#FFFFFF" }]}>
-                <Ionicons name="cube" size={40} color={colors.primary} />
+                <Ionicons name="cube" size={48} color={colors.primary} />
               </View>
             </View>
             <View style={[styles.heroChip, { backgroundColor: "#FFFFFF" }]}>
@@ -658,40 +663,40 @@ const styles = StyleSheet.create({
   hero: {
     flexDirection: "row",
     borderRadius: 24,
-    padding: 16,
+    padding: 20,
     gap: 12,
     overflow: "hidden",
   },
-  heroLeft: { flex: 1, gap: 8 },
-  heroTitle: { fontSize: 21, letterSpacing: -0.5, lineHeight: 25 },
+  heroLeft: { flex: 1, gap: 10 },
+  heroTitle: { fontSize: 24, letterSpacing: -0.5, lineHeight: 28 },
   heroBody: { fontSize: 12, lineHeight: 17 },
   heroButton: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
     paddingHorizontal: 18,
-    paddingVertical: 10,
+    paddingVertical: 12,
     borderRadius: 999,
     alignSelf: "flex-start",
-    marginTop: 2,
+    marginTop: 4,
   },
-  heroButtonText: { color: "#FFFFFF", fontSize: 14 },
+  heroButtonText: { color: "#FFFFFF", fontSize: 14, flexShrink: 1 },
   heroRight: {
-    width: 104,
+    width: 120,
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
   },
   heroBracket: {
-    width: 84,
-    height: 84,
+    width: 100,
+    height: 100,
     alignItems: "center",
     justifyContent: "center",
   },
   heroIconCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 76,
+    height: 76,
+    borderRadius: 38,
     alignItems: "center",
     justifyContent: "center",
   },
