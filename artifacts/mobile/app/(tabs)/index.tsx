@@ -137,7 +137,7 @@ function GridCard({
   loading,
   badge,
   glow,
-  glowColor = "#E11D48",
+  glowColor = "#EC4899",
 }: {
   tag: string;
   title: string;
@@ -447,7 +447,7 @@ export default function HomeScreen() {
               watermark="AI"
               badge={t("home.pathChatBadge")}
               glow
-              glowColor="#0EA5E9"
+              glowColor="#8B5CF6"
               onPress={goFreeChat}
               loading={startChat.isPending}
             />
@@ -482,6 +482,7 @@ export default function HomeScreen() {
               watermarkIcon="book"
               badge={t("home.vocabBadge")}
               glow
+              glowColor="#EC4899"
               onPress={() => requirePro(() => router.push("/vocabulary"))}
             />
           </View>
