@@ -9,7 +9,9 @@ export function usePro() {
   const { isSubscribed, isLoading } = useSubscription();
 
   const requirePro = useCallback(
-    (action?: () => void): boolean => {
+    // `feature` lets the caller tell the paywall which locked feature was tapped
+    // so it can theme itself (accent color + a deep-dive on that feature).
+    (action?: () => void, feature?: string): boolean => {
       if (isSubscribed) {
         action?.();
         return true;
@@ -20,7 +22,11 @@ export function usePro() {
       if (isLoading) {
         return false;
       }
-      router.push("/paywall");
+      if (feature) {
+        router.push({ pathname: "/paywall", params: { feature } });
+      } else {
+        router.push("/paywall");
+      }
       return false;
     },
     [isSubscribed, isLoading],

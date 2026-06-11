@@ -428,6 +428,17 @@ export type TKey =
   | "paywall.fChatDesc"
   | "paywall.fVocabTitle"
   | "paywall.fVocabDesc"
+  | "paywall.spotChatTitle"
+  | "paywall.spotChatDesc"
+  | "paywall.spotChatB1"
+  | "paywall.spotChatB2"
+  | "paywall.spotChatB3"
+  | "paywall.spotVocabTitle"
+  | "paywall.spotVocabDesc"
+  | "paywall.spotVocabB1"
+  | "paywall.spotVocabB2"
+  | "paywall.spotVocabB3"
+  | "paywall.spotEverything"
   | "paywall.choosePlan"
   | "paywall.annualSub"
   | "paywall.monthlySub"
@@ -856,6 +867,19 @@ const en: Record<TKey, string> = {
   "paywall.fChatDesc": "Unlimited AI chat interactions",
   "paywall.fVocabTitle": "Vocabulary",
   "paywall.fVocabDesc": "Save, review & master words",
+  "paywall.spotChatTitle": "Full Conversations",
+  "paywall.spotChatDesc":
+    "Go past a couple of free replies. Chat without limits with your AI tutor about anything you scan — it adapts to your level, gently corrects your mistakes, and always keeps the conversation going in the language you're learning.",
+  "paywall.spotChatB1": "Unlimited back-and-forth messages",
+  "paywall.spotChatB2": "Gentle real-time corrections as you go",
+  "paywall.spotChatB3": "Speak or type — your tutor always replies",
+  "paywall.spotVocabTitle": "Vocabulary Mastery",
+  "paywall.spotVocabDesc":
+    "Turn every scan into vocabulary that sticks. Save the words you meet, revisit them whenever you like, and lock them in with smart practice built around what you're actually learning.",
+  "paywall.spotVocabB1": "Save words from any conversation",
+  "paywall.spotVocabB2": "Review & practice with smart flashcards",
+  "paywall.spotVocabB3": "Track every word you've mastered",
+  "paywall.spotEverything": "Everything else in Pro",
   "paywall.choosePlan": "Choose Your Plan",
   "paywall.annualSub": "Full access for 12 months",
   "paywall.monthlySub": "Full access for 1 month",

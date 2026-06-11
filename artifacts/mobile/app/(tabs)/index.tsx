@@ -296,7 +296,7 @@ export default function HomeScreen() {
   const goFreeChat = () => {
     if (startChat.isPending) return;
     // Tutor chat is Pro-only — route free users to the paywall.
-    if (!requirePro()) return;
+    if (!requirePro(undefined, "chat")) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     startChat.mutate(
       {
@@ -468,7 +468,7 @@ export default function HomeScreen() {
               ctaBg="#FFFFFF"
               ctaFg="#047857"
               watermarkIcon="book"
-              onPress={() => requirePro(() => router.push("/vocabulary"))}
+              onPress={() => requirePro(() => router.push("/vocabulary"), "vocab")}
               locked={!isPro && !planLoading}
             />
           </View>

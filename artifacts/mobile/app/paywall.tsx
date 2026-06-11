@@ -12,7 +12,7 @@ import {
   Linking,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
@@ -41,6 +41,47 @@ const FEATURES: {
   { icon: "chatbubbles", bg: "#3B82F6", titleKey: "paywall.fChatTitle", descKey: "paywall.fChatDesc" },
   { icon: "book", bg: "#10B981", titleKey: "paywall.fVocabTitle", descKey: "paywall.fVocabDesc" },
 ];
+
+// When the user taps a specific locked feature on Home we route here with a
+// `feature` param. The paywall then themes itself to that feature: the hero
+// accent + lock take the feature's color and a full-width "spotlight" card
+// goes deep on it, while the grid still lists everything else in Pro. Accent
+// colors match the corresponding Home cards (orange chat, green vocabulary).
+type PaywallFeature = "chat" | "vocab";
+
+const FEATURE_THEMES: Record<
+  PaywallFeature,
+  {
+    accent: string;
+    // Spotlight-panel background. Can be a touch darker than `accent` so white
+    // body text stays legible (WCAG AA) on the large colored card.
+    spotBg: string;
+    icon: keyof typeof Ionicons.glyphMap;
+    titleKey: TKey;
+    descKey: TKey;
+    bulletKeys: [TKey, TKey, TKey];
+    gridTitleKey: TKey;
+  }
+> = {
+  chat: {
+    accent: "#EA580C",
+    spotBg: "#C2410C",
+    icon: "chatbubbles",
+    titleKey: "paywall.spotChatTitle",
+    descKey: "paywall.spotChatDesc",
+    bulletKeys: ["paywall.spotChatB1", "paywall.spotChatB2", "paywall.spotChatB3"],
+    gridTitleKey: "paywall.fChatTitle",
+  },
+  vocab: {
+    accent: "#047857",
+    spotBg: "#047857",
+    icon: "book",
+    titleKey: "paywall.spotVocabTitle",
+    descKey: "paywall.spotVocabDesc",
+    bulletKeys: ["paywall.spotVocabB1", "paywall.spotVocabB2", "paywall.spotVocabB3"],
+    gridTitleKey: "paywall.fVocabTitle",
+  },
+};
 
 // Maps a RevenueCat package's billing period to a friendly name + price suffix +
 // subtitle. Prices themselves always come from product.priceString (never hardcoded).
@@ -99,6 +140,15 @@ export default function PaywallScreen() {
   const t = useT();
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const { feature } = useLocalSearchParams<{ feature?: string }>();
+  const featureTheme =
+    feature === "chat" || feature === "vocab" ? FEATURE_THEMES[feature] : null;
+  const accent = featureTheme?.accent ?? colors.primary;
+  const accentSoft = featureTheme ? `${featureTheme.accent}1F` : colors.primarySoft;
+  // When a feature is spotlighted, the grid below lists the *other* Pro perks.
+  const gridFeatures = featureTheme
+    ? FEATURES.filter((f) => f.titleKey !== featureTheme.gridTitleKey)
+    : FEATURES;
   const {
     offerings,
     ineligibleTrialProductIds,
@@ -269,7 +319,7 @@ export default function PaywallScreen() {
             <Text style={[styles.title, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
               {t("paywall.title")}
             </Text>
-            <Text style={[styles.titleAccent, { color: colors.primary, fontFamily: "Inter_700Bold" }]}>
+            <Text style={[styles.titleAccent, { color: accent, fontFamily: "Inter_700Bold" }]}>
               {t("paywall.titleAccent")}
             </Text>
             <Text style={[styles.subtitle, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
@@ -280,29 +330,61 @@ export default function PaywallScreen() {
             <Ionicons
               name="sparkles"
               size={15}
-              color={colors.primary}
+              color={accent}
               style={{ position: "absolute", top: 0, right: 4 }}
             />
             <Ionicons
               name="sparkles"
               size={10}
-              color={colors.primary}
+              color={accent}
               style={{ position: "absolute", bottom: 8, left: 2, opacity: 0.7 }}
             />
-            <View style={[styles.heroCube, { backgroundColor: colors.primarySoft }]} />
-            <View style={[styles.heroLock, { backgroundColor: colors.primary }]}>
+            <View style={[styles.heroCube, { backgroundColor: accentSoft }]} />
+            <View style={[styles.heroLock, { backgroundColor: accent, shadowColor: accent }]}>
               <Ionicons name="lock-closed" size={32} color="#FFFFFF" />
             </View>
           </View>
         </View>
 
+        {/* Feature spotlight — a deep-dive on the feature the user tapped. */}
+        {featureTheme && (
+          <View style={[styles.spotlight, { backgroundColor: featureTheme.spotBg }]}>
+            <View style={styles.spotlightWatermark} pointerEvents="none">
+              <Ionicons name={featureTheme.icon} size={120} color="#FFFFFF" />
+            </View>
+            <View style={styles.spotlightBadge}>
+              <Ionicons name={featureTheme.icon} size={24} color="#FFFFFF" />
+            </View>
+            <Text style={[styles.spotlightTitle, { color: "#FFFFFF", fontFamily: "Inter_700Bold" }]}>
+              {t(featureTheme.titleKey)}
+            </Text>
+            <Text style={[styles.spotlightDesc, { color: "#FFFFFF", fontFamily: "Inter_500Medium" }]}>
+              {t(featureTheme.descKey)}
+            </Text>
+            <View style={styles.spotlightBullets}>
+              {featureTheme.bulletKeys.map((bk) => (
+                <View key={bk} style={styles.spotlightBulletRow}>
+                  <View style={styles.spotlightCheck}>
+                    <Ionicons name="checkmark" size={13} color={featureTheme.spotBg} />
+                  </View>
+                  <Text
+                    style={[styles.spotlightBulletText, { color: "#FFFFFF", fontFamily: "Inter_600SemiBold" }]}
+                  >
+                    {t(bk)}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
         {/* Premium features */}
         <View style={[styles.featuresCard, { backgroundColor: colors.primarySoft }]}>
           <Text style={[styles.featuresTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-            {t("paywall.featuresTitle")}
+            {t(featureTheme ? "paywall.spotEverything" : "paywall.featuresTitle")}
           </Text>
           <View style={styles.featuresGrid}>
-            {FEATURES.map((f) => (
+            {gridFeatures.map((f) => (
               <View key={f.titleKey} style={[styles.featureItem, { backgroundColor: colors.card }]}>
                 <View style={[styles.featureIcon, { backgroundColor: f.bg }]}>
                   <Ionicons name={f.icon} size={18} color="#FFFFFF" />
@@ -641,6 +723,37 @@ const styles = StyleSheet.create({
   },
   featureTitle: { fontSize: 13.5 },
   featureDesc: { fontSize: 11, lineHeight: 15, marginTop: 2 },
+
+  spotlight: {
+    borderRadius: 20,
+    padding: 18,
+    marginTop: 20,
+    overflow: "hidden",
+    gap: 10,
+  },
+  spotlightWatermark: { position: "absolute", right: -14, bottom: -18, opacity: 0.16 },
+  spotlightBadge: {
+    width: 46,
+    height: 46,
+    borderRadius: 14,
+    backgroundColor: "rgba(255,255,255,0.22)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 2,
+  },
+  spotlightTitle: { fontSize: 20, letterSpacing: -0.3 },
+  spotlightDesc: { fontSize: 13.5, lineHeight: 19, opacity: 0.95 },
+  spotlightBullets: { gap: 9, marginTop: 4 },
+  spotlightBulletRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  spotlightCheck: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  spotlightBulletText: { flex: 1, fontSize: 13, lineHeight: 17 },
 
   sectionTitle: { fontSize: 17, marginTop: 22, marginBottom: 12 },
 
