@@ -61,7 +61,6 @@ const FEATURE_THEMES: Record<
     gradient: readonly [string, string];
     icon: keyof typeof Ionicons.glyphMap;
     titleKey: TKey;
-    descKey: TKey;
     bulletKeys: readonly TKey[];
     gridTitleKey: TKey;
   }
@@ -72,7 +71,6 @@ const FEATURE_THEMES: Record<
     gradient: ["#F97316", "#EA580C"],
     icon: "chatbubbles",
     titleKey: "paywall.spotChatTitle",
-    descKey: "paywall.spotChatDesc",
     bulletKeys: [
       "paywall.spotChatB1",
       "paywall.spotChatB2",
@@ -87,7 +85,6 @@ const FEATURE_THEMES: Record<
     gradient: ["#10B981", "#047857"],
     icon: "book",
     titleKey: "paywall.spotVocabTitle",
-    descKey: "paywall.spotVocabDesc",
     bulletKeys: ["paywall.spotVocabB1", "paywall.spotVocabB2", "paywall.spotVocabB3"],
     gridTitleKey: "paywall.fVocabTitle",
   },
@@ -97,7 +94,6 @@ const FEATURE_THEMES: Record<
     gradient: ["#38BDF8", "#0EA5E9"],
     icon: "globe",
     titleKey: "paywall.spotLangsTitle",
-    descKey: "paywall.spotLangsDesc",
     bulletKeys: ["paywall.spotLangsB1", "paywall.spotLangsB2", "paywall.spotLangsB3"],
     gridTitleKey: "paywall.fLangsTitle",
   },
@@ -384,9 +380,6 @@ export default function PaywallScreen() {
             </View>
             <Text style={[styles.spotlightTitle, { color: "#FFFFFF", fontFamily: "Inter_700Bold" }]}>
               {t(featureTheme.titleKey)}
-            </Text>
-            <Text style={[styles.spotlightDesc, { color: "#FFFFFF", fontFamily: "Inter_500Medium" }]}>
-              {t(featureTheme.descKey)}
             </Text>
             <View style={styles.spotlightBullets}>
               {featureTheme.bulletKeys.map((bk) => (
@@ -769,7 +762,6 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   spotlightTitle: { fontSize: 20, letterSpacing: -0.3 },
-  spotlightDesc: { fontSize: 13.5, lineHeight: 19, opacity: 0.95 },
   spotlightBullets: { gap: 9, marginTop: 4 },
   spotlightBulletRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   spotlightCheck: {
