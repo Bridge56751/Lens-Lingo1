@@ -41,7 +41,6 @@ export type TKey =
   | "home.sessions"
   | "home.vocabulary"
   | "home.vocabTag"
-  | "home.vocabBadge"
   | "home.pathVocabSub"
   | "home.pathVocabCta"
   | "home.words"
@@ -66,7 +65,6 @@ export type TKey =
   | "home.pathChatTitle"
   | "home.pathChatSub"
   | "home.pathChatCta"
-  | "home.pathChatBadge"
   | "home.chatErrorTitle"
   | "home.chatErrorBody"
   | "home.continueConvos"
@@ -517,7 +515,6 @@ const en: Record<TKey, string> = {
   "home.sessions": "{n} sessions",
   "home.vocabulary": "Vocabulary",
   "home.vocabTag": "WORD BANK",
-  "home.vocabBadge": "GRAMMAR CHECK",
   "home.pathVocabSub": "Save \u00b7 Review \u00b7 Master",
   "home.pathVocabCta": "Study Words",
   "home.words": "{n} words",
@@ -542,7 +539,6 @@ const en: Record<TKey, string> = {
   "home.pathChatTitle": "Full Conversation",
   "home.pathChatSub": "Talk freely with your AI tutor",
   "home.pathChatCta": "Start Chat",
-  "home.pathChatBadge": "AI GRADING",
   "home.chatErrorTitle": "Couldn't start chat",
   "home.chatErrorBody": "Something went wrong starting your conversation. Please try again.",
   "home.continueConvos": "Continue your conversations",

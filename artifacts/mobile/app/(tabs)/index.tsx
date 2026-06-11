@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import {
   useListOpenaiConversations,
@@ -135,7 +135,6 @@ function GridCard({
   progress,
   onPress,
   loading,
-  badge,
 }: {
   tag: string;
   title: string;
@@ -153,7 +152,6 @@ function GridCard({
   progress?: number;
   onPress: () => void;
   loading?: boolean;
-  badge?: string;
 }) {
   const card = (
     <TouchableOpacity
@@ -177,25 +175,11 @@ function GridCard({
       </View>
 
       <View style={{ gap: 8 }}>
-        {badge ? (
-          <View style={styles.gridProPill}>
-            <MaterialCommunityIcons name="crown" size={13} color="#F5C518" />
-            <Text
-              style={styles.gridProPillText}
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.8}
-            >
-              {badge}
-            </Text>
-          </View>
-        ) : (
-          <View style={[styles.pathTag, { backgroundColor: tagBg, marginBottom: 0 }]}>
-            <Text style={[styles.pathTagText, { color: tagFg, fontFamily: "Inter_700Bold" }]}>
-              {tag}
-            </Text>
-          </View>
-        )}
+        <View style={[styles.pathTag, { backgroundColor: tagBg, marginBottom: 0 }]}>
+          <Text style={[styles.pathTagText, { color: tagFg, fontFamily: "Inter_700Bold" }]}>
+            {tag}
+          </Text>
+        </View>
         <Text
           style={[styles.gridTitle, { color: fg, fontFamily: "Inter_700Bold" }]}
           numberOfLines={2}
@@ -431,7 +415,6 @@ export default function HomeScreen() {
               ctaBg="#FFFFFF"
               ctaFg="#C2410C"
               watermark="AI"
-              badge={t("home.pathChatBadge")}
               onPress={goFreeChat}
               loading={startChat.isPending}
             />
@@ -464,7 +447,6 @@ export default function HomeScreen() {
               ctaBg="#FFFFFF"
               ctaFg="#047857"
               watermarkIcon="book"
-              badge={t("home.vocabBadge")}
               onPress={() => requirePro(() => router.push("/vocabulary"))}
             />
           </View>
@@ -742,29 +724,6 @@ const styles = StyleSheet.create({
   pathProgressFill: { height: "100%", borderRadius: 4 },
   gridRow: { flexDirection: "row", gap: 14 },
   gridCardWrap: { flex: 1 },
-  gridProPill: {
-    flexDirection: "row",
-    alignItems: "center",
-    alignSelf: "flex-start",
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 999,
-    backgroundColor: "#FFFFFF",
-    shadowColor: "#FFFFFF",
-    shadowOpacity: 1,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 0 },
-    elevation: 8,
-  },
-  gridProPillText: {
-    fontSize: 10,
-    letterSpacing: 0.2,
-    color: "#1A1B2E",
-    fontFamily: "Inter_700Bold",
-    flexShrink: 1,
-    textAlign: "center",
-  },
   gridCard: {
     flexGrow: 1,
     flexShrink: 1,
