@@ -349,7 +349,11 @@ export default function HomeScreen() {
         <View style={[styles.headerDivider, { backgroundColor: colors.border }]} />
 
         {/* Hero card */}
-        <View style={[styles.hero, { backgroundColor: "#5B3FD9" }]}>
+        <TouchableOpacity
+          style={[styles.hero, { backgroundColor: "#5B3FD9" }]}
+          onPress={goScan}
+          activeOpacity={0.9}
+        >
           <View style={styles.heroLeft}>
             <Text style={[styles.heroTitle, { color: "#FFFFFF", fontFamily: "Inter_700Bold" }]}>
               {t("home.scanLearnSpeak")}
@@ -384,7 +388,7 @@ export default function HomeScreen() {
               <Ionicons name="volume-medium" size={14} color={colors.primary} />
             </View>
           </View>
-        </View>
+        </TouchableOpacity>
 
         {/* Categories — 2x2 grid */}
         <View style={{ gap: 14 }}>
