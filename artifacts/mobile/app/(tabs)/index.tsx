@@ -549,7 +549,7 @@ export default function HomeScreen() {
                       // Free users are locked to one language; switching is Pro.
                       if (!isPro) {
                         setLangPickerOpen(false);
-                        router.push("/paywall");
+                        router.push({ pathname: "/paywall", params: { feature: "langs" } });
                         return;
                       }
                       const apply = () => {

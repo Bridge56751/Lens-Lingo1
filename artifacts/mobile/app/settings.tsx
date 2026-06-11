@@ -897,7 +897,7 @@ export default function SettingsScreen() {
                       // Free users are locked to one language; switching is Pro.
                       if (!isSubscribed) {
                         setPicker(null);
-                        router.push("/paywall");
+                        router.push({ pathname: "/paywall", params: { feature: "langs" } });
                         return;
                       }
                       const apply = () => {
