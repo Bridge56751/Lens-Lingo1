@@ -517,7 +517,7 @@ const en: Record<TKey, string> = {
   "home.sessions": "{n} sessions",
   "home.vocabulary": "Vocabulary",
   "home.vocabTag": "WORD BANK",
-  "home.vocabBadge": "SMART DECK",
+  "home.vocabBadge": "GRAMMAR CHECK",
   "home.pathVocabSub": "Save \u00b7 Review \u00b7 Master",
   "home.pathVocabCta": "Study Words",
   "home.words": "{n} words",
