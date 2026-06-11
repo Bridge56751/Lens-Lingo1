@@ -464,25 +464,29 @@ export default function PaywallScreen() {
             <Text style={[styles.featuresTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
               {t("paywall.featuresTitle")}
             </Text>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.stripRow}
-            >
+            <View style={styles.bulletList}>
               {FEATURES.map((f) => (
-                <View key={f.titleKey} style={[styles.stripChip, { backgroundColor: colors.card }]}>
-                  <View style={[styles.stripIcon, { backgroundColor: f.bg }]}>
-                    <Ionicons name={f.icon} size={13} color="#FFFFFF" />
+                <View key={f.titleKey} style={styles.bulletRow}>
+                  <View style={[styles.bulletCheck, { backgroundColor: f.bg }]}>
+                    <Ionicons name="checkmark" size={12} color="#FFFFFF" />
                   </View>
-                  <Text
-                    style={[styles.stripChipText, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}
-                    numberOfLines={1}
-                  >
-                    {t(f.titleKey)}
-                  </Text>
+                  <View style={styles.bulletText}>
+                    <Text
+                      style={[styles.bulletTitle, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}
+                      numberOfLines={1}
+                    >
+                      {t(f.titleKey)}
+                    </Text>
+                    <Text
+                      style={[styles.bulletDesc, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}
+                      numberOfLines={1}
+                    >
+                      {t(f.descKey)}
+                    </Text>
+                  </View>
                 </View>
               ))}
-            </ScrollView>
+            </View>
           </View>
         )}
 
@@ -816,27 +820,22 @@ const styles = StyleSheet.create({
 
   featureStrip: {
     borderRadius: 20,
-    padding: 14,
+    padding: 16,
     marginTop: 20,
-    gap: 10,
+    gap: 12,
   },
-  stripRow: { flexDirection: "row", gap: 8, paddingRight: 4 },
-  stripChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 7,
-    paddingVertical: 8,
-    paddingHorizontal: 10,
-    borderRadius: 999,
-  },
-  stripIcon: {
-    width: 22,
-    height: 22,
-    borderRadius: 7,
+  bulletList: { gap: 12 },
+  bulletRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+  bulletCheck: {
+    width: 26,
+    height: 26,
+    borderRadius: 9,
     alignItems: "center",
     justifyContent: "center",
   },
-  stripChipText: { fontSize: 12.5 },
+  bulletText: { flex: 1 },
+  bulletTitle: { fontSize: 14 },
+  bulletDesc: { fontSize: 12, marginTop: 1, lineHeight: 16 },
 
   spotlight: {
     borderRadius: 20,
