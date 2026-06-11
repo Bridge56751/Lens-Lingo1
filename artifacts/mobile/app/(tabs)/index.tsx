@@ -763,6 +763,7 @@ const styles = StyleSheet.create({
     color: "#1A1B2E",
     fontFamily: "Inter_700Bold",
     flexShrink: 1,
+    textAlign: "center",
   },
   gridCard: {
     flexGrow: 1,
