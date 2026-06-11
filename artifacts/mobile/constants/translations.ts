@@ -440,6 +440,11 @@ export type TKey =
   | "paywall.spotVocabB1"
   | "paywall.spotVocabB2"
   | "paywall.spotVocabB3"
+  | "paywall.spotLangsTitle"
+  | "paywall.spotLangsDesc"
+  | "paywall.spotLangsB1"
+  | "paywall.spotLangsB2"
+  | "paywall.spotLangsB3"
   | "paywall.spotEverything"
   | "paywall.choosePlan"
   | "paywall.annualSub"
@@ -883,6 +888,12 @@ const en: Record<TKey, string> = {
   "paywall.spotVocabB1": "See real example sentences for any word",
   "paywall.spotVocabB2": "Use a word in your own sentence & get graded",
   "paywall.spotVocabB3": "Search up & look up any word, anytime",
+  "paywall.spotLangsTitle": "All 12 Languages",
+  "paywall.spotLangsDesc":
+    "The free plan keeps you on one language. Go Pro to unlock all 12 and switch whenever you like — learn Spanish today, Japanese tomorrow, with your progress kept for each.",
+  "paywall.spotLangsB1": "Unlock all 12 languages",
+  "paywall.spotLangsB2": "Switch your learning language anytime",
+  "paywall.spotLangsB3": "Learn as many languages as you want",
   "paywall.spotEverything": "Everything else in Pro",
   "paywall.choosePlan": "Choose Your Plan",
   "paywall.annualSub": "Full access for 12 months",

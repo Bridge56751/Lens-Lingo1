@@ -164,7 +164,7 @@ export default function OnboardingScreen() {
       apply();
       return;
     }
-    requirePro(apply);
+    requirePro(apply, "langs");
   };
 
   const pickLevel = (level: Difficulty) => {

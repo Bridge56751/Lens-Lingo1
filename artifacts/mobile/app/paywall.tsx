@@ -48,7 +48,7 @@ const FEATURES: {
 // accent + lock take the feature's color and a full-width "spotlight" card
 // goes deep on it, while the grid still lists everything else in Pro. Accent
 // colors match the corresponding Home cards (orange chat, green vocabulary).
-type PaywallFeature = "chat" | "vocab";
+type PaywallFeature = "chat" | "vocab" | "langs";
 
 const FEATURE_THEMES: Record<
   PaywallFeature,
@@ -85,6 +85,16 @@ const FEATURE_THEMES: Record<
     descKey: "paywall.spotVocabDesc",
     bulletKeys: ["paywall.spotVocabB1", "paywall.spotVocabB2", "paywall.spotVocabB3"],
     gridTitleKey: "paywall.fVocabTitle",
+  },
+  langs: {
+    accent: "#0EA5E9",
+    spotBg: "#0369A1",
+    gradient: ["#38BDF8", "#0EA5E9"],
+    icon: "globe",
+    titleKey: "paywall.spotLangsTitle",
+    descKey: "paywall.spotLangsDesc",
+    bulletKeys: ["paywall.spotLangsB1", "paywall.spotLangsB2", "paywall.spotLangsB3"],
+    gridTitleKey: "paywall.fLangsTitle",
   },
 };
 
@@ -147,7 +157,9 @@ export default function PaywallScreen() {
   const insets = useSafeAreaInsets();
   const { feature } = useLocalSearchParams<{ feature?: string }>();
   const featureTheme =
-    feature === "chat" || feature === "vocab" ? FEATURE_THEMES[feature] : null;
+    feature === "chat" || feature === "vocab" || feature === "langs"
+      ? FEATURE_THEMES[feature]
+      : null;
   const accent = featureTheme?.accent ?? colors.primary;
   const accentSoft = featureTheme ? `${featureTheme.accent}1F` : colors.primarySoft;
   // Every purchase-flow accent (CTA, plan selection, price, badges) follows the
