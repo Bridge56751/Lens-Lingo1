@@ -9,6 +9,7 @@ import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Asset } from "expo-asset";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useState } from "react";
@@ -124,6 +125,7 @@ export default function RootLayout() {
     Inter_700Bold,
   });
   const [deviceReady, setDeviceReady] = useState(false);
+  const [assetsReady, setAssetsReady] = useState(false);
 
   useEffect(() => {
     getOrCreateDeviceId()
@@ -132,13 +134,22 @@ export default function RootLayout() {
       .finally(() => setDeviceReady(true));
   }, []);
 
+  // Preload + cache the onboarding logo during the splash phase so it renders
+  // instantly instead of popping in a moment after onboarding mounts.
+  // `.finally` guarantees startup proceeds even if the preload fails.
   useEffect(() => {
-    if ((fontsLoaded || fontError) && deviceReady) {
+    Asset.loadAsync(require("../assets/images/logo.png"))
+      .catch(() => {})
+      .finally(() => setAssetsReady(true));
+  }, []);
+
+  useEffect(() => {
+    if ((fontsLoaded || fontError) && deviceReady && assetsReady) {
       SplashScreen.hideAsync();
     }
-  }, [fontsLoaded, fontError, deviceReady]);
+  }, [fontsLoaded, fontError, deviceReady, assetsReady]);
 
-  if ((!fontsLoaded && !fontError) || !deviceReady) return null;
+  if ((!fontsLoaded && !fontError) || !deviceReady || !assetsReady) return null;
 
   return (
     // Auth is optional: render the app immediately and let Clerk hydrate in the

@@ -165,9 +165,10 @@ export default function OnboardingScreen() {
   const renderWelcome = () => (
     <View style={styles.centerSlide}>
       <Image
-        source={require("../assets/images/icon.png")}
+        source={require("../assets/images/logo.png")}
         style={styles.logo}
         resizeMode="contain"
+        fadeDuration={0}
       />
       <Text style={[styles.title, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
         {t("onboarding.welcomeTitle")}
