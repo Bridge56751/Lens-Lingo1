@@ -115,11 +115,15 @@ export default function OnboardingScreen() {
   const finish = () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     update("onboardingSeen", true);
-    // Finishing the tour always lands on the paywall. Replacing onboarding (a
-    // fullScreenModal) with the paywall works for every entry: on first launch
-    // (no back stack) the paywall's close() falls back to the tabs; when opened
-    // via "Take tour" over the tabs, replace keeps the tabs underneath so the
-    // paywall's close() pops straight back to them.
+    // "Take tour" replay: onboarding was pushed over the tabs (back stack
+    // exists), so just pop back — a returning user shouldn't see the paywall
+    // again.
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+    // First launch (reached via Redirect, no back stack): replace onboarding (a
+    // fullScreenModal) with the paywall; its close() falls back to the tabs.
     router.replace("/paywall");
   };
 
