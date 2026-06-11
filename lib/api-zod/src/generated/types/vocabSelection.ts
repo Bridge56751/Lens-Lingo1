@@ -12,5 +12,6 @@ export interface VocabSelection {
   level: string;
   word: string;
   translation: string;
+  mastered: boolean;
   createdAt: Date;
 }

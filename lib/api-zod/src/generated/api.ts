@@ -135,6 +135,7 @@ export const ListVocabSelectionsResponseItem = zod.object({
   "level": zod.string(),
   "word": zod.string(),
   "translation": zod.string(),
+  "mastered": zod.boolean(),
   "createdAt": zod.coerce.date()
 })
 export const ListVocabSelectionsResponse = zod.array(ListVocabSelectionsResponseItem)
@@ -156,6 +157,22 @@ export const AddVocabSelectionBody = zod.object({
  */
 export const DeleteVocabSelectionParams = zod.object({
   "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary Bulk move (master/unmaster) or delete picked words
+ */
+
+
+
+export const BulkUpdateVocabSelectionsBody = zod.object({
+  "ids": zod.array(zod.number()).min(1),
+  "action": zod.enum(['master', 'unmaster', 'delete'])
+})
+
+export const BulkUpdateVocabSelectionsResponse = zod.object({
+  "affected": zod.number()
 })
 
 

@@ -160,6 +160,7 @@ export interface VocabSelection {
   level: string;
   word: string;
   translation: string;
+  mastered: boolean;
   createdAt: string;
 }
 
@@ -168,6 +169,25 @@ export interface VocabSelectionInput {
   level: string;
   word: string;
   translation: string;
+}
+
+export type VocabBulkInputAction = typeof VocabBulkInputAction[keyof typeof VocabBulkInputAction];
+
+
+export const VocabBulkInputAction = {
+  master: 'master',
+  unmaster: 'unmaster',
+  delete: 'delete',
+} as const;
+
+export interface VocabBulkInput {
+  /** @minItems 1 */
+  ids: number[];
+  action: VocabBulkInputAction;
+}
+
+export interface VocabBulkResult {
+  affected: number;
 }
 
 export interface VocabExampleInput {

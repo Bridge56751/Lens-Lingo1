@@ -67,5 +67,6 @@ A language learning mobile app that lets users scan real-world objects with thei
 
 - Always run `pnpm --filter @workspace/api-spec run codegen` after changing `lib/api-spec/openapi.yaml`
 - Run `pnpm --filter @workspace/db run push` after adding new schema files and exporting from `lib/db/src/schema/index.ts`
+- `vocab_selections.mastered` (boolean, default false) was added to dev via a manual `ALTER` because `drizzle push` is blocked by an unrelated interactive truncate prompt. **At deploy, run on prod:** `ALTER TABLE vocab_selections ADD COLUMN IF NOT EXISTS mastered boolean NOT NULL DEFAULT false;`
 - The `integrations-openai-ai-react` lib is excluded from root `tsconfig.json` references (not needed for Expo)
 - Web preview safe-area insets differ from native — always test on device via Expo Go QR code

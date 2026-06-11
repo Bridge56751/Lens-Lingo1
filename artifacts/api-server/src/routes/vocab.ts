@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, inArray } from "drizzle-orm";
 import { db } from "@workspace/db";
 import { vocabBank, vocabSelections } from "@workspace/db";
 import { openai } from "@workspace/integrations-openai-ai-server";
@@ -258,6 +258,61 @@ router.delete("/vocab/selections/:id", async (req, res) => {
     return;
   }
   res.status(204).send();
+});
+
+// POST /vocab/selections/bulk - move (master/unmaster) or delete many picked
+// words at once. Every operation is scoped to the resolved customer so a request
+// can never touch another customer's rows.
+const BULK_ACTIONS = new Set(["master", "unmaster", "delete"]);
+const BULK_MAX = 500;
+
+router.post("/vocab/selections/bulk", async (req, res) => {
+  if (req.customerId == null) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+
+  const { ids: rawIds, action } = req.body as { ids?: unknown; action?: unknown };
+
+  if (typeof action !== "string" || !BULK_ACTIONS.has(action)) {
+    res.status(400).json({ error: "action must be master, unmaster or delete" });
+    return;
+  }
+  if (!Array.isArray(rawIds) || rawIds.length === 0) {
+    res.status(400).json({ error: "ids must be a non-empty array" });
+    return;
+  }
+  if (rawIds.length > BULK_MAX) {
+    res.status(400).json({ error: `Cannot process more than ${BULK_MAX} ids at once` });
+    return;
+  }
+  const ids = rawIds.filter((n): n is number => Number.isInteger(n));
+  if (ids.length === 0) {
+    res.status(400).json({ error: "ids must contain valid integers" });
+    return;
+  }
+
+  const owned = and(
+    eq(vocabSelections.customerId, req.customerId),
+    inArray(vocabSelections.id, ids),
+  );
+
+  let affected = 0;
+  if (action === "delete") {
+    const rows = await db.delete(vocabSelections).where(owned).returning({
+      id: vocabSelections.id,
+    });
+    affected = rows.length;
+  } else {
+    const rows = await db
+      .update(vocabSelections)
+      .set({ mastered: action === "master" })
+      .where(owned)
+      .returning({ id: vocabSelections.id });
+    affected = rows.length;
+  }
+
+  res.json({ affected });
 });
 
 // POST /vocab/search - find and translate words by a search term so the user

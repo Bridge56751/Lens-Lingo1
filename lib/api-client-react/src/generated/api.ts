@@ -44,6 +44,8 @@ import type {
   StartChatInput,
   StartChatResult,
   VocabBank,
+  VocabBulkInput,
+  VocabBulkResult,
   VocabCheck,
   VocabCheckInput,
   VocabExample,
@@ -895,6 +897,77 @@ export const useDeleteVocabSelection = <TError = ErrorType<ApiError>,
         TContext
       > => {
       return useMutation(getDeleteVocabSelectionMutationOptions(options));
+    }
+
+export const getBulkUpdateVocabSelectionsUrl = () => {
+
+
+
+
+  return `/api/vocab/selections/bulk`
+}
+
+/**
+ * @summary Bulk move (master/unmaster) or delete picked words
+ */
+export const bulkUpdateVocabSelections = async (vocabBulkInput: VocabBulkInput, options?: RequestInit): Promise<VocabBulkResult> => {
+
+  return customFetch<VocabBulkResult>(getBulkUpdateVocabSelectionsUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      vocabBulkInput,)
+  }
+);}
+
+
+
+
+export const getBulkUpdateVocabSelectionsMutationOptions = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bulkUpdateVocabSelections>>, TError,{data: BodyType<VocabBulkInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof bulkUpdateVocabSelections>>, TError,{data: BodyType<VocabBulkInput>}, TContext> => {
+
+const mutationKey = ['bulkUpdateVocabSelections'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof bulkUpdateVocabSelections>>, {data: BodyType<VocabBulkInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  bulkUpdateVocabSelections(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type BulkUpdateVocabSelectionsMutationResult = NonNullable<Awaited<ReturnType<typeof bulkUpdateVocabSelections>>>
+    export type BulkUpdateVocabSelectionsMutationBody = BodyType<VocabBulkInput>
+    export type BulkUpdateVocabSelectionsMutationError = ErrorType<ApiError>
+
+    /**
+ * @summary Bulk move (master/unmaster) or delete picked words
+ */
+export const useBulkUpdateVocabSelections = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bulkUpdateVocabSelections>>, TError,{data: BodyType<VocabBulkInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof bulkUpdateVocabSelections>>,
+        TError,
+        {data: BodyType<VocabBulkInput>},
+        TContext
+      > => {
+      return useMutation(getBulkUpdateVocabSelectionsMutationOptions(options));
     }
 
 export const getGetVocabExampleUrl = () => {

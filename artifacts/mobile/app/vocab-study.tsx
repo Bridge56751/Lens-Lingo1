@@ -85,13 +85,16 @@ function VocabStudyScreenInner() {
   const { data: selections, isLoading } = useListVocabSelections({ targetLanguage: target });
   const deck = useMemo(() => {
     const all = (selections ?? []) as VocabSelection[];
-    if (!idsParam) return all;
+    // The default deck is the active learning list — mastered words are a "done"
+    // archive and only ever studied when their ids are passed explicitly (Review).
+    const learning = all.filter((s) => !s.mastered);
+    if (!idsParam) return learning;
     const idSet = new Set(
       idsParam.split(",").map((s) => parseInt(s, 10)).filter((n) => !Number.isNaN(n)),
     );
-    if (idSet.size === 0) return all;
+    if (idSet.size === 0) return learning;
     const subset = all.filter((s) => idSet.has(s.id));
-    return subset.length > 0 ? subset : all;
+    return subset.length > 0 ? subset : learning;
   }, [selections, idsParam]);
 
   const [pos, setPos] = useState(0);

@@ -1,4 +1,5 @@
 import {
+  boolean,
   integer,
   pgTable,
   serial,
@@ -50,6 +51,9 @@ export const vocabSelections = pgTable(
     level: text("level").notNull(),
     word: text("word").notNull(),
     translation: text("translation").notNull(),
+    // Whether the customer has marked this word as "mastered". Mastered words
+    // move to a separate bucket and are excluded from the default study deck.
+    mastered: boolean("mastered").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -64,6 +68,7 @@ export const insertVocabSelectionSchema = createInsertSchema(
 ).omit({
   id: true,
   customerId: true,
+  mastered: true,
   createdAt: true,
 });
 

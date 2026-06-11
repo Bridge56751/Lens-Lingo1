@@ -376,6 +376,15 @@ export type TKey =
   | "vocab.doneSub"
   | "vocab.restart"
   | "vocab.actionError"
+  | "vocab.mastered"
+  | "vocab.bankTab"
+  | "vocab.bulkStudy"
+  | "vocab.bulkReview"
+  | "vocab.selectedCount"
+  | "vocab.deleteTitle"
+  | "vocab.deleteMsg"
+  | "vocab.masteredEmptyTitle"
+  | "vocab.masteredEmptySub"
   | "sentences.title"
   | "sentences.sub"
   | "sentences.error"
@@ -532,6 +541,15 @@ const en: Record<TKey, string> = {
   "vocab.doneSub": "You studied all your picked words.",
   "vocab.restart": "Start over",
   "vocab.actionError": "Something went wrong. Please try again.",
+  "vocab.mastered": "Mastered",
+  "vocab.bankTab": "Bank",
+  "vocab.bulkStudy": "Study",
+  "vocab.bulkReview": "Review",
+  "vocab.selectedCount": "{count} selected",
+  "vocab.deleteTitle": "Delete words?",
+  "vocab.deleteMsg": "This permanently removes the selected words from your list.",
+  "vocab.masteredEmptyTitle": "No mastered words yet",
+  "vocab.masteredEmptySub": "Tick words in My Words and tap Mastered to move the ones you already know here.",
   "sentences.title": "Simple Sentences",
   "sentences.sub": "Everyday {lang} phrases to get you around",
   "sentences.error": "Couldn’t load phrases. Pull to retry.",
