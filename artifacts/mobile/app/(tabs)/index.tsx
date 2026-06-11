@@ -405,23 +405,18 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* Categories — 2x2 grid */}
-        <View style={{ gap: 14 }}>
+        {/* Pro features — sectioned off at the top */}
+        <View style={styles.section}>
+          <View style={styles.sectionHead}>
+            <View style={styles.proStarBadge}>
+              <Ionicons name="star" size={11} color="#F5C518" />
+            </View>
+            <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+              {t("home.proSection")}
+            </Text>
+            <View style={[styles.sectionRule, { backgroundColor: "rgba(245,197,24,0.4)" }]} />
+          </View>
           <View style={styles.gridRow}>
-            <GridCard
-              tag={t("home.pathSentencesTag")}
-              title={t("home.pathSentencesTitle")}
-              subtitle={t("home.pathSentencesSub")}
-              ctaLabel={t("home.pathSentencesCta")}
-              bg="#2563EB"
-              fg="#FFFFFF"
-              tagBg="#FFFFFF"
-              tagFg="#1D4ED8"
-              ctaBg="#FFFFFF"
-              ctaFg="#1D4ED8"
-              watermark="Hi"
-              onPress={() => router.push("/sentences")}
-            />
             <GridCard
               tag={t("home.pathChatTag")}
               title={t("home.pathChatTitle")}
@@ -439,23 +434,6 @@ export default function HomeScreen() {
               onPress={goFreeChat}
               loading={startChat.isPending}
             />
-          </View>
-          <View style={styles.gridRow}>
-            <GridCard
-              tag={t("home.pathAlphabetTag")}
-              title={t("home.pathAlphabetTitle")}
-              subtitle={t("home.pathAlphabetSub")}
-              ctaLabel={t("home.pathAlphabetCta")}
-              bg="#FBBF24"
-              fg="#422006"
-              tagBg="rgba(255,255,255,0.55)"
-              tagFg="#422006"
-              ctaBg="#422006"
-              ctaFg="#FBBF24"
-              watermark="Aa"
-              progress={alphabet.total > 0 ? alphabet.ratio : undefined}
-              onPress={() => router.push("/alphabet")}
-            />
             <GridCard
               tag={t("home.vocabTag")}
               title={t("home.vocabulary")}
@@ -471,6 +449,47 @@ export default function HomeScreen() {
               badge={t("home.vocabBadge")}
               glow
               onPress={() => requirePro(() => router.push("/vocabulary"))}
+            />
+          </View>
+        </View>
+
+        {/* Learn — free */}
+        <View style={styles.section}>
+          <View style={styles.sectionHead}>
+            <Text style={[styles.sectionTitle, { color: colors.mutedForeground }]}>
+              {t("home.learnSection")}
+            </Text>
+            <View style={[styles.sectionRule, { backgroundColor: colors.border }]} />
+          </View>
+          <View style={styles.gridRow}>
+            <GridCard
+              tag={t("home.pathSentencesTag")}
+              title={t("home.pathSentencesTitle")}
+              subtitle={t("home.pathSentencesSub")}
+              ctaLabel={t("home.pathSentencesCta")}
+              bg="#2563EB"
+              fg="#FFFFFF"
+              tagBg="#FFFFFF"
+              tagFg="#1D4ED8"
+              ctaBg="#FFFFFF"
+              ctaFg="#1D4ED8"
+              watermark="Hi"
+              onPress={() => router.push("/sentences")}
+            />
+            <GridCard
+              tag={t("home.pathAlphabetTag")}
+              title={t("home.pathAlphabetTitle")}
+              subtitle={t("home.pathAlphabetSub")}
+              ctaLabel={t("home.pathAlphabetCta")}
+              bg="#FBBF24"
+              fg="#422006"
+              tagBg="rgba(255,255,255,0.55)"
+              tagFg="#422006"
+              ctaBg="#422006"
+              ctaFg="#FBBF24"
+              watermark="Aa"
+              progress={alphabet.total > 0 ? alphabet.ratio : undefined}
+              onPress={() => router.push("/alphabet")}
             />
           </View>
         </View>
@@ -746,6 +765,28 @@ const styles = StyleSheet.create({
   pathProgressTrack: { height: 8, borderRadius: 4, overflow: "hidden" },
   pathProgressFill: { height: "100%", borderRadius: 4 },
   gridRow: { flexDirection: "row", gap: 14 },
+  section: { gap: 12 },
+  sectionHead: { flexDirection: "row", alignItems: "center", gap: 8 },
+  proStarBadge: {
+    width: 20,
+    height: 20,
+    borderRadius: 6,
+    backgroundColor: "#0B0B12",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "rgba(245,197,24,0.5)",
+  },
+  sectionTitle: {
+    fontSize: 12,
+    letterSpacing: 0.8,
+    fontFamily: "Inter_700Bold",
+  },
+  sectionRule: {
+    flex: 1,
+    height: 1,
+    borderRadius: 1,
+  },
   gridCardWrap: { flex: 1 },
   gridBadge: {
     position: "absolute",

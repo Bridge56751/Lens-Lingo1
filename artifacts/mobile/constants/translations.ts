@@ -73,6 +73,8 @@ export type TKey =
   | "home.newHere"
   | "home.newHereDesc"
   | "home.takeTour"
+  | "home.proSection"
+  | "home.learnSection"
   | "onboarding.skip"
   | "onboarding.next"
   | "onboarding.getStarted"
@@ -518,6 +520,8 @@ const en: Record<TKey, string> = {
   "home.vocabulary": "Vocabulary",
   "home.vocabTag": "WORD BANK",
   "home.vocabBadge": "GRAMMAR CHECK",
+  "home.proSection": "PRO FEATURES",
+  "home.learnSection": "LEARN",
   "home.pathVocabSub": "Save \u00b7 Review \u00b7 Master",
   "home.pathVocabCta": "Study Words",
   "home.words": "{n} words",
