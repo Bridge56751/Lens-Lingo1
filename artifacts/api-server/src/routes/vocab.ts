@@ -4,8 +4,14 @@ import { db } from "@workspace/db";
 import { vocabBank, vocabSelections } from "@workspace/db";
 import { openai } from "@workspace/integrations-openai-ai-server";
 import { accuracyRules } from "../lib/languages";
+import { requirePro } from "../middleware/customer";
 
 const router = Router();
+
+// Vocabulary (Word Bank + study) is a Pro-only feature in the app — every
+// entry point is behind ProGuard / requirePro. Mirror that boundary on the
+// server so these routes can't be driven by calling the API directly.
+router.use(requirePro);
 
 // Allowlist for languages interpolated into AI prompts (prevents injection of
 // instruction-like text via an arbitrary language string).

@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, type Request } from "express";
 import { and, eq, desc, like, or, sql } from "drizzle-orm";
 import { db } from "@workspace/db";
 import { conversations, customers, messages } from "@workspace/db";
@@ -17,6 +17,7 @@ import {
   freeChatTutorSystemPrompt,
   tutorTurnReminder,
 } from "../../lib/prompts";
+import { requirePro } from "../../middleware/customer";
 
 const router = Router();
 
@@ -104,7 +105,7 @@ async function autoTitleFreeChat(opts: {
 }
 
 // POST /openai/transcribe - transcribe spoken audio to text (Whisper)
-router.post("/openai/transcribe", async (req, res) => {
+router.post("/openai/transcribe", requirePro, async (req, res) => {
   const { audioBase64, mimeType, language } = req.body as {
     audioBase64?: string;
     mimeType?: string;
@@ -151,7 +152,7 @@ router.post("/openai/transcribe", async (req, res) => {
 });
 
 // POST /openai/translate - translate a tutor message into the user's language
-router.post("/openai/translate", async (req, res) => {
+router.post("/openai/translate", requirePro, async (req, res) => {
   const { text, to } = req.body as { text?: string; to?: string };
 
   const input = typeof text === "string" ? text.trim() : "";
@@ -331,7 +332,7 @@ router.get("/openai/conversations", async (req, res) => {
 });
 
 // POST /openai/conversations - create a new conversation
-router.post("/openai/conversations", async (req, res) => {
+router.post("/openai/conversations", requirePro, async (req, res) => {
   const { title } = req.body as { title?: string };
   if (!title) {
     res.status(400).json({ error: "title is required" });
@@ -361,7 +362,7 @@ router.post("/openai/conversations", async (req, res) => {
 });
 
 // POST /openai/conversations/chat - start a free speak-or-type tutor chat (no scan)
-router.post("/openai/conversations/chat", async (req, res) => {
+router.post("/openai/conversations/chat", requirePro, async (req, res) => {
   const { targetLanguage: rawTarget, nativeLanguage: rawNative } = req.body as {
     targetLanguage?: string;
     nativeLanguage?: string;
@@ -440,7 +441,7 @@ router.post("/openai/conversations/chat", async (req, res) => {
 });
 
 // GET /openai/conversations/:id - get conversation with messages (excluding system messages)
-router.get("/openai/conversations/:id", async (req, res) => {
+router.get("/openai/conversations/:id", requirePro, async (req: Request<{ id: string }>, res) => {
   const id = parseInt(req.params.id ?? "", 10);
   if (isNaN(id)) {
     res.status(400).json({ error: "Invalid conversation id" });
@@ -548,7 +549,7 @@ router.delete("/openai/conversations/:id", async (req, res) => {
 });
 
 // GET /openai/conversations/:id/messages - list messages (excluding system)
-router.get("/openai/conversations/:id/messages", async (req, res) => {
+router.get("/openai/conversations/:id/messages", requirePro, async (req: Request<{ id: string }>, res) => {
   const id = parseInt(req.params.id ?? "", 10);
   if (isNaN(id)) {
     res.status(400).json({ error: "Invalid conversation id" });
@@ -586,7 +587,7 @@ router.get("/openai/conversations/:id/messages", async (req, res) => {
 });
 
 // POST /openai/conversations/:id/messages - send message, stream response
-router.post("/openai/conversations/:id/messages", async (req, res) => {
+router.post("/openai/conversations/:id/messages", requirePro, async (req: Request<{ id: string }>, res) => {
   const id = parseInt(req.params.id ?? "", 10);
   if (isNaN(id)) {
     res.status(400).json({ error: "Invalid conversation id" });
@@ -766,7 +767,7 @@ const MIN_USER_MESSAGES_TO_GRADE = 1;
 // POST /openai/conversations/:id/grade - grade the learner's performance.
 // Returns a 0-100 score plus structured strengths/mistakes/suggestions and
 // persists the result so it can be shown again on reopen.
-router.post("/openai/conversations/:id/grade", async (req, res) => {
+router.post("/openai/conversations/:id/grade", requirePro, async (req: Request<{ id: string }>, res) => {
   const id = parseInt(req.params.id ?? "", 10);
   if (isNaN(id)) {
     res.status(400).json({ error: "Invalid conversation id" });

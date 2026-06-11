@@ -42,6 +42,10 @@ import { authHeader } from "@/lib/authToken";
 import { romanizeText, isNonLatinLanguage } from "@/lib/romanize";
 import { speakWord, stopSpeaking, prefetchSpeech } from "@/lib/speech";
 import { recordPractice, markVoiceChat } from "@/lib/activity";
+import {
+  goToPaywallForProRequired,
+  isProRequiredApiError,
+} from "@/lib/proRequired";
 import { fetch as expoFetch } from "expo/fetch";
 
 type Message = {
@@ -162,6 +166,11 @@ function MessageBubble({
         },
         body: JSON.stringify({ text: message.content, to: nativeLanguage }),
       });
+      if (response.status === 403) {
+        // Translation is Pro-only on the server; route to the paywall.
+        goToPaywallForProRequired();
+        return;
+      }
       if (!response.ok) throw new Error("translate failed");
       const data = (await response.json()) as { translation?: string };
       if (!data.translation) throw new Error("empty translation");
@@ -456,6 +465,9 @@ function ConversationScreenInner() {
         queryKey: getGetOpenaiConversationQueryKey(conversationId),
       });
     } catch (err) {
+      // Server says this account isn't Pro — the global error hook routes to the
+      // paywall; skip the generic grade-failed alert.
+      if (isProRequiredApiError(err)) return;
       const status =
         err && typeof err === "object" && "status" in err
           ? (err as { status?: number }).status
@@ -533,6 +545,11 @@ function ConversationScreenInner() {
         }),
       });
 
+      if (response.status === 403) {
+        // Voice transcription is Pro-only on the server; route to the paywall.
+        goToPaywallForProRequired();
+        return;
+      }
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
       const data = (await response.json()) as { text?: string };
@@ -593,6 +610,13 @@ function ConversationScreenInner() {
         },
       );
 
+      if (response.status === 403) {
+        // Chat send is Pro-only on the server; route to the paywall and drop the
+        // optimistic user bubble we just added since the turn won't be answered.
+        goToPaywallForProRequired();
+        setMessages((prev) => prev.filter((m) => m.id !== userMessage.id));
+        return;
+      }
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
       const reader = response.body?.getReader();

@@ -2,8 +2,13 @@ import { Router } from "express";
 import { and, eq, asc } from "drizzle-orm";
 import { db } from "@workspace/db";
 import { conversations, messages } from "@workspace/db";
+import { requirePro } from "../middleware/customer";
 
 const router = Router();
+
+// The Vocabulary screen is Pro-only in the app (ProGuard + requirePro on its
+// entry point). Mirror that boundary on the server.
+router.use(requirePro);
 
 const STOPWORDS = new Set([
   "the", "a", "an", "is", "are", "was", "were", "be", "been", "being",

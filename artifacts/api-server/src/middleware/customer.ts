@@ -2,6 +2,7 @@ import type { Request, Response, NextFunction } from "express";
 import { getAuth, clerkClient } from "@clerk/express";
 import { db, customers } from "@workspace/db";
 import { eq } from "drizzle-orm";
+import { customerHasPro } from "../lib/plan";
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -137,5 +138,42 @@ export function requireAuth(
     res.status(401).json({ error: "Unauthorized" });
     return;
   }
+  next();
+}
+
+/**
+ * Route guard that requires the resolved customer to hold the Pro entitlement.
+ * Must run after `resolveCustomer` so `req.customerId` / `req.authUserId` /
+ * `req.deviceId` are populated.
+ *
+ * This is the server-side mirror of the mobile app's client-side Pro boundary
+ * (`usePro` / `ProGuard`): it stops a paid feature from being used by calling
+ * the API directly. Entitlement is resolved via `customerHasPro`, which pulls
+ * the authoritative state from RevenueCat (cached briefly) and reconciles it
+ * onto the customer row. The check fails closed — a missing customer or any
+ * resolution error yields a 403 — so a paid route is never served to a caller
+ * we can't confirm as Pro. The `{ error: "pro_required" }` body lets the client
+ * detect this case and route the user to the paywall.
+ */
+export async function requirePro(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  const customerId = req.customerId;
+  if (customerId == null) {
+    res.status(403).json({ error: "pro_required" });
+    return;
+  }
+
+  // Same id the mobile client logged in to RevenueCat with (Clerk user id when
+  // signed in, else the anonymous device id).
+  const appUserId = req.authUserId ?? req.deviceId;
+  const isPro = await customerHasPro({ customerId, appUserId, log: req.log });
+  if (!isPro) {
+    res.status(403).json({ error: "pro_required" });
+    return;
+  }
+
   next();
 }

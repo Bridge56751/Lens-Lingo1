@@ -5,7 +5,7 @@ import {
   Inter_700Bold,
   useFonts,
 } from "@expo-google-fonts/inter";
-import { QueryClient } from "@tanstack/react-query";
+import { QueryClient, QueryCache, MutationCache } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -25,6 +25,7 @@ import { getOrCreateDeviceId } from "@/lib/device";
 import { setMobileAuthTokenGetter } from "@/lib/authToken";
 import { setAuthTokenGetter, setBaseUrl, setDeviceId } from "@workspace/api-client-react";
 import { initializeRevenueCat, SubscriptionProvider } from "@/lib/revenuecat";
+import { handleProRequiredError } from "@/lib/proRequired";
 
 const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 const CLERK_PROXY_URL = process.env.EXPO_PUBLIC_CLERK_PROXY_URL || undefined;
@@ -51,7 +52,12 @@ SplashScreen.preventAutoHideAsync();
 // still refetches fresh data whenever it is online.
 const OFFLINE_MAX_AGE = 1000 * 60 * 60 * 24 * 30; // 30 days
 
+// A global error hook routes any 403 `pro_required` (the server-side Pro guard)
+// to the paywall, so calling a paid route as a free user lands on the upgrade
+// screen instead of a silent failure. Non-Pro errors pass through untouched.
 const queryClient = new QueryClient({
+  queryCache: new QueryCache({ onError: handleProRequiredError }),
+  mutationCache: new MutationCache({ onError: handleProRequiredError }),
   defaultOptions: { queries: { gcTime: OFFLINE_MAX_AGE } },
 });
 
