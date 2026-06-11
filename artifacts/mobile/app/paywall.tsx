@@ -172,6 +172,10 @@ export default function PaywallScreen() {
   const gridFeatures = featureTheme
     ? FEATURES.filter((f) => f.titleKey !== featureTheme.gridTitleKey)
     : FEATURES;
+  // On the generic (no-spotlight) paywall, surface Unlimited Scans as a
+  // full-width hero card with the remaining four laid out in a 2x2 grid.
+  const wideFeature = featureTheme ? null : gridFeatures[0];
+  const gridItems = wideFeature ? gridFeatures.slice(1) : gridFeatures;
   const {
     offerings,
     ineligibleTrialProductIds,
@@ -403,8 +407,28 @@ export default function PaywallScreen() {
           <Text style={[styles.featuresTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
             {t(featureTheme ? "paywall.spotEverything" : "paywall.featuresTitle")}
           </Text>
+          {wideFeature && (
+            <View style={[styles.featureWide, { backgroundColor: colors.card }]}>
+              <View style={[styles.featureIcon, { backgroundColor: wideFeature.bg, marginBottom: 0 }]}>
+                <Ionicons name={wideFeature.icon} size={18} color="#FFFFFF" />
+              </View>
+              <View style={styles.featureWideText}>
+                <Text
+                  style={[styles.featureTitle, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}
+                  numberOfLines={1}
+                >
+                  {t(wideFeature.titleKey)}
+                </Text>
+                <Text
+                  style={[styles.featureDesc, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}
+                >
+                  {t(wideFeature.descKey)}
+                </Text>
+              </View>
+            </View>
+          )}
           <View style={styles.featuresGrid}>
-            {gridFeatures.map((f) => (
+            {gridItems.map((f) => (
               <View key={f.titleKey} style={[styles.featureItem, { backgroundColor: colors.card }]}>
                 <View style={[styles.featureIcon, { backgroundColor: f.bg }]}>
                   <Ionicons name={f.icon} size={18} color="#FFFFFF" />
@@ -743,6 +767,15 @@ const styles = StyleSheet.create({
   },
   featureTitle: { fontSize: 13.5 },
   featureDesc: { fontSize: 11, lineHeight: 15, marginTop: 2 },
+  featureWide: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 16,
+    padding: 12,
+    gap: 12,
+    marginBottom: 12,
+  },
+  featureWideText: { flex: 1 },
 
   spotlight: {
     borderRadius: 20,
