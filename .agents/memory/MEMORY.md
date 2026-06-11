@@ -20,3 +20,4 @@
 - [Language flags](language-flags.md) — per-language flags come from one shared LANGUAGE_FLAGS map; emoji flags render on iOS/web but NOT Android (shows region code) — use images if Android matters.
 - [Romanization aid](romanization-aid.md) — optional non-Latin reading aid (on-demand /openai/romanize); disabled React Query still exposes cached data, so gate reads/renders on the live toggle, not just query.data.
 - [Server Pro plan sync](server-plan-sync.md) — /me/plan pulls plan from RevenueCat REST (getCustomer) on read, not webhooks; RC customer id == auth_user_id/device_id via Purchases.logIn; connector token + REVENUECAT_PROJECT_ID, no secret.
+- [RevenueCat web price fields](revenuecat-web-price-fields.md) — web Browser Mode numeric price fields are unreliable (bogus discounts); trust *String fields, clamp computed %; verify prices on device; prices live in RC config not app code.

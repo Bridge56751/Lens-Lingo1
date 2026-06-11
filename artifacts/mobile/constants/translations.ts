@@ -417,6 +417,29 @@ export type TKey =
   | "paywall.subscribe"
   | "paywall.restore"
   | "paywall.terms"
+  | "paywall.header"
+  | "paywall.titleAccent"
+  | "paywall.featuresTitle"
+  | "paywall.fScansTitle"
+  | "paywall.fScansDesc"
+  | "paywall.fTutorTitle"
+  | "paywall.fTutorDesc"
+  | "paywall.fChatTitle"
+  | "paywall.fChatDesc"
+  | "paywall.fVocabTitle"
+  | "paywall.fVocabDesc"
+  | "paywall.choosePlan"
+  | "paywall.annualSub"
+  | "paywall.monthlySub"
+  | "paywall.weeklySub"
+  | "paywall.planSub"
+  | "paywall.save"
+  | "paywall.continueWith"
+  | "paywall.continueGeneric"
+  | "paywall.securePayment"
+  | "paywall.tos"
+  | "paywall.privacy"
+  | "paywall.restoreShort"
   | "paywall.successTitle"
   | "paywall.successBody"
   | "paywall.restoredTitle"
@@ -812,9 +835,32 @@ const en: Record<TKey, string> = {
   "pro.upgradeSub": "Unlock tutor chat, voice, Word Bank & all languages",
   "pro.restoreTitle": "Restore purchases",
   "pro.restoreSub": "Already subscribed? Restore your Pro access",
-  "paywall.title": "Unlock LinguaScan Pro",
+  "paywall.title": "Unlock Your",
+  "paywall.titleAccent": "Full Learning Potential",
   "paywall.subtitle":
-    "Learn faster with your AI tutor, voice practice, and every language.",
+    "Get unlimited access to all features and learn faster with AI-powered tools.",
+  "paywall.header": "Upgrade to Premium",
+  "paywall.featuresTitle": "Premium Features",
+  "paywall.fScansTitle": "Unlimited Scans",
+  "paywall.fScansDesc": "Scan as many objects as you want",
+  "paywall.fTutorTitle": "AI Tutor",
+  "paywall.fTutorDesc": "Get personalized help anytime",
+  "paywall.fChatTitle": "Full Conversations",
+  "paywall.fChatDesc": "Unlimited AI chat interactions",
+  "paywall.fVocabTitle": "Vocabulary",
+  "paywall.fVocabDesc": "Save, review & master words",
+  "paywall.choosePlan": "Choose Your Plan",
+  "paywall.annualSub": "Full access for 12 months",
+  "paywall.monthlySub": "Full access for 1 month",
+  "paywall.weeklySub": "Full access for 7 days",
+  "paywall.planSub": "Full access",
+  "paywall.save": "Save {n}%",
+  "paywall.continueWith": "Continue with {plan}",
+  "paywall.continueGeneric": "Continue",
+  "paywall.securePayment": "Secure payment · Cancel anytime",
+  "paywall.tos": "Terms of Service",
+  "paywall.privacy": "Privacy Policy",
+  "paywall.restoreShort": "Restore Purchases",
   "paywall.feature.chat": "Chat with your AI language tutor",
   "paywall.feature.voice": "Speaking practice with the mic, everywhere",
   "paywall.feature.vocab": "Build your personal Word Bank",
