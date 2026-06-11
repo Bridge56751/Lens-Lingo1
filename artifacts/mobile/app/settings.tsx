@@ -155,7 +155,7 @@ export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const t = useT();
   const { prefs, update } = usePreferences();
-  const { isSubscribed, restore, isRestoring } = useSubscription();
+  const { isSubscribed, isLoading: subLoading, restore, isRestoring } = useSubscription();
   const { data: conversations } = useListOpenaiConversations();
   const { events: activityEvents } = useActivity();
   const { isSignedIn } = useAuth();
@@ -882,6 +882,8 @@ export default function SettingsScreen() {
                 const active = lang === prefs.targetLanguage;
                 const nativeName =
                   LOCALE_NATIVE_NAMES[lang as Locale] ?? lang;
+                // Free users keep English + their current language unlocked; the rest are Pro-gated.
+                const locked = !isSubscribed && !subLoading && lang !== "English" && !active;
                 return (
                   <TouchableOpacity
                     key={lang}
@@ -894,8 +896,14 @@ export default function SettingsScreen() {
                         setPicker(null);
                         return;
                       }
-                      // Free users are locked to one language; switching is Pro.
-                      if (!isSubscribed) {
+                      // Tier still resolving — no-op so a free user can't slip a
+                      // paid switch and a Pro user isn't wrongly gated; retry once loaded.
+                      if (subLoading) {
+                        return;
+                      }
+                      // Locked languages route to the paywall; English and the
+                      // current language stay free to select.
+                      if (locked) {
                         setPicker(null);
                         router.push({ pathname: "/paywall", params: { feature: "langs" } });
                         return;
@@ -930,8 +938,10 @@ export default function SettingsScreen() {
                     }}
                     activeOpacity={0.7}
                   >
-                    <Text style={styles.langFlag}>{LANGUAGE_FLAGS[lang as Language]}</Text>
-                    <View style={{ flex: 1 }}>
+                    <Text style={[styles.langFlag, locked && { opacity: 0.45 }]}>
+                      {LANGUAGE_FLAGS[lang as Language]}
+                    </Text>
+                    <View style={[{ flex: 1 }, locked && { opacity: 0.45 }]}>
                       <Text
                         style={[
                           styles.langOptionText,
@@ -961,7 +971,11 @@ export default function SettingsScreen() {
                         </Text>
                       )}
                     </View>
-                    {active && <Ionicons name="checkmark" size={20} color={colors.primary} />}
+                    {active ? (
+                      <Ionicons name="checkmark" size={20} color={colors.primary} />
+                    ) : locked ? (
+                      <Ionicons name="lock-closed" size={16} color={colors.mutedForeground} />
+                    ) : null}
                   </TouchableOpacity>
                 );
               })}

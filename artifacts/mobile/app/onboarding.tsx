@@ -164,6 +164,12 @@ export default function OnboardingScreen() {
       apply();
       return;
     }
+    // English stays free everywhere (matches the Home + Settings language
+    // pickers), so a replay-tour switch to English is never Pro-gated.
+    if (lang === "English") {
+      apply();
+      return;
+    }
     requirePro(apply, "langs");
   };
 

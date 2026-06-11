@@ -22,3 +22,4 @@
 - [Server Pro plan sync](server-plan-sync.md) — /me/plan pulls plan from RevenueCat REST (getCustomer) on read, not webhooks; RC customer id == auth_user_id/device_id via Purchases.logIn; connector token + REVENUECAT_PROJECT_ID, no secret.
 - [RevenueCat free trials](revenuecat-free-trials.md) — trials are store-configured intro offers surfaced via introPrice (price 0); app only displays; gate trial copy on iOS checkTrialOrIntroductoryPriceEligibility (INELIGIBLE), not Android/web.
 - [RevenueCat web price fields](revenuecat-web-price-fields.md) — web Browser Mode numeric price fields are unreliable (bogus discounts); trust *String fields, clamp computed %; verify prices on device; prices live in RC config not app code.
+- [Paywall gate loading window](paywall-gate-loading.md) — turning a `!isPro` tap-gate into a derived `locked` flag that excludes `isLoading` fails OPEN during cold start; add a separate loading no-op in the handler.
