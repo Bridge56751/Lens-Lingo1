@@ -40,6 +40,7 @@ const FEATURES: {
   { icon: "sparkles", bg: "#F97316", titleKey: "paywall.fTutorTitle", descKey: "paywall.fTutorDesc" },
   { icon: "chatbubbles", bg: "#3B82F6", titleKey: "paywall.fChatTitle", descKey: "paywall.fChatDesc" },
   { icon: "book", bg: "#10B981", titleKey: "paywall.fVocabTitle", descKey: "paywall.fVocabDesc" },
+  { icon: "globe", bg: "#0EA5E9", titleKey: "paywall.fLangsTitle", descKey: "paywall.fLangsDesc" },
 ];
 
 // When the user taps a specific locked feature on Home we route here with a

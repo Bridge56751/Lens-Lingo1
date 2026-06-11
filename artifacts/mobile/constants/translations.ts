@@ -428,6 +428,8 @@ export type TKey =
   | "paywall.fChatDesc"
   | "paywall.fVocabTitle"
   | "paywall.fVocabDesc"
+  | "paywall.fLangsTitle"
+  | "paywall.fLangsDesc"
   | "paywall.spotChatTitle"
   | "paywall.spotChatDesc"
   | "paywall.spotChatB1"
@@ -867,6 +869,8 @@ const en: Record<TKey, string> = {
   "paywall.fChatDesc": "Unlimited AI chat interactions",
   "paywall.fVocabTitle": "Vocabulary",
   "paywall.fVocabDesc": "Save, review & master words",
+  "paywall.fLangsTitle": "All Languages",
+  "paywall.fLangsDesc": "Learn all 12 languages",
   "paywall.spotChatTitle": "Full Conversations",
   "paywall.spotChatDesc":
     "Go past a couple of free replies. Chat without limits with your AI tutor about anything you scan — it adapts to your level, gently corrects your mistakes, and always keeps the conversation going in the language you're learning.",
