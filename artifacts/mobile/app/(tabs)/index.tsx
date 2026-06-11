@@ -372,9 +372,9 @@ export default function HomeScreen() {
 
           <View style={styles.heroRight}>
             <View style={styles.heroBracket}>
-              <CornerBrackets color="#FFFFFF" size={20} />
+              <CornerBrackets color="#FFFFFF" size={16} />
               <View style={[styles.heroIconCircle, { backgroundColor: "#FFFFFF" }]}>
-                <Ionicons name="cube" size={48} color={colors.primary} />
+                <Ionicons name="cube" size={40} color={colors.primary} />
               </View>
             </View>
             <View style={[styles.heroChip, { backgroundColor: "#FFFFFF" }]}>
@@ -658,40 +658,40 @@ const styles = StyleSheet.create({
   hero: {
     flexDirection: "row",
     borderRadius: 24,
-    padding: 20,
+    padding: 16,
     gap: 12,
     overflow: "hidden",
   },
-  heroLeft: { flex: 1, gap: 10 },
-  heroTitle: { fontSize: 24, letterSpacing: -0.5, lineHeight: 28 },
+  heroLeft: { flex: 1, gap: 8 },
+  heroTitle: { fontSize: 21, letterSpacing: -0.5, lineHeight: 25 },
   heroBody: { fontSize: 12, lineHeight: 17 },
   heroButton: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
     paddingHorizontal: 18,
-    paddingVertical: 12,
+    paddingVertical: 10,
     borderRadius: 999,
     alignSelf: "flex-start",
-    marginTop: 4,
+    marginTop: 2,
   },
   heroButtonText: { color: "#FFFFFF", fontSize: 14 },
   heroRight: {
-    width: 120,
+    width: 104,
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
   },
   heroBracket: {
-    width: 100,
-    height: 100,
+    width: 84,
+    height: 84,
     alignItems: "center",
     justifyContent: "center",
   },
   heroIconCircle: {
-    width: 76,
-    height: 76,
-    borderRadius: 38,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     alignItems: "center",
     justifyContent: "center",
   },
