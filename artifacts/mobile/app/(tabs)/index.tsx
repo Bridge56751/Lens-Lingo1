@@ -161,12 +161,7 @@ function GridCard({
 }) {
   const card = (
     <TouchableOpacity
-      style={[
-        styles.gridCard,
-        glow && styles.gridCardGlowBorder,
-        glow && { borderColor: glowColor },
-        { backgroundColor: bg, opacity: loading ? 0.7 : 1 },
-      ]}
+      style={[styles.gridCard, { backgroundColor: bg, opacity: loading ? 0.7 : 1 }]}
       onPress={() => {
         if (loading) return;
         Haptics.selectionAsync();
@@ -251,13 +246,7 @@ function GridCard({
 
   return (
     <View style={styles.gridCardWrap}>
-      {glow ? (
-        <View style={[styles.gridGlowWrap, { backgroundColor: glowColor, shadowColor: glowColor }]}>
-          {card}
-        </View>
-      ) : (
-        card
-      )}
+      {card}
       {badge ? (
         <View
           style={[styles.gridBadge, glow && { backgroundColor: glowColor, shadowColor: glowColor }]}
@@ -783,16 +772,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
     color: "#FFFFFF",
     fontFamily: "Inter_700Bold",
-  },
-  gridGlowWrap: {
-    borderRadius: 22,
-    shadowOpacity: 0.8,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 0 },
-    elevation: 16,
-  },
-  gridCardGlowBorder: {
-    borderWidth: 2,
   },
   gridCard: {
     flexGrow: 1,
