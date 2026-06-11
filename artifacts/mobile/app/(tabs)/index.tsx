@@ -351,7 +351,12 @@ export default function HomeScreen() {
         {/* Hero card */}
         <View style={[styles.hero, { backgroundColor: "#5B3FD9" }]}>
           <View style={styles.heroLeft}>
-            <Text style={[styles.heroTitle, { color: "#FFFFFF", fontFamily: "Inter_700Bold" }]}>
+            <Text
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.5}
+              style={[styles.heroTitle, { color: "#FFFFFF", fontFamily: "Inter_700Bold" }]}
+            >
               {t("home.scanLearnSpeak")}
             </Text>
             <Text style={[styles.heroBody, { color: "rgba(255,255,255,0.82)", fontFamily: "Inter_400Regular" }]}>
