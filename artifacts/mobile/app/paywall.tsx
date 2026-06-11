@@ -57,6 +57,8 @@ const FEATURE_THEMES: Record<
     // Spotlight-panel background. Can be a touch darker than `accent` so white
     // body text stays legible (WCAG AA) on the large colored card.
     spotBg: string;
+    // [light, dark] pair for the main CTA button gradient.
+    gradient: readonly [string, string];
     icon: keyof typeof Ionicons.glyphMap;
     titleKey: TKey;
     descKey: TKey;
@@ -67,6 +69,7 @@ const FEATURE_THEMES: Record<
   chat: {
     accent: "#EA580C",
     spotBg: "#C2410C",
+    gradient: ["#F97316", "#EA580C"],
     icon: "chatbubbles",
     titleKey: "paywall.spotChatTitle",
     descKey: "paywall.spotChatDesc",
@@ -76,6 +79,7 @@ const FEATURE_THEMES: Record<
   vocab: {
     accent: "#047857",
     spotBg: "#047857",
+    gradient: ["#10B981", "#047857"],
     icon: "book",
     titleKey: "paywall.spotVocabTitle",
     descKey: "paywall.spotVocabDesc",
@@ -146,6 +150,11 @@ export default function PaywallScreen() {
     feature === "chat" || feature === "vocab" ? FEATURE_THEMES[feature] : null;
   const accent = featureTheme?.accent ?? colors.primary;
   const accentSoft = featureTheme ? `${featureTheme.accent}1F` : colors.primarySoft;
+  // Every purchase-flow accent (CTA, plan selection, price, badges) follows the
+  // tapped feature's color; with no feature it falls back to the brand purple.
+  const ctaGradient: readonly [string, string] = featureTheme
+    ? featureTheme.gradient
+    : ["#8A6BFF", "#5B3FD9"];
   // When a feature is spotlighted, the grid below lists the *other* Pro perks.
   const gridFeatures = featureTheme
     ? FEATURES.filter((f) => f.titleKey !== featureTheme.gridTitleKey)
@@ -380,7 +389,7 @@ export default function PaywallScreen() {
         )}
 
         {/* Premium features */}
-        <View style={[styles.featuresCard, { backgroundColor: colors.primarySoft }]}>
+        <View style={[styles.featuresCard, { backgroundColor: accentSoft }]}>
           <Text style={[styles.featuresTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
             {t(featureTheme ? "paywall.spotEverything" : "paywall.featuresTitle")}
           </Text>
@@ -413,7 +422,7 @@ export default function PaywallScreen() {
 
         {isLoading ? (
           <View style={styles.loadingWrap}>
-            <ActivityIndicator color={colors.primary} />
+            <ActivityIndicator color={accent} />
             <Text style={[styles.loadingText, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
               {t("paywall.loading")}
             </Text>
@@ -440,7 +449,7 @@ export default function PaywallScreen() {
                     styles.planCard,
                     {
                       backgroundColor: colors.card,
-                      borderColor: selected ? colors.primary : colors.border,
+                      borderColor: selected ? accent : colors.border,
                     },
                   ]}
                   onPress={() => {
@@ -451,7 +460,7 @@ export default function PaywallScreen() {
                 >
                   {isAnnual && (
                     <View style={styles.planTopRow}>
-                      <View style={[styles.bestValue, { backgroundColor: colors.primary }]}>
+                      <View style={[styles.bestValue, { backgroundColor: accent }]}>
                         <Text style={[styles.bestValueText, { color: "#FFFFFF", fontFamily: "Inter_700Bold" }]}>
                           {t("paywall.bestValue")}
                         </Text>
@@ -474,16 +483,16 @@ export default function PaywallScreen() {
                         {meta.sub}
                       </Text>
                       {trial && (
-                        <View style={[styles.trialChip, { backgroundColor: colors.primarySoft }]}>
-                          <Ionicons name="gift" size={11} color={colors.primary} />
-                          <Text style={[styles.trialChipText, { color: colors.primary, fontFamily: "Inter_700Bold" }]}>
+                        <View style={[styles.trialChip, { backgroundColor: accentSoft }]}>
+                          <Ionicons name="gift" size={11} color={accent} />
+                          <Text style={[styles.trialChipText, { color: accent, fontFamily: "Inter_700Bold" }]}>
                             {trialLabel(t, trial)}
                           </Text>
                         </View>
                       )}
                     </View>
                     <View style={styles.priceCol}>
-                      <Text style={[styles.bigPrice, { color: colors.primary, fontFamily: "Inter_700Bold" }]}>
+                      <Text style={[styles.bigPrice, { color: accent, fontFamily: "Inter_700Bold" }]}>
                         {pkg.product.priceString}
                       </Text>
                       {savings ? (
@@ -501,10 +510,10 @@ export default function PaywallScreen() {
                     <View
                       style={[
                         styles.radio,
-                        { borderColor: selected ? colors.primary : colors.border },
+                        { borderColor: selected ? accent : colors.border },
                       ]}
                     >
-                      {selected && <View style={[styles.radioDot, { backgroundColor: colors.primary }]} />}
+                      {selected && <View style={[styles.radioDot, { backgroundColor: accent }]} />}
                     </View>
                   </View>
                 </TouchableOpacity>
@@ -521,7 +530,7 @@ export default function PaywallScreen() {
           style={[styles.ctaWrap, { opacity: !selectedPackage || isPurchasing ? 0.6 : 1 }]}
         >
           <LinearGradient
-            colors={["#8A6BFF", "#5B3FD9"]}
+            colors={ctaGradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.subscribeBtn}
@@ -558,7 +567,7 @@ export default function PaywallScreen() {
             {isRestoring ? (
               <ActivityIndicator size="small" color={colors.mutedForeground} />
             ) : (
-              <Text style={[styles.footerLink, { color: colors.primary, fontFamily: "Inter_600SemiBold" }]}>
+              <Text style={[styles.footerLink, { color: accent, fontFamily: "Inter_600SemiBold" }]}>
                 {t("paywall.restoreShort")}
               </Text>
             )}
@@ -591,7 +600,7 @@ export default function PaywallScreen() {
                 styles.modalIcon,
                 {
                   backgroundColor:
-                    result === "error" ? "#FEE2E2" : colors.primarySoft,
+                    result === "error" ? "#FEE2E2" : accentSoft,
                 },
               ]}
             >
@@ -604,7 +613,7 @@ export default function PaywallScreen() {
                       : "information-circle"
                 }
                 size={34}
-                color={result === "error" ? "#DC2626" : colors.primary}
+                color={result === "error" ? "#DC2626" : accent}
               />
             </View>
             <Text style={[styles.modalTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
@@ -626,7 +635,7 @@ export default function PaywallScreen() {
                     : t("paywall.errorBody")}
             </Text>
             <TouchableOpacity
-              style={[styles.modalBtn, { backgroundColor: colors.primary }]}
+              style={[styles.modalBtn, { backgroundColor: accent }]}
               onPress={dismissResult}
               activeOpacity={0.9}
             >
