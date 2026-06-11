@@ -87,7 +87,7 @@ function VocabularyScreenInner() {
   };
 
   const [activeTab, setActiveTab] = useState<Tab>(
-    params.tab === "bank" ? "bank" : params.tab === "search" ? "search" : "myWords",
+    params.tab === "myWords" ? "myWords" : params.tab === "search" ? "search" : "bank",
   );
 
   const topPadding = Platform.OS === "web" ? 16 : insets.top;
@@ -263,7 +263,7 @@ function SegmentButton({
       activeOpacity={0.85}
       style={[
         styles.segmentBtn,
-        { backgroundColor: active ? colors.card : "transparent" },
+        { backgroundColor: active ? accent.color : "transparent" },
       ]}
     >
       <View style={styles.segmentInner}>
@@ -271,7 +271,7 @@ function SegmentButton({
           style={[
             styles.segmentText,
             {
-              color: active ? colors.foreground : colors.mutedForeground,
+              color: active ? accent.on : colors.mutedForeground,
               fontFamily: active ? "Inter_700Bold" : "Inter_600SemiBold",
             },
           ]}
@@ -279,8 +279,10 @@ function SegmentButton({
           {label}
         </Text>
         {badge != null && badge > 0 && (
-          <View style={[styles.segBadge, { backgroundColor: accent.color }]}>
-            <Text style={styles.segBadgeText}>{badge}</Text>
+          <View style={[styles.segBadge, { backgroundColor: active ? accent.on : accent.color }]}>
+            <Text style={[styles.segBadgeText, { color: active ? accent.color : "#FFFFFF" }]}>
+              {badge}
+            </Text>
           </View>
         )}
       </View>
@@ -306,7 +308,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     padding: 4,
     borderRadius: 999,
-    backgroundColor: "rgba(0,0,0,0.05)",
+    backgroundColor: accent.soft,
     gap: 4,
   },
   segmentBtn: {
