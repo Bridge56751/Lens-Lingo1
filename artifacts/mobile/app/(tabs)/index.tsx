@@ -136,8 +136,6 @@ function GridCard({
   onPress,
   loading,
   badge,
-  glow,
-  accentColor = "#F5C518",
 }: {
   tag: string;
   title: string;
@@ -156,8 +154,6 @@ function GridCard({
   onPress: () => void;
   loading?: boolean;
   badge?: string;
-  glow?: boolean;
-  accentColor?: string;
 }) {
   const card = (
     <TouchableOpacity
@@ -181,11 +177,18 @@ function GridCard({
       </View>
 
       <View style={{ gap: 8 }}>
-        <View style={[styles.pathTag, { backgroundColor: tagBg, marginBottom: 0 }]}>
-          <Text style={[styles.pathTagText, { color: tagFg, fontFamily: "Inter_700Bold" }]}>
-            {tag}
-          </Text>
-        </View>
+        {badge ? (
+          <View style={styles.gridProPill}>
+            <Ionicons name="star" size={13} color="#FFFFFF" />
+            <Text style={styles.gridProPillText}>{badge}</Text>
+          </View>
+        ) : (
+          <View style={[styles.pathTag, { backgroundColor: tagBg, marginBottom: 0 }]}>
+            <Text style={[styles.pathTagText, { color: tagFg, fontFamily: "Inter_700Bold" }]}>
+              {tag}
+            </Text>
+          </View>
+        )}
         <Text
           style={[styles.gridTitle, { color: fg, fontFamily: "Inter_700Bold" }]}
           numberOfLines={2}
@@ -244,20 +247,7 @@ function GridCard({
     </TouchableOpacity>
   );
 
-  return (
-    <View style={styles.gridCardWrap}>
-      {card}
-      {badge ? (
-        <View
-          style={[styles.gridBadge, glow && styles.gridBadgePremium]}
-          pointerEvents="none"
-        >
-          <Ionicons name="star" size={10} color={glow ? accentColor : "#FFFFFF"} />
-          <Text style={styles.gridBadgeText}>{badge}</Text>
-        </View>
-      ) : null}
-    </View>
-  );
+  return <View style={styles.gridCardWrap}>{card}</View>;
 }
 
 export default function HomeScreen() {
@@ -435,7 +425,6 @@ export default function HomeScreen() {
               ctaFg="#C2410C"
               watermark="AI"
               badge={t("home.pathChatBadge")}
-              glow
               onPress={goFreeChat}
               loading={startChat.isPending}
             />
@@ -469,7 +458,6 @@ export default function HomeScreen() {
               ctaFg="#047857"
               watermarkIcon="book"
               badge={t("home.vocabBadge")}
-              glow
               onPress={() => requirePro(() => router.push("/vocabulary"))}
             />
           </View>
@@ -747,39 +735,21 @@ const styles = StyleSheet.create({
   pathProgressFill: { height: "100%", borderRadius: 4 },
   gridRow: { flexDirection: "row", gap: 14 },
   gridCardWrap: { flex: 1 },
-  gridBadge: {
-    position: "absolute",
-    top: -9,
-    right: 10,
-    zIndex: 10,
+  gridProPill: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 9,
-    paddingVertical: 4,
+    alignSelf: "flex-start",
+    gap: 5,
+    paddingHorizontal: 11,
+    paddingVertical: 6,
     borderRadius: 999,
     backgroundColor: "#7C5CFF",
-    shadowColor: "#7C5CFF",
-    shadowOpacity: 0.45,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 6,
   },
-  gridBadgeText: {
-    fontSize: 10,
-    letterSpacing: 0.6,
+  gridProPillText: {
+    fontSize: 11,
+    letterSpacing: 0.5,
     color: "#FFFFFF",
     fontFamily: "Inter_700Bold",
-  },
-  gridBadgePremium: {
-    backgroundColor: "#0B0B12",
-    borderWidth: 1,
-    borderColor: "rgba(245,197,24,0.5)",
-    shadowColor: "#000000",
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 6,
   },
   gridCard: {
     flexGrow: 1,
