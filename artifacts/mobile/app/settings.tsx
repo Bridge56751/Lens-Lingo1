@@ -29,7 +29,11 @@ import {
   type Difficulty,
 } from "@/hooks/usePreferences";
 import { useT } from "@/hooks/useT";
-import { useSubscription, REVENUECAT_ENTITLEMENT_IDENTIFIER } from "@/lib/revenuecat";
+import {
+  useSubscription,
+  REVENUECAT_ENTITLEMENT_IDENTIFIER,
+  openManageSubscriptions,
+} from "@/lib/revenuecat";
 import { LOCALE_NATIVE_NAMES, type Locale } from "@/constants/translations";
 import { useListOpenaiConversations, useDeleteAccount, setDeviceId } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -155,7 +159,7 @@ export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const t = useT();
   const { prefs, update } = usePreferences();
-  const { isSubscribed, isLoading: subLoading, restore, isRestoring } = useSubscription();
+  const { isSubscribed, isLoading: subLoading, restore, isRestoring, customerInfo } = useSubscription();
   const { data: conversations } = useListOpenaiConversations();
   const { events: activityEvents } = useActivity();
   const { isSignedIn } = useAuth();
@@ -205,6 +209,18 @@ export default function SettingsScreen() {
       setRestoreResult(active ? "restored" : "nothing");
     } catch {
       setRestoreResult("error");
+    }
+  };
+
+  // Send subscribers to the OS subscription management sheet (App Store / Play
+  // Store) where plan changes (monthly → annual) and cancellation actually
+  // happen. Best-effort: a thrown native call shouldn't surface an error.
+  const handleManagePlan = async () => {
+    Haptics.selectionAsync();
+    try {
+      await openManageSubscriptions(customerInfo?.managementURL ?? null);
+    } catch {
+      // no-op — the OS sheet may be unavailable (e.g. web preview)
     }
   };
 
@@ -522,6 +538,17 @@ export default function SettingsScreen() {
                   }
             }
           />
+          {isSubscribed && (
+            <Row
+              icon="swap-horizontal"
+              iconBg="#0EA5E9"
+              iconColor="#FFFFFF"
+              title={t("pro.manageTitle")}
+              subtitle={t("pro.manageSub")}
+              right={<Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />}
+              onPress={handleManagePlan}
+            />
+          )}
           <Row
             icon="refresh"
             iconBg="#64748B"

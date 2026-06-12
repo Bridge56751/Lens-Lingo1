@@ -407,6 +407,8 @@ export type TKey =
   | "pro.upgradeSub"
   | "pro.restoreTitle"
   | "pro.restoreSub"
+  | "pro.manageTitle"
+  | "pro.manageSub"
   | "paywall.title"
   | "paywall.subtitle"
   | "paywall.feature.chat"
@@ -879,6 +881,8 @@ const en: Record<TKey, string> = {
   "pro.upgradeSub": "Unlock tutor chat, voice, Word Bank & all languages",
   "pro.restoreTitle": "Restore purchases",
   "pro.restoreSub": "Already subscribed? Restore your Pro access",
+  "pro.manageTitle": "Change plan",
+  "pro.manageSub": "Switch to annual or cancel anytime",
   "paywall.title": "Unlock Your",
   "paywall.titleAccent": "Full Learning Potential",
   "paywall.subtitle":

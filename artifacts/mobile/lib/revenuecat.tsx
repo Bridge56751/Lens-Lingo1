@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect } from "react";
-import { Platform } from "react-native";
+import { Platform, Linking } from "react-native";
 import Purchases, {
   type PurchasesPackage,
   INTRO_ELIGIBILITY_STATUS,
@@ -50,6 +50,23 @@ export function initializeRevenueCat() {
   Purchases.configure({ apiKey });
 
   console.log("Configured RevenueCat");
+}
+
+/**
+ * Opens the OS-level subscription management UI so an existing subscriber can
+ * switch plans (e.g. monthly → annual) or cancel — the only store-compliant
+ * place to do this. On iOS/Android this is the native App Store / Play Store
+ * subscriptions sheet; on web (and any other platform) we fall back to the
+ * RevenueCat-provided management URL when one is available.
+ */
+export async function openManageSubscriptions(managementURL?: string | null) {
+  if (Platform.OS === "ios" || Platform.OS === "android") {
+    await Purchases.showManageSubscriptions();
+    return;
+  }
+  if (managementURL) {
+    await Linking.openURL(managementURL);
+  }
 }
 
 /**
