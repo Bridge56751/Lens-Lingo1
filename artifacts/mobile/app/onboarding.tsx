@@ -37,7 +37,6 @@ type FeatureSlide = {
   icon: keyof typeof Ionicons.glyphMap;
   bg: string;
   fg: string;
-  badge: string;
   titleKey: TKey;
   descKey: TKey;
 };
@@ -47,7 +46,6 @@ const FEATURES: FeatureSlide[] = [
     icon: "scan",
     bg: "#7C5CFF",
     fg: "#FFFFFF",
-    badge: "rgba(255,255,255,0.20)",
     titleKey: "onboarding.scanTitle",
     descKey: "onboarding.scanDesc",
   },
@@ -55,7 +53,6 @@ const FEATURES: FeatureSlide[] = [
     icon: "chatbubbles",
     bg: "#EA580C",
     fg: "#FFFFFF",
-    badge: "rgba(255,255,255,0.20)",
     titleKey: "onboarding.chatTitle",
     descKey: "onboarding.chatDesc",
   },
@@ -63,7 +60,6 @@ const FEATURES: FeatureSlide[] = [
     icon: "text",
     bg: "#FBBF24",
     fg: "#422006",
-    badge: "rgba(66,32,6,0.16)",
     titleKey: "onboarding.abcTitle",
     descKey: "onboarding.abcDesc",
   },
@@ -71,7 +67,6 @@ const FEATURES: FeatureSlide[] = [
     icon: "chatbox-ellipses",
     bg: "#2563EB",
     fg: "#FFFFFF",
-    badge: "rgba(255,255,255,0.20)",
     titleKey: "onboarding.sentencesTitle",
     descKey: "onboarding.sentencesDesc",
   },
@@ -79,13 +74,10 @@ const FEATURES: FeatureSlide[] = [
     icon: "book",
     bg: "#047857",
     fg: "#FFFFFF",
-    badge: "rgba(255,255,255,0.20)",
     titleKey: "onboarding.vocabTitle",
     descKey: "onboarding.vocabDesc",
   },
 ];
-
-const [SCAN_FEATURE, ...GRID_FEATURES] = FEATURES;
 
 type Page =
   | { kind: "welcome" }
@@ -211,40 +203,20 @@ export default function OnboardingScreen() {
       <Text style={[styles.formDesc, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
         {t("onboarding.howDesc")}
       </Text>
-      <View style={[styles.featureCard, styles.featureWide, { backgroundColor: SCAN_FEATURE.bg }]}>
-        <View style={styles.featureWatermark} pointerEvents="none">
-          <Ionicons name={SCAN_FEATURE.icon} size={96} color={SCAN_FEATURE.fg} />
-        </View>
-        <View style={[styles.featureBadge, { backgroundColor: SCAN_FEATURE.badge }]}>
-          <Ionicons name={SCAN_FEATURE.icon} size={24} color={SCAN_FEATURE.fg} />
-        </View>
-        <View style={styles.featureWideText}>
-          <Text style={[styles.featureTitle, { color: SCAN_FEATURE.fg, fontFamily: "Inter_700Bold" }]}>
-            {t(SCAN_FEATURE.titleKey)}
-          </Text>
-          <Text
-            style={[styles.featureDesc, { color: SCAN_FEATURE.fg, fontFamily: "Inter_600SemiBold" }]}
-          >
-            {t(SCAN_FEATURE.descKey)}
-          </Text>
-        </View>
-      </View>
-      <View style={styles.featureGrid}>
-        {GRID_FEATURES.map((slide) => (
-          <View key={slide.titleKey} style={[styles.featureCard, { backgroundColor: slide.bg }]}>
-            <View style={styles.featureWatermark} pointerEvents="none">
-              <Ionicons name={slide.icon} size={72} color={slide.fg} />
+      <View style={styles.featureList} pointerEvents="none">
+        {FEATURES.map((slide) => (
+          <View key={slide.titleKey} style={styles.featureRow}>
+            <View style={[styles.featureIcon, { backgroundColor: slide.bg }]}>
+              <Ionicons name={slide.icon} size={24} color={slide.fg} />
             </View>
-            <View style={[styles.featureBadge, { backgroundColor: slide.badge }]}>
-              <Ionicons name={slide.icon} size={22} color={slide.fg} />
-            </View>
-            <View>
-              <Text style={[styles.featureTitle, { color: slide.fg, fontFamily: "Inter_700Bold" }]}>
+            <View style={styles.featureRowText}>
+              <Text
+                style={[styles.featureRowTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}
+              >
                 {t(slide.titleKey)}
               </Text>
               <Text
-                style={[styles.featureDesc, { color: slide.fg, fontFamily: "Inter_600SemiBold" }]}
-                numberOfLines={3}
+                style={[styles.featureRowDesc, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}
               >
                 {t(slide.descKey)}
               </Text>
@@ -472,7 +444,7 @@ const styles = StyleSheet.create({
   desc: { fontSize: 16, lineHeight: 24, textAlign: "center" },
   formSlide: { flex: 1 },
   formContent: { paddingHorizontal: GRID_PADDING, paddingTop: 12, paddingBottom: 24 },
-  formTitle: { fontSize: 26, letterSpacing: -0.5, marginBottom: 8 },
+  formTitle: { fontSize: 26, lineHeight: 33, letterSpacing: -0.5, marginBottom: 8 },
   formDesc: { fontSize: 15, lineHeight: 22, marginBottom: 24 },
   grid: {
     flexDirection: "row",
@@ -515,36 +487,18 @@ const styles = StyleSheet.create({
   },
   levelTitle: { fontSize: 19, letterSpacing: -0.3 },
   levelDesc: { fontSize: 14, lineHeight: 20 },
-  featureGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: GRID_GAP,
-  },
-  featureCard: {
-    width: CHIP_WIDTH,
-    minHeight: 168,
-    borderRadius: 20,
-    padding: 16,
-    overflow: "hidden",
-    justifyContent: "space-between",
-    gap: 14,
-  },
-  featureWide: {
-    width: "100%",
-    minHeight: 0,
-    marginBottom: GRID_GAP,
-  },
-  featureWideText: { paddingRight: 64 },
-  featureWatermark: { position: "absolute", right: -8, bottom: -10, opacity: 0.18 },
-  featureBadge: {
-    width: 44,
-    height: 44,
-    borderRadius: 13,
+  featureList: { gap: 18, marginTop: 2 },
+  featureRow: { flexDirection: "row", alignItems: "center", gap: 15 },
+  featureIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: 15,
     alignItems: "center",
     justifyContent: "center",
   },
-  featureTitle: { fontSize: 16, letterSpacing: -0.2, marginBottom: 4 },
-  featureDesc: { fontSize: 12.5, lineHeight: 17 },
+  featureRowText: { flex: 1 },
+  featureRowTitle: { fontSize: 17, letterSpacing: -0.2, marginBottom: 3 },
+  featureRowDesc: { fontSize: 14, lineHeight: 19 },
   footer: { paddingHorizontal: 24, gap: 24, paddingTop: 8 },
   dots: { flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 7 },
   dot: { height: 8, borderRadius: 4 },
