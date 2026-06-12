@@ -220,7 +220,12 @@ function romanizeSystemPrompt(language: string): string {
 // POST /openai/romanize - transliterate non-Latin target-language text into the
 // Latin alphabet (romaji / pinyin / romaja / etc.) as an optional reading aid.
 // Accepts a single { text } or a batch { texts }. Latin-script languages pass
-// through unchanged. Mirrors /openai/translate: on-demand, not persisted.
+// through unchanged. On-demand, not persisted.
+// INTENTIONALLY NOT requirePro: this reading aid is used by FREE screens
+// (Sentences, Alphabet — neither is ProGuard-gated, and the home screen pushes
+// them without requirePro) as well as the Pro conversation screen. Gating it
+// would break a free feature, so it mirrors the existing free boundary. Do not
+// add requirePro here. See .agents/memory/server-pro-enforcement.md.
 router.post("/openai/romanize", async (req, res) => {
   const body = req.body as { text?: string; texts?: unknown; language?: string };
   const language = safeLanguage(body.language);
@@ -518,6 +523,12 @@ router.get("/openai/conversations/:id", requirePro, async (req: Request<{ id: st
 });
 
 // DELETE /openai/conversations/:id
+// INTENTIONALLY NOT requirePro: removing a past session is FREE. Scans are free
+// and create conversations that appear in History; the History delete button is
+// NOT requirePro-gated (only opening/continuing a chat is). Gating delete would
+// stop free users from removing their own scanned history — a NEW restriction
+// this feature must never add. Do not add requirePro here.
+// See .agents/memory/server-pro-enforcement.md.
 router.delete("/openai/conversations/:id", async (req, res) => {
   const id = parseInt(req.params.id ?? "", 10);
   if (isNaN(id)) {

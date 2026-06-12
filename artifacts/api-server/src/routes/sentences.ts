@@ -117,6 +117,11 @@ Respond with ONLY valid JSON in exactly this shape (one key per category):
 }
 
 // GET /sentences/bank?targetLanguage=&nativeLanguage= - survival phrases by situation
+// INTENTIONALLY NOT requirePro: the Sentences screen is a FREE feature
+// (app/sentences.tsx has no ProGuard wrapper, and the home screen pushes
+// "/sentences" without a requirePro gate, unlike "/vocabulary"). Gating this
+// would break the free Sentences screen. Do not add requirePro here.
+// See .agents/memory/server-pro-enforcement.md.
 router.get("/sentences/bank", async (req, res) => {
   const targetLanguage = validLanguage(req.query.targetLanguage);
   const nativeLanguage = validLanguage(req.query.nativeLanguage);
