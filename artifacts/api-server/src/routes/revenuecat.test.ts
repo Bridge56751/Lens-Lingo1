@@ -23,12 +23,23 @@ import { SQL } from "drizzle-orm";
 // Shared mock state. `vi.hoisted` runs before the `vi.mock` factories below so
 // they can close over it.
 const h = vi.hoisted(() => ({
-  getCustomerMock:
+  // Mocks the dedicated active-entitlements endpoint the resolver now uses.
+  activeEntitlementsMock:
     vi.fn<
       (opts: {
         path: { project_id: string; customer_id: string };
       }) => Promise<{
-        data?: { active_entitlements?: { items?: unknown[] } };
+        data?: { items?: unknown[] };
+        error?: unknown;
+        response?: { status: number };
+      }>
+    >(),
+  // Mocks the project entitlement listing used to map the `pro_access` lookup
+  // key to its RevenueCat object id.
+  listEntitlementsMock:
+    vi.fn<
+      (opts: { path: { project_id: string } }) => Promise<{
+        data?: { items?: { id: string; lookup_key: string }[] };
         error?: unknown;
         response?: { status: number };
       }>
@@ -41,7 +52,8 @@ const h = vi.hoisted(() => ({
 }));
 
 vi.mock("@replit/revenuecat-sdk", () => ({
-  getCustomer: h.getCustomerMock,
+  listCustomerActiveEntitlements: h.activeEntitlementsMock,
+  listEntitlements: h.listEntitlementsMock,
 }));
 
 vi.mock("../lib/revenueCatClient", () => ({
@@ -146,7 +158,9 @@ afterAll(() => {
 
 beforeEach(() => {
   ctx = {};
-  h.getCustomerMock.mockReset();
+  h.activeEntitlementsMock.mockReset();
+  h.listEntitlementsMock.mockReset();
+  h.listEntitlementsMock.mockResolvedValue(rcEntitlements());
   h.row = null;
 });
 
@@ -162,27 +176,35 @@ async function getPlan(): Promise<{
   return { status: res.status, body };
 }
 
-// A RevenueCat customer holding the given (active) entitlement.
-function rcActive(
-  entitlementId = "pro_access",
-  expiresAt: number | null = null,
-) {
+// RevenueCat object id of the Pro entitlement (lookup_key "pro_access"). The
+// active-entitlements API reports entitlements by this object id, not the key.
+const PRO_ENT_ID = "entle_pro";
+
+// The project's entitlements, mapping the `pro_access` lookup key to its id.
+function rcEntitlements() {
   return {
     data: {
-      active_entitlements: {
-        items: [{ entitlement_id: entitlementId, expires_at: expiresAt }],
-      },
+      items: [
+        { id: PRO_ENT_ID, lookup_key: "pro_access" },
+        { id: "entle_other", lookup_key: "legacy_tier" },
+      ],
     },
+    response: { status: 200 },
+  };
+}
+
+// A RevenueCat customer holding the given (active) entitlement, identified by
+// its object id (defaults to the Pro entitlement).
+function rcActive(entitlementId = PRO_ENT_ID, expiresAt: number | null = null) {
+  return {
+    data: { items: [{ entitlement_id: entitlementId, expires_at: expiresAt }] },
     response: { status: 200 },
   };
 }
 
 // A RevenueCat customer with no active entitlements.
 function rcEmpty() {
-  return {
-    data: { active_entitlements: { items: [] } },
-    response: { status: 200 },
-  };
+  return { data: { items: [] }, response: { status: 200 } };
 }
 
 // RevenueCat has never seen this customer (never purchased).
@@ -196,13 +218,13 @@ describe("GET /me/plan — Pro status sync", () => {
     const { status, body } = await getPlan();
     expect(status).toBe(200);
     expect(body).toEqual({ plan: "free", proSince: null });
-    expect(h.getCustomerMock).not.toHaveBeenCalled();
+    expect(h.activeEntitlementsMock).not.toHaveBeenCalled();
   });
 
   it("treats a never-purchased customer (RevenueCat 404) as free", async () => {
     ctx = { customerId: 1, deviceId: "dev-1" };
     h.row = { id: 1, plan: "free", proSince: null };
-    h.getCustomerMock.mockResolvedValue(rc404());
+    h.activeEntitlementsMock.mockResolvedValue(rc404());
 
     const { status, body } = await getPlan();
 
@@ -214,7 +236,7 @@ describe("GET /me/plan — Pro status sync", () => {
   it("grants Pro for an active pro_access entitlement and stamps proSince when previously unset", async () => {
     ctx = { customerId: 2, deviceId: "dev-2" };
     h.row = { id: 2, plan: "free", proSince: null };
-    h.getCustomerMock.mockResolvedValue(rcActive("pro_access", null));
+    h.activeEntitlementsMock.mockResolvedValue(rcActive(PRO_ENT_ID, null));
 
     const { status, body } = await getPlan();
 
@@ -229,7 +251,7 @@ describe("GET /me/plan — Pro status sync", () => {
     const original = new Date("2025-01-01T00:00:00.000Z");
     ctx = { customerId: 3, authUserId: "user-3" };
     h.row = { id: 3, plan: "pro", proSince: original };
-    h.getCustomerMock.mockResolvedValue(rcActive("pro_access", null));
+    h.activeEntitlementsMock.mockResolvedValue(rcActive(PRO_ENT_ID, null));
 
     const { status, body } = await getPlan();
 
@@ -243,7 +265,7 @@ describe("GET /me/plan — Pro status sync", () => {
     const past = Date.now() - 60_000;
     ctx = { customerId: 4, deviceId: "dev-4" };
     h.row = { id: 4, plan: "pro", proSince: new Date("2025-01-01") };
-    h.getCustomerMock.mockResolvedValue(rcActive("pro_access", past));
+    h.activeEntitlementsMock.mockResolvedValue(rcActive(PRO_ENT_ID, past));
 
     const { status, body } = await getPlan();
 
@@ -256,7 +278,7 @@ describe("GET /me/plan — Pro status sync", () => {
     ctx = { customerId: 5, deviceId: "dev-5" };
     h.row = { id: 5, plan: "pro", proSince: new Date("2025-01-01") };
     // Has an entitlement, but not the pro_access one we unlock on.
-    h.getCustomerMock.mockResolvedValue(rcActive("some_other_tier", null));
+    h.activeEntitlementsMock.mockResolvedValue(rcActive("some_other_tier", null));
 
     const { status, body } = await getPlan();
 
@@ -268,7 +290,7 @@ describe("GET /me/plan — Pro status sync", () => {
   it("keeps Pro for a non-expiring entitlement (expires_at null)", async () => {
     ctx = { customerId: 6, deviceId: "dev-6" };
     h.row = { id: 6, plan: "free", proSince: null };
-    h.getCustomerMock.mockResolvedValue(rcEmpty());
+    h.activeEntitlementsMock.mockResolvedValue(rcEmpty());
 
     // sanity: empty entitlements means free
     const { body } = await getPlan();
@@ -279,7 +301,7 @@ describe("GET /me/plan — Pro status sync", () => {
     const original = new Date("2025-03-01T00:00:00.000Z");
     ctx = { customerId: 7, authUserId: "user-7" };
     h.row = { id: 7, plan: "pro", proSince: original };
-    h.getCustomerMock.mockRejectedValue(new Error("network down"));
+    h.activeEntitlementsMock.mockRejectedValue(new Error("network down"));
 
     const { status, body } = await getPlan();
 
@@ -294,7 +316,7 @@ describe("GET /me/plan — Pro status sync", () => {
     const original = new Date("2025-03-01T00:00:00.000Z");
     ctx = { customerId: 8, deviceId: "dev-8" };
     h.row = { id: 8, plan: "pro", proSince: original };
-    h.getCustomerMock.mockResolvedValue({
+    h.activeEntitlementsMock.mockResolvedValue({
       error: { message: "boom" },
       response: { status: 500 },
     });
@@ -310,12 +332,12 @@ describe("GET /me/plan — Pro status sync", () => {
   it("queries RevenueCat with the Clerk auth user id when signed in", async () => {
     ctx = { customerId: 9, authUserId: "user-9", deviceId: "dev-9" };
     h.row = { id: 9, plan: "free", proSince: null };
-    h.getCustomerMock.mockResolvedValue(rc404());
+    h.activeEntitlementsMock.mockResolvedValue(rc404());
 
     await getPlan();
 
-    expect(h.getCustomerMock).toHaveBeenCalledTimes(1);
-    expect(h.getCustomerMock.mock.calls[0]?.[0]?.path).toEqual({
+    expect(h.activeEntitlementsMock).toHaveBeenCalledTimes(1);
+    expect(h.activeEntitlementsMock.mock.calls[0]?.[0]?.path).toEqual({
       project_id: PROJECT_ID,
       customer_id: "user-9",
     });
@@ -324,11 +346,11 @@ describe("GET /me/plan — Pro status sync", () => {
   it("falls back to the device id for the RevenueCat lookup when anonymous", async () => {
     ctx = { customerId: 10, deviceId: "dev-10" };
     h.row = { id: 10, plan: "free", proSince: null };
-    h.getCustomerMock.mockResolvedValue(rc404());
+    h.activeEntitlementsMock.mockResolvedValue(rc404());
 
     await getPlan();
 
-    expect(h.getCustomerMock.mock.calls[0]?.[0]?.path.customer_id).toBe(
+    expect(h.activeEntitlementsMock.mock.calls[0]?.[0]?.path.customer_id).toBe(
       "dev-10",
     );
   });

@@ -26,10 +26,18 @@ import type { AddressInfo } from "node:net";
 // guard is ever reverted to an unpathed `router.use(requirePro)`.
 
 const h = vi.hoisted(() => ({
-  getCustomerMock:
+  activeEntitlementsMock:
     vi.fn<
       () => Promise<{
-        data?: { active_entitlements?: { items?: unknown[] } };
+        data?: { items?: unknown[] };
+        error?: unknown;
+        response?: { status: number };
+      }>
+    >(),
+  listEntitlementsMock:
+    vi.fn<
+      () => Promise<{
+        data?: { items?: { id: string; lookup_key: string }[] };
         error?: unknown;
         response?: { status: number };
       }>
@@ -38,7 +46,8 @@ const h = vi.hoisted(() => ({
 }));
 
 vi.mock("@replit/revenuecat-sdk", () => ({
-  getCustomer: h.getCustomerMock,
+  listCustomerActiveEntitlements: h.activeEntitlementsMock,
+  listEntitlements: h.listEntitlementsMock,
 }));
 
 vi.mock("../lib/revenueCatClient", () => ({
@@ -121,9 +130,15 @@ afterAll(() => {
 
 beforeEach(() => {
   h.row = { id: 1, plan: "free", proSince: null };
-  h.getCustomerMock.mockReset();
+  h.activeEntitlementsMock.mockReset();
+  h.listEntitlementsMock.mockReset();
+  // The Pro entitlement exists in the project (maps lookup_key -> object id).
+  h.listEntitlementsMock.mockResolvedValue({
+    data: { items: [{ id: "entle_pro", lookup_key: "pro_access" }] },
+    response: { status: 200 },
+  });
   // RevenueCat has never seen this customer -> not Pro.
-  h.getCustomerMock.mockResolvedValue({
+  h.activeEntitlementsMock.mockResolvedValue({
     error: { message: "not found" },
     response: { status: 404 },
   });

@@ -20,12 +20,23 @@ import { SQL } from "drizzle-orm";
 // any missing customer / not-Pro / resolution error yields a 403.
 
 const h = vi.hoisted(() => ({
-  getCustomerMock:
+  // Mocks the dedicated active-entitlements endpoint the resolver now uses.
+  activeEntitlementsMock:
     vi.fn<
       (opts: {
         path: { project_id: string; customer_id: string };
       }) => Promise<{
-        data?: { active_entitlements?: { items?: unknown[] } };
+        data?: { items?: unknown[] };
+        error?: unknown;
+        response?: { status: number };
+      }>
+    >(),
+  // Mocks the project entitlement listing used to map the `pro_access` lookup
+  // key to its RevenueCat object id.
+  listEntitlementsMock:
+    vi.fn<
+      (opts: { path: { project_id: string } }) => Promise<{
+        data?: { items?: { id: string; lookup_key: string }[] };
         error?: unknown;
         response?: { status: number };
       }>
@@ -37,7 +48,8 @@ const h = vi.hoisted(() => ({
 }));
 
 vi.mock("@replit/revenuecat-sdk", () => ({
-  getCustomer: h.getCustomerMock,
+  listCustomerActiveEntitlements: h.activeEntitlementsMock,
+  listEntitlements: h.listEntitlementsMock,
 }));
 
 vi.mock("../lib/revenueCatClient", () => ({
@@ -140,7 +152,9 @@ afterAll(() => {
 
 beforeEach(() => {
   ctx = {};
-  h.getCustomerMock.mockReset();
+  h.activeEntitlementsMock.mockReset();
+  h.listEntitlementsMock.mockReset();
+  h.listEntitlementsMock.mockResolvedValue(rcEntitlements());
   h.row = null;
 });
 
@@ -158,24 +172,34 @@ async function callProtected(): Promise<{
   return { status: res.status, body };
 }
 
-// A RevenueCat customer holding the active pro_access entitlement.
-function rcActive() {
+// RevenueCat object id of the Pro entitlement (lookup_key "pro_access"). The
+// active-entitlements API reports entitlements by this object id, not the key.
+const PRO_ENT_ID = "entle_pro";
+
+// The project's entitlements, mapping the `pro_access` lookup key to its id.
+function rcEntitlements() {
   return {
     data: {
-      active_entitlements: {
-        items: [{ entitlement_id: "pro_access", expires_at: null }],
-      },
+      items: [
+        { id: PRO_ENT_ID, lookup_key: "pro_access" },
+        { id: "entle_other", lookup_key: "legacy_tier" },
+      ],
     },
+    response: { status: 200 },
+  };
+}
+
+// A RevenueCat customer holding the active Pro entitlement (by its object id).
+function rcActive() {
+  return {
+    data: { items: [{ entitlement_id: PRO_ENT_ID, expires_at: null }] },
     response: { status: 200 },
   };
 }
 
 // A RevenueCat customer with no active entitlements.
 function rcEmpty() {
-  return {
-    data: { active_entitlements: { items: [] } },
-    response: { status: 200 },
-  };
+  return { data: { items: [] }, response: { status: 200 } };
 }
 
 // RevenueCat has never seen this customer (never purchased).
@@ -189,13 +213,13 @@ describe("requirePro — server-side Pro enforcement", () => {
     const { status, body } = await callProtected();
     expect(status).toBe(403);
     expect(body).toEqual({ error: "pro_required" });
-    expect(h.getCustomerMock).not.toHaveBeenCalled();
+    expect(h.activeEntitlementsMock).not.toHaveBeenCalled();
   });
 
   it("rejects with 403 a free customer (RevenueCat 404, never purchased)", async () => {
     ctx = { customerId: 1, deviceId: "dev-1" };
     h.row = { id: 1, plan: "free", proSince: null };
-    h.getCustomerMock.mockResolvedValue(rc404());
+    h.activeEntitlementsMock.mockResolvedValue(rc404());
 
     const { status, body } = await callProtected();
 
@@ -206,7 +230,7 @@ describe("requirePro — server-side Pro enforcement", () => {
   it("rejects with 403 a customer with no active entitlement", async () => {
     ctx = { customerId: 2, deviceId: "dev-2" };
     h.row = { id: 2, plan: "free", proSince: null };
-    h.getCustomerMock.mockResolvedValue(rcEmpty());
+    h.activeEntitlementsMock.mockResolvedValue(rcEmpty());
 
     const { status, body } = await callProtected();
 
@@ -218,7 +242,7 @@ describe("requirePro — server-side Pro enforcement", () => {
     ctx = { customerId: 3, deviceId: "dev-3" };
     // Stored plan is stale (free) but the entitlement is now active.
     h.row = { id: 3, plan: "free", proSince: null };
-    h.getCustomerMock.mockResolvedValue(rcActive());
+    h.activeEntitlementsMock.mockResolvedValue(rcActive());
 
     const { status, body } = await callProtected();
 
@@ -232,7 +256,7 @@ describe("requirePro — server-side Pro enforcement", () => {
   it("serves stored Pro (allows access) when RevenueCat is unreachable", async () => {
     ctx = { customerId: 4, deviceId: "dev-4" };
     h.row = { id: 4, plan: "pro", proSince: new Date("2025-01-01") };
-    h.getCustomerMock.mockRejectedValue(new Error("network down"));
+    h.activeEntitlementsMock.mockRejectedValue(new Error("network down"));
 
     const { status, body } = await callProtected();
 
@@ -245,7 +269,7 @@ describe("requirePro — server-side Pro enforcement", () => {
   it("rejects with 403 a stored-free customer when RevenueCat is unreachable", async () => {
     ctx = { customerId: 5, deviceId: "dev-5" };
     h.row = { id: 5, plan: "free", proSince: null };
-    h.getCustomerMock.mockRejectedValue(new Error("network down"));
+    h.activeEntitlementsMock.mockRejectedValue(new Error("network down"));
 
     const { status, body } = await callProtected();
 
@@ -256,12 +280,12 @@ describe("requirePro — server-side Pro enforcement", () => {
   it("looks up RevenueCat by the Clerk auth user id when signed in", async () => {
     ctx = { customerId: 6, authUserId: "user-6", deviceId: "dev-6" };
     h.row = { id: 6, plan: "free", proSince: null };
-    h.getCustomerMock.mockResolvedValue(rcActive());
+    h.activeEntitlementsMock.mockResolvedValue(rcActive());
 
     const { status } = await callProtected();
 
     expect(status).toBe(200);
-    expect(h.getCustomerMock.mock.calls[0]?.[0]?.path).toEqual({
+    expect(h.activeEntitlementsMock.mock.calls[0]?.[0]?.path).toEqual({
       project_id: PROJECT_ID,
       customer_id: "user-6",
     });

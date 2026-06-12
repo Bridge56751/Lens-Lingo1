@@ -1,13 +1,67 @@
 import { eq, sql } from "drizzle-orm";
 import { db, customers } from "@workspace/db";
-import { getCustomer } from "@replit/revenuecat-sdk";
+import {
+  listEntitlements,
+  listCustomerActiveEntitlements,
+} from "@replit/revenuecat-sdk";
 import { getUncachableRevenueCatClient } from "./revenueCatClient";
 
 /**
- * RevenueCat entitlement lookup key that unlocks Pro. Must match the entitlement
- * the mobile client checks (`pro_access`) and the one provisioned in RevenueCat.
+ * RevenueCat entitlement *lookup key* that unlocks Pro. This matches the
+ * identifier the mobile client checks (`pro_access`) and the entitlement
+ * provisioned in RevenueCat.
+ *
+ * IMPORTANT: RevenueCat's REST API reports a customer's active entitlements by
+ * the entitlement's *object id* (e.g. `entle49b...`), NOT by this lookup key, so
+ * we first resolve the lookup key to its object id (see
+ * `resolveProEntitlementId`) and match on that.
  */
-const PRO_ENTITLEMENT_ID = "pro_access";
+const PRO_ENTITLEMENT_LOOKUP_KEY = "pro_access";
+
+/** RevenueCat REST client type (resolved lazily per request). */
+type RevenueCatClient = Awaited<
+  ReturnType<typeof getUncachableRevenueCatClient>
+>;
+
+/**
+ * Cached RevenueCat object id of the Pro entitlement, resolved from its lookup
+ * key. Entitlement ids are stable for the life of the entitlement, so the first
+ * successful resolution is reused for the rest of the process. Only a non-null
+ * result is cached, so a transient lookup miss is retried on the next call.
+ */
+let proEntitlementIdCache: string | null = null;
+
+/**
+ * Resolves the Pro entitlement's RevenueCat object id from its lookup key by
+ * listing the project's entitlements. Throws if the lookup fails or the
+ * entitlement is missing, so the best-effort caller falls back to the stored
+ * plan rather than silently treating every customer as free.
+ */
+async function resolveProEntitlementId(
+  client: RevenueCatClient,
+  projectId: string,
+): Promise<string> {
+  if (proEntitlementIdCache) return proEntitlementIdCache;
+  const { data, error, response } = await listEntitlements({
+    client,
+    path: { project_id: projectId },
+  });
+  if (error) {
+    throw new Error(
+      `RevenueCat listEntitlements failed with status ${response?.status}`,
+    );
+  }
+  const match = (data?.items ?? []).find(
+    (e) => e.lookup_key === PRO_ENTITLEMENT_LOOKUP_KEY,
+  );
+  if (!match) {
+    throw new Error(
+      `RevenueCat entitlement with lookup_key "${PRO_ENTITLEMENT_LOOKUP_KEY}" not found`,
+    );
+  }
+  proEntitlementIdCache = match.id;
+  return match.id;
+}
 
 /**
  * How long a successful RevenueCat pull stays "fresh". Within this window the
@@ -67,7 +121,14 @@ async function fetchProFromRevenueCat(appUserId: string): Promise<boolean> {
   }
 
   const client = await getUncachableRevenueCatClient();
-  const { data, error, response } = await getCustomer({
+  const proEntitlementId = await resolveProEntitlementId(client, projectId);
+
+  // `getCustomer` does NOT return active entitlements (its only expandable
+  // field is `attributes`); the dedicated active-entitlements endpoint must be
+  // used. Each returned item identifies its entitlement by the entitlement's
+  // *object id*, so we match on the resolved id (and also accept the lookup key
+  // defensively, in case the API ever reports it that way).
+  const { data, error, response } = await listCustomerActiveEntitlements({
     client,
     path: { project_id: projectId, customer_id: appUserId },
   });
@@ -76,15 +137,16 @@ async function fetchProFromRevenueCat(appUserId: string): Promise<boolean> {
     // RevenueCat has no such customer yet (never purchased) — not an error.
     if (response?.status === 404) return false;
     throw new Error(
-      `RevenueCat getCustomer failed with status ${response?.status}`,
+      `RevenueCat listCustomerActiveEntitlements failed with status ${response?.status}`,
     );
   }
 
-  const items = data?.active_entitlements?.items ?? [];
+  const items = data?.items ?? [];
   const now = Date.now();
   return items.some(
     (e) =>
-      e.entitlement_id === PRO_ENTITLEMENT_ID &&
+      (e.entitlement_id === proEntitlementId ||
+        e.entitlement_id === PRO_ENTITLEMENT_LOOKUP_KEY) &&
       (e.expires_at == null || e.expires_at > now),
   );
 }
