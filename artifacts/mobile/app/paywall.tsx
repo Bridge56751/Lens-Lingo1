@@ -156,11 +156,7 @@ export default function PaywallScreen() {
   const t = useT();
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { feature, intro } = useLocalSearchParams<{ feature?: string; intro?: string }>();
-  // The first-time, post-onboarding paywall (routed with ?intro=1) keeps the full
-  // feature showcase. Every other entry point compacts it to a single row so the
-  // plans/price are reachable with far less scrolling.
-  const isIntro = intro === "1";
+  const { feature } = useLocalSearchParams<{ feature?: string }>();
   const featureTheme =
     feature === "chat" || feature === "vocab" || feature === "langs"
       ? FEATURE_THEMES[feature]
@@ -377,11 +373,11 @@ export default function PaywallScreen() {
           </View>
         </View>
 
-        {/* Feature spotlight — a deep-dive panel for a themed feature. Only the
-            full first-time (intro) paywall may show it; every compact entry point
-            skips it to stay short. Onboarding doesn't theme a feature today, so
-            this is held in reserve for a themed full paywall. */}
-        {isIntro && featureTheme && (
+        {/* Feature spotlight — a deep-dive panel themed to the tapped feature
+            (orange chat, green vocabulary, blue languages). Shown whenever the
+            paywall is opened for a specific locked feature so that feature's value
+            prop leads the page, mirroring the home cards. */}
+        {featureTheme && (
           <View style={[styles.spotlight, { backgroundColor: featureTheme.spotBg }]}>
             <View style={styles.spotlightWatermark} pointerEvents="none">
               <Ionicons name={featureTheme.icon} size={120} color="#FFFFFF" />
@@ -403,87 +399,6 @@ export default function PaywallScreen() {
                   >
                     {t(bk)}
                   </Text>
-                </View>
-              ))}
-            </View>
-          </View>
-        )}
-
-        {/* Premium features — the full showcase (wide hero + 2x2 grid) shows only
-            on the first-time, post-onboarding paywall. Every other entry point
-            (locked-feature taps, Settings) gets a compact one-row strip so the
-            plans/price need far less scrolling to reach. */}
-        {isIntro ? (
-          <View style={[styles.featuresCard, { backgroundColor: accentSoft }]}>
-            <Text style={[styles.featuresTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-              {t(featureTheme ? "paywall.spotEverything" : "paywall.featuresTitle")}
-            </Text>
-            {wideFeature && (
-              <View style={[styles.featureWide, { backgroundColor: colors.card }]}>
-                <View style={[styles.featureIcon, { backgroundColor: wideFeature.bg, marginBottom: 0 }]}>
-                  <Ionicons name={wideFeature.icon} size={18} color="#FFFFFF" />
-                </View>
-                <View style={styles.featureWideText}>
-                  <Text
-                    style={[styles.featureTitle, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}
-                    numberOfLines={1}
-                  >
-                    {t(wideFeature.titleKey)}
-                  </Text>
-                  <Text
-                    style={[styles.featureDesc, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}
-                  >
-                    {t(wideFeature.descKey)}
-                  </Text>
-                </View>
-              </View>
-            )}
-            <View style={styles.featuresGrid}>
-              {gridItems.map((f) => (
-                <View key={f.titleKey} style={[styles.featureItem, { backgroundColor: colors.card }]}>
-                  <View style={[styles.featureIcon, { backgroundColor: f.bg }]}>
-                    <Ionicons name={f.icon} size={18} color="#FFFFFF" />
-                  </View>
-                  <Text
-                    style={[styles.featureTitle, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}
-                    numberOfLines={1}
-                  >
-                    {t(f.titleKey)}
-                  </Text>
-                  <Text
-                    style={[styles.featureDesc, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}
-                  >
-                    {t(f.descKey)}
-                  </Text>
-                </View>
-              ))}
-            </View>
-          </View>
-        ) : (
-          <View style={[styles.featureStrip, { backgroundColor: accentSoft }]}>
-            <Text style={[styles.featuresTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-              {t("paywall.featuresTitle")}
-            </Text>
-            <View style={styles.bulletList}>
-              {FEATURES.map((f) => (
-                <View key={f.titleKey} style={styles.bulletRow}>
-                  <View style={[styles.bulletCheck, { backgroundColor: f.bg }]}>
-                    <Ionicons name="checkmark" size={12} color="#FFFFFF" />
-                  </View>
-                  <View style={styles.bulletText}>
-                    <Text
-                      style={[styles.bulletTitle, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}
-                      numberOfLines={1}
-                    >
-                      {t(f.titleKey)}
-                    </Text>
-                    <Text
-                      style={[styles.bulletDesc, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}
-                      numberOfLines={1}
-                    >
-                      {t(f.descKey)}
-                    </Text>
-                  </View>
                 </View>
               ))}
             </View>
@@ -628,6 +543,56 @@ export default function PaywallScreen() {
             {trialNote}
           </Text>
         )}
+
+        {/* Everything else in Pro — the themed feature leads at the top; this grid
+            lists the remaining perks. On the generic paywall (no spotlight) the
+            first perk (Unlimited Scans) becomes a wide hero card. It sits below the
+            plans + CTA so the first price is reachable without any scrolling. */}
+        <View style={[styles.featuresCard, { backgroundColor: accentSoft }]}>
+          <Text style={[styles.featuresTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
+            {t(featureTheme ? "paywall.spotEverything" : "paywall.featuresTitle")}
+          </Text>
+          {wideFeature && (
+            <View style={[styles.featureWide, { backgroundColor: colors.card }]}>
+              <View style={[styles.featureIcon, { backgroundColor: wideFeature.bg, marginBottom: 0 }]}>
+                <Ionicons name={wideFeature.icon} size={18} color="#FFFFFF" />
+              </View>
+              <View style={styles.featureWideText}>
+                <Text
+                  style={[styles.featureTitle, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}
+                  numberOfLines={1}
+                >
+                  {t(wideFeature.titleKey)}
+                </Text>
+                <Text
+                  style={[styles.featureDesc, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}
+                >
+                  {t(wideFeature.descKey)}
+                </Text>
+              </View>
+            </View>
+          )}
+          <View style={styles.featuresGrid}>
+            {gridItems.map((f) => (
+              <View key={f.titleKey} style={[styles.featureItem, { backgroundColor: colors.card }]}>
+                <View style={[styles.featureIcon, { backgroundColor: f.bg }]}>
+                  <Ionicons name={f.icon} size={18} color="#FFFFFF" />
+                </View>
+                <Text
+                  style={[styles.featureTitle, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}
+                  numberOfLines={1}
+                >
+                  {t(f.titleKey)}
+                </Text>
+                <Text
+                  style={[styles.featureDesc, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}
+                >
+                  {t(f.descKey)}
+                </Text>
+              </View>
+            ))}
+          </View>
+        </View>
 
         <View style={styles.secureRow}>
           <Ionicons name="shield-checkmark" size={14} color={colors.mutedForeground} />
@@ -817,25 +782,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   featureWideText: { flex: 1 },
-
-  featureStrip: {
-    borderRadius: 20,
-    padding: 16,
-    marginTop: 20,
-    gap: 12,
-  },
-  bulletList: { gap: 12 },
-  bulletRow: { flexDirection: "row", alignItems: "center", gap: 12 },
-  bulletCheck: {
-    width: 26,
-    height: 26,
-    borderRadius: 9,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  bulletText: { flex: 1 },
-  bulletTitle: { fontSize: 14 },
-  bulletDesc: { fontSize: 12, marginTop: 1, lineHeight: 16 },
 
   spotlight: {
     borderRadius: 20,

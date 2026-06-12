@@ -126,9 +126,7 @@ export default function OnboardingScreen() {
     }
     // First launch (reached via Redirect, no back stack): replace onboarding (a
     // fullScreenModal) with the paywall; its close() falls back to the tabs.
-    // intro=1 marks this as the first-time paywall so it shows the full feature
-    // showcase (every other entry point gets the compact one-row version).
-    router.replace("/paywall?intro=1");
+    router.replace("/paywall");
   };
 
   const goTo = (next: number) => {
