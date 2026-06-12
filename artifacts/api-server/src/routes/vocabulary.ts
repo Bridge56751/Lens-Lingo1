@@ -8,7 +8,13 @@ const router = Router();
 
 // The Vocabulary screen is Pro-only in the app (ProGuard + requirePro on its
 // entry point). Mirror that boundary on the server.
-router.use(requirePro);
+//
+// Scope the guard to this router's own path. The router is mounted without a
+// prefix (`router.use(vocabularyRouter)`), so an unpathed `router.use(requirePro)`
+// would fire for EVERY /api request flowing through here and 403 sibling
+// routers' free routes (conversations list, /me/plan, …). "/vocabulary"
+// confines it to this route.
+router.use("/vocabulary", requirePro);
 
 const STOPWORDS = new Set([
   "the", "a", "an", "is", "are", "was", "were", "be", "been", "being",

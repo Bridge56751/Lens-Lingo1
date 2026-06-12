@@ -30,6 +30,23 @@ with NO `requirePro()` client gate. Only *opening/continuing* a past chat is Pro
 (History `handleOpen` gates). Gating delete would stop free users from removing
 their own scanned history — a NEW restriction, which this feature must never add.
 
+## Express footgun — an unpathed `router.use(guard)` LEAKS across sibling routers
+A sub-router that gates itself with `router.use(requirePro)` (no path) and is then
+mounted with NO path prefix in `routes/index.ts` (`router.use(vocabRouter)`) runs
+that guard for **every** `/api` request flowing through it — including sibling
+routers' FREE routes mounted *after* it (the conversations list, `/me/plan`).
+Symptom: free routes start returning `403 pro_required`, the first call ~2s (RC
+lookup) then ~130ms (cached), and `/me/plan` 403s so the client can never even
+reconcile Pro. **Fix:** scope the guard to the router's own path
+(`router.use("/vocab", requirePro)` / `"/vocabulary"`), or gate per-route. Guard
+this with an integration test that mounts the real routers like `index.ts` and
+asserts a free sibling route mounted after the gated ones is NOT 403 — an
+isolated middleware unit test can't catch the leak.
+
+**Why:** This single mis-scoped `use` broke the whole free experience AND blocked
+the Pro reconcile path after a real purchase (the chat 403 came from the leaked
+guard, not the chat route's own guard).
+
 ## Fail-closed vs fail-open
 `requirePro` fails **closed**: `customerHasPro` resolves to `false` on any error
 (incl. a hard DB read error) so a gate never leaks access. BUT a RevenueCat outage

@@ -11,7 +11,13 @@ const router = Router();
 // Vocabulary (Word Bank + study) is a Pro-only feature in the app — every
 // entry point is behind ProGuard / requirePro. Mirror that boundary on the
 // server so these routes can't be driven by calling the API directly.
-router.use(requirePro);
+//
+// The guard MUST be scoped to this router's own path prefix. This router is
+// mounted without a path prefix (`router.use(vocabRouter)`), so an unpathed
+// `router.use(requirePro)` would run for EVERY /api request that flows through
+// here — gating sibling routers' free routes (the conversations list, /me/plan,
+// etc.) with a 403. Scoping to "/vocab" confines the guard to these routes.
+router.use("/vocab", requirePro);
 
 // Allowlist for languages interpolated into AI prompts (prevents injection of
 // instruction-like text via an arbitrary language string).
