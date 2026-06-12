@@ -1,10 +1,13 @@
 ---
-name: Paywall contextual layout
-description: How LinguaScan's paywall must be laid out — themed per-feature spotlight + first plan price above the fold.
+name: Paywall layout
+description: How LinguaScan's paywall is laid out for contextual (feature-tapped) vs generic entry points.
 ---
 
-Rule: When the paywall is opened for a specific locked feature (param `feature` = chat/vocab/langs), it MUST lead with the large themed "spotlight" card for that feature (icon badge + title + checkmark bullets; colored orange=chat, green=vocab, blue=langs), then the plan/price cards, and only then the "Everything else in Pro" grid of the remaining features. The generic (no-feature) paywall shows no spotlight; its feature grid leads with a wide "Unlimited Scans" card.
+The paywall (`artifacts/mobile/app/paywall.tsx`) has two layouts, keyed on whether a `feature` param is present (`featureTheme`):
 
-**Why:** The user explicitly likes this spotlight + "Everything else in Pro" style and wants at least the first plan price visible WITHOUT scrolling. A prior "make it compact" refactor had hidden the spotlight (gated behind `?intro=1`), replaced contextual paywalls with a flat bullet strip, and placed the tall feature section ABOVE the plans — which pushed prices below the fold. All of that was reverted.
+- **Contextual** (tapped a specific locked feature: chat/vocab/langs): lead with the large themed "spotlight" card for that feature (icon badge + title + checkmark bullets; orange=chat, green=vocab, blue=langs), THEN "Choose Your Plan" + plan cards + CTA, THEN the "Everything else in Pro" grid of the remaining features. The spotlight is the value showcase, so plans/price sit right under it and the first price is visible without scrolling.
+- **Generic** (no feature param — opened from Settings upgrade, post-scan "continue chat" via `scan.tsx` requirePro(), and end of onboarding): there is NO spotlight, so the "Premium Features" grid (wide "Unlimited Scans" hero + 2x2 of the rest) is rendered ABOVE "Choose Your Plan" + prices, so the user sees what Pro unlocks before the price. Nothing feature-grid sits below the CTA here.
 
-**How to apply:** Keep render order: hero → spotlight (only when a `featureTheme` exists) → "Choose Your Plan" + plans → CTA → "Everything else in Pro" grid → footer. Do NOT move the feature grid above the plans, and do NOT gate the spotlight behind an intro/first-run flag. Prices always come from RevenueCat `product.priceString` — never hardcode.
+**Why:** The user likes the themed spotlight style for contextual taps AND wants the first plan price visible without scrolling on contextual paywalls; separately, for the plain generic paywall (which has no spotlight) the user explicitly asked to move the feature showcase ABOVE the prices. A prior "make it compact" refactor had hidden the spotlight (gated behind `?intro=1`) and used a flat bullet strip — that was reverted.
+
+**How to apply:** Keep the spotlight gated only on `featureTheme` (never an intro/first-run flag). Don't move the contextual "Everything else in Pro" grid above the plans. Don't move the generic "Premium Features" grid below the plans. Prices always come from RevenueCat `product.priceString` — never hardcode.

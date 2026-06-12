@@ -290,6 +290,58 @@ export default function PaywallScreen() {
         })
       : null;
 
+  // The feature grid. On a contextual paywall (spotlight present) this is the
+  // "Everything else in Pro" recap that sits BELOW the plans; on the generic
+  // paywall (no spotlight) it becomes the value showcase rendered ABOVE the
+  // plans so the user sees what Pro unlocks before the price.
+  const featuresCard = (
+    <View style={[styles.featuresCard, { backgroundColor: accentSoft }]}>
+      <Text style={[styles.featuresTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
+        {t(featureTheme ? "paywall.spotEverything" : "paywall.featuresTitle")}
+      </Text>
+      {wideFeature && (
+        <View style={[styles.featureWide, { backgroundColor: colors.card }]}>
+          <View style={[styles.featureIcon, { backgroundColor: wideFeature.bg, marginBottom: 0 }]}>
+            <Ionicons name={wideFeature.icon} size={18} color="#FFFFFF" />
+          </View>
+          <View style={styles.featureWideText}>
+            <Text
+              style={[styles.featureTitle, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}
+              numberOfLines={1}
+            >
+              {t(wideFeature.titleKey)}
+            </Text>
+            <Text
+              style={[styles.featureDesc, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}
+            >
+              {t(wideFeature.descKey)}
+            </Text>
+          </View>
+        </View>
+      )}
+      <View style={styles.featuresGrid}>
+        {gridItems.map((f) => (
+          <View key={f.titleKey} style={[styles.featureItem, { backgroundColor: colors.card }]}>
+            <View style={[styles.featureIcon, { backgroundColor: f.bg }]}>
+              <Ionicons name={f.icon} size={18} color="#FFFFFF" />
+            </View>
+            <Text
+              style={[styles.featureTitle, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}
+              numberOfLines={1}
+            >
+              {t(f.titleKey)}
+            </Text>
+            <Text
+              style={[styles.featureDesc, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}
+            >
+              {t(f.descKey)}
+            </Text>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+
   // A Pro user reaching the paywall (e.g. opened from settings) sees a simple
   // confirmation rather than purchase options.
   if (isSubscribed) {
@@ -404,6 +456,10 @@ export default function PaywallScreen() {
             </View>
           </View>
         )}
+
+        {/* Generic paywall (no spotlight): show the feature value showcase ABOVE
+            the plans so the user sees what Pro unlocks before the price. */}
+        {!featureTheme && featuresCard}
 
         {/* Choose your plan */}
         <Text style={[styles.sectionTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
@@ -544,55 +600,10 @@ export default function PaywallScreen() {
           </Text>
         )}
 
-        {/* Everything else in Pro — the themed feature leads at the top; this grid
-            lists the remaining perks. On the generic paywall (no spotlight) the
-            first perk (Unlimited Scans) becomes a wide hero card. It sits below the
-            plans + CTA so the first price is reachable without any scrolling. */}
-        <View style={[styles.featuresCard, { backgroundColor: accentSoft }]}>
-          <Text style={[styles.featuresTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-            {t(featureTheme ? "paywall.spotEverything" : "paywall.featuresTitle")}
-          </Text>
-          {wideFeature && (
-            <View style={[styles.featureWide, { backgroundColor: colors.card }]}>
-              <View style={[styles.featureIcon, { backgroundColor: wideFeature.bg, marginBottom: 0 }]}>
-                <Ionicons name={wideFeature.icon} size={18} color="#FFFFFF" />
-              </View>
-              <View style={styles.featureWideText}>
-                <Text
-                  style={[styles.featureTitle, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}
-                  numberOfLines={1}
-                >
-                  {t(wideFeature.titleKey)}
-                </Text>
-                <Text
-                  style={[styles.featureDesc, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}
-                >
-                  {t(wideFeature.descKey)}
-                </Text>
-              </View>
-            </View>
-          )}
-          <View style={styles.featuresGrid}>
-            {gridItems.map((f) => (
-              <View key={f.titleKey} style={[styles.featureItem, { backgroundColor: colors.card }]}>
-                <View style={[styles.featureIcon, { backgroundColor: f.bg }]}>
-                  <Ionicons name={f.icon} size={18} color="#FFFFFF" />
-                </View>
-                <Text
-                  style={[styles.featureTitle, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}
-                  numberOfLines={1}
-                >
-                  {t(f.titleKey)}
-                </Text>
-                <Text
-                  style={[styles.featureDesc, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}
-                >
-                  {t(f.descKey)}
-                </Text>
-              </View>
-            ))}
-          </View>
-        </View>
+        {/* Contextual paywall (spotlight present): the tapped feature leads at the
+            top, so this "Everything else in Pro" recap sits below the plans + CTA
+            and the first price stays reachable without scrolling. */}
+        {featureTheme && featuresCard}
 
         <View style={styles.secureRow}>
           <Ionicons name="shield-checkmark" size={14} color={colors.mutedForeground} />
