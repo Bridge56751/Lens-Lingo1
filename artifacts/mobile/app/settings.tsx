@@ -491,6 +491,9 @@ export default function SettingsScreen() {
           )}
         </LinearGradient>
 
+        {/* Activity */}
+        <StreakCards streak={streak} bestStreak={bestStreak} />
+
         {/* Membership */}
         <Section
           title={t("pro.section")}
@@ -634,8 +637,7 @@ export default function SettingsScreen() {
           </Pressable>
         </Modal>
 
-        {/* Activity */}
-        <StreakCards streak={streak} bestStreak={bestStreak} />
+        {/* Daily goal */}
         <Row
           icon="checkmark-circle"
           iconBg="#16A34A"
