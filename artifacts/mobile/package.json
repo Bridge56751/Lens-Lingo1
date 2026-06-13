@@ -59,10 +59,14 @@
     "zod-validation-error": "^3.4.0"
   },
   "dependencies": {
+    "@react-native-firebase/analytics": "^24.1.1",
+    "@react-native-firebase/app": "^24.1.1",
+    "@react-native-firebase/crashlytics": "^24.1.1",
     "@tanstack/query-async-storage-persister": "^5.100.9",
     "@tanstack/react-query-persist-client": "^5.100.9",
     "expo-asset": "~12.0.13",
     "expo-audio": "~1.1.1",
+    "expo-build-properties": "~1.0.10",
     "expo-camera": "^17.0.10",
     "expo-file-system": "~19.0.23",
     "expo-speech": "~14.0.8",

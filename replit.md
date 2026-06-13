@@ -23,6 +23,7 @@ A language learning mobile app that lets users scan real-world objects with thei
 - API: Express 5
 - DB: PostgreSQL + Drizzle ORM
 - AI: OpenAI GPT (vision + chat) via Replit AI Integrations
+- Analytics/Crash (iOS only): Firebase Analytics + Crashlytics via `@react-native-firebase`
 - Validation: Zod (`zod/v4`), `drizzle-zod`
 - API codegen: Orval (from OpenAPI spec)
 - Build: esbuild (CJS bundle)
@@ -40,6 +41,7 @@ A language learning mobile app that lets users scan real-world objects with thei
 - Mobile app: `artifacts/mobile/app/` (tabs: index + history, conversation/[id])
 - Design tokens: `artifacts/mobile/constants/colors.ts`
 - Practice-activity log: `artifacts/mobile/lib/activity.ts` + `hooks/useActivity.ts`
+- Firebase (iOS) wrapper: `artifacts/mobile/lib/analytics.ts` (web/Expo-Go no-op) + `lib/analytics.native.ts` (real, lazy-required); config in `artifacts/mobile/GoogleService-Info.plist` + `app.json`; wired in `app/_layout.tsx`
 
 ## Architecture decisions
 
@@ -55,6 +57,8 @@ A language learning mobile app that lets users scan real-world objects with thei
 - Per-customer tracking lives on the `customers` table: `plan` ('free'/'pro') + `pro_since` for tiering, and `scan_count` (pictures taken), `chat_count` (chats started), `message_count` (messages sent) usage counters incremented in the scan, create-conversation, and message-send routes. View these directly in the Supabase Table Editor.
 - **Server-side Pro sync (REST pull, no webhook)**: `GET /api/me/plan` returns the server's authoritative `{plan, proSince}` for the resolved customer. Pro status is pulled from RevenueCat's REST API on each read (`getCustomer` via the Replit RevenueCat connector — `lib/revenueCatClient.ts` + `REVENUECAT_PROJECT_ID`) and reconciled onto `customers.plan` / `pro_since` (grant preserves the original `proSince` via COALESCE; revoke clears it to null). The refresh is best-effort — if RevenueCat is unreachable it serves the last-known stored plan instead of failing. The mobile app calls `Purchases.logIn(clerkUserId ?? deviceId)` (in `lib/revenuecat.tsx`) so the RevenueCat customer id matches `auth_user_id` / `device_id`; RevenueCat aliases anonymous→identified on login, so a pre-sign-in purchase still resolves. No webhook receiver or shared secret is required.
 - **Optional auth (Replit-managed Clerk)**: Sign-in is optional — the anonymous device flow stays the default and the app is never gated behind login. Email sign-up (with email-code verification) and Sign in with Apple are supported. The server mounts the Clerk proxy + `clerkMiddleware`; identity resolution in `customer.ts` is token-aware — a Clerk session resolves/creates the `customers` row by `auth_user_id` and keeps the Clerk-**verified** primary email in sync (overwrites only on a non-null change, so a stale value is never kept and errors/no-primary never clobber); otherwise it falls back to the `x-device-id` device row. On first sign-in the mobile `auth.tsx` screen calls `POST /api/account/link` (auth-gated, idempotent — locks the device row `FOR UPDATE` so concurrent/retried calls can't double-count) which merges the anonymous device row's conversations + vocab selections + usage counters into the account row and re-syncs the verified email. `customers` has nullable `auth_user_id` (unique) + `email`; `device_id` is nullable. The mobile app renders immediately (Clerk hydrates in the background, not gated by `<ClerkLoaded>`); the auth modal waits for a session token before linking and shows a retry on failure so device data is never silently dropped.
+
+- **Firebase Analytics + Crashlytics (iOS only)**: `@react-native-firebase/{app,analytics,crashlytics}` provide Analytics (a `screen_view` per route via `usePathname`, `app_open`, and user id = device id) and Crashlytics (the root `ErrorBoundary`'s `onError` calls `recordError`). The native modules only exist in a custom dev/prod (`eas`) build — NOT Expo Go or web. A platform split keeps the dev env working: `lib/analytics.ts` is a no-op (web + TS source of truth) and Metro resolves `lib/analytics.native.ts` on iOS/Android, which lazy-`require`s RNFirebase behind a `Constants.executionEnvironment === "storeClient"` Expo-Go guard + per-call try/catch (analytics can never crash the app). Android was intentionally skipped (no `google-services.json`). Analytics will NOT report until Google Analytics is enabled for the `lens-lingo` Firebase project and the plist re-downloaded (the shipped plist has `IS_ANALYTICS_ENABLED=false`); Crashlytics works regardless.
 
 ## Product
 
@@ -72,3 +76,5 @@ A language learning mobile app that lets users scan real-world objects with thei
 - The built-in `executeSql` tool and the Replit `database` skill target the Replit-managed Postgres, NOT this app's Supabase DB — they'll report `relation "customers" does not exist`. To run one-off SQL against Supabase, use the `getConnectionString()` resolver (Session pooler + split password) with a `pg` Pool.
 - The `integrations-openai-ai-react` lib is excluded from root `tsconfig.json` references (not needed for Expo)
 - Web preview safe-area insets differ from native — always test on device via Expo Go QR code
+- **Firebase / RNFirebase + Metro**: `@react-native-firebase/app@24` depends on the full `firebase` JS SDK, which drags in every `@firebase/*` package. A leftover pnpm `*_tmp_*` dir (e.g. `node_modules/.pnpm/@firebase+storage@.../node_modules/@firebase/storage_tmp_NNNN`) makes Metro's FallbackWatcher crash on startup with `ENOENT ... watch`. Fix: `rm -rf node_modules/.pnpm/@firebase+*/node_modules/@firebase/*_tmp_*` then restart the mobile workflow. They sit ~4 levels under `.pnpm`, so a shallow `find -maxdepth 3` misses them and a full-tree `find node_modules` times out — target the `.pnpm/@firebase+*` glob directly.
+- Firebase native modules CANNOT run in Expo Go or web — Analytics/Crashlytics only work in an `eas build` (dev or prod). The dev workflow here uses Expo Go, so analytics/crash data can't be verified in this environment. RNFirebase deps/plugins live under `artifacts/mobile/node_modules`, NOT root (pnpm monorepo).

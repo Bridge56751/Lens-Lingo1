@@ -10,7 +10,7 @@ import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Asset } from "expo-asset";
-import { Stack } from "expo-router";
+import { Stack, usePathname } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -26,6 +26,12 @@ import { setMobileAuthTokenGetter } from "@/lib/authToken";
 import { setAuthTokenGetter, setBaseUrl, setDeviceId } from "@workspace/api-client-react";
 import { initializeRevenueCat, SubscriptionProvider } from "@/lib/revenuecat";
 import { handleProRequiredError } from "@/lib/proRequired";
+import {
+  initAnalytics,
+  logScreenView,
+  recordError,
+  setAnalyticsUser,
+} from "@/lib/analytics";
 
 const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 const CLERK_PROXY_URL = process.env.EXPO_PUBLIC_CLERK_PROXY_URL || undefined;
@@ -86,6 +92,16 @@ function AuthTokenSync() {
   return null;
 }
 
+// Logs a Firebase Analytics screen_view whenever the active route changes.
+// No-op on web / in Expo Go (see lib/analytics).
+function AnalyticsTracker() {
+  const pathname = usePathname();
+  useEffect(() => {
+    if (pathname) logScreenView(pathname);
+  }, [pathname]);
+  return null;
+}
+
 function RootLayoutNav() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
@@ -133,9 +149,18 @@ export default function RootLayout() {
   const [deviceReady, setDeviceReady] = useState(false);
   const [assetsReady, setAssetsReady] = useState(false);
 
+  // Enable Firebase Analytics + Crashlytics collection and log app_open once.
+  useEffect(() => {
+    initAnalytics();
+  }, []);
+
   useEffect(() => {
     getOrCreateDeviceId()
-      .then((id) => setDeviceId(id))
+      .then((id) => {
+        setDeviceId(id);
+        // Attribute analytics + crash reports to the stable device id.
+        setAnalyticsUser(id);
+      })
       .catch(() => {})
       .finally(() => setDeviceReady(true));
   }, []);
@@ -168,7 +193,9 @@ export default function RootLayout() {
     >
       <AuthTokenSync />
       <SafeAreaProvider>
-        <ErrorBoundary>
+        <ErrorBoundary
+          onError={(error, stack) => recordError(error, stack)}
+        >
           <PersistQueryClientProvider
             client={queryClient}
             persistOptions={{ persister: asyncStoragePersister, maxAge: OFFLINE_MAX_AGE }}
@@ -176,6 +203,7 @@ export default function RootLayout() {
             <SubscriptionProvider>
               <GestureHandlerRootView>
                 <KeyboardProvider>
+                  <AnalyticsTracker />
                   <RootLayoutNav />
                 </KeyboardProvider>
               </GestureHandlerRootView>

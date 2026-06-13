@@ -26,4 +26,5 @@
 - [Paywall gate loading window](paywall-gate-loading.md) — turning a `!isPro` tap-gate into a derived `locked` flag that excludes `isLoading` fails OPEN during cold start; add a separate loading no-op in the handler.
 - [Scan-limit enforcement](scan-limit-enforcement.md) — server usage caps reserve-or-deny inside a row-locked tx (SELECT…FOR UPDATE) before expensive work; store an ABSOLUTE reset instant (not a client day-key) floored ≥23h after prev; first/null period unfloored (accepted); release slot on persist failure.
 - [Paywall layout](paywall-layout.md) — keyed on feature param: contextual = themed spotlight→plans→grid (first price visible); generic (no spotlight) = feature grid ABOVE plans/price.
+- [Firebase on Expo](firebase-rnfirebase.md) — iOS-only Analytics+Crashlytics; platform-split no-op (web/Expo Go) vs .native lazy-require; RNFirebase's firebase-JS-SDK leftover *_tmp_* dirs crash Metro watcher.
 - [Hide sign-in UI flag](auth-ui-flag.md) — AUTH_UI_ENABLED (default off) ships anonymous-only; keep sign-out unconditional (don't trap sessions) + auth route registered; flip to re-enable.

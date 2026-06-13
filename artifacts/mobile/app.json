@@ -16,6 +16,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.lenslingo.mobile",
+      "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
         "NSCameraUsageDescription": "Lens Lingo uses your camera to scan real-world objects so it can identify them and start a language lesson.",
         "NSMicrophoneUsageDescription": "Lens Lingo uses your microphone so you can speak with your AI tutor and practice your pronunciation.",
@@ -56,7 +57,18 @@
           "microphonePermission": "Lens Lingo uses your microphone so you can speak with your AI tutor and practice your pronunciation."
         }
       ],
-      "expo-asset"
+      "expo-asset",
+      "@react-native-firebase/app",
+      "@react-native-firebase/analytics",
+      "@react-native-firebase/crashlytics",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static"
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
