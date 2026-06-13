@@ -50,6 +50,7 @@ import {
   type OfflineProgress,
   type PackState,
 } from "@/lib/offlinePack";
+import { AUTH_UI_ENABLED } from "@/constants/features";
 
 function Row({
   icon,
@@ -474,11 +475,15 @@ export default function SettingsScreen() {
                     {accountEmail}
                   </Text>
                 </View>
-              ) : (
+              ) : isSignedIn ? (
                 <Text style={[styles.profileSignInSub, { color: "rgba(255,255,255,0.82)", fontFamily: "Inter_400Regular" }]}>
-                  {isSignedIn ? t("settings.signedInAs") : t("settings.signInSub")}
+                  {t("settings.signedInAs")}
                 </Text>
-              )}
+              ) : AUTH_UI_ENABLED ? (
+                <Text style={[styles.profileSignInSub, { color: "rgba(255,255,255,0.82)", fontFamily: "Inter_400Regular" }]}>
+                  {t("settings.signInSub")}
+                </Text>
+              ) : null}
             </View>
           </View>
 
@@ -496,7 +501,7 @@ export default function SettingsScreen() {
                 {t("settings.signOut")}
               </Text>
             </TouchableOpacity>
-          ) : (
+          ) : AUTH_UI_ENABLED ? (
             <TouchableOpacity
               style={styles.profileSignIn}
               onPress={() => {
@@ -510,7 +515,7 @@ export default function SettingsScreen() {
                 {t("settings.signInCta")}
               </Text>
             </TouchableOpacity>
-          )}
+          ) : null}
         </LinearGradient>
 
         {/* Activity */}
