@@ -1,18 +1,22 @@
 ---
 name: RevenueCat web price fields
-description: RevenueCat web Browser Mode returns unreliable numeric product price fields; only *String fields are trustworthy there.
+description: In RevenueCat web Browser Mode the SDK's normalized per-period numbers are the unreliable part; raw product.price backs priceString and is usable, with guards.
 ---
 
 # RevenueCat web Browser Mode price fields
 
-In the Expo **web preview** the RevenueCat JS SDK runs in "Browser Mode" with the RC **Test store**. In that mode the numeric product fields (`product.price`, `pricePerYear`, `pricePerMonth`, `pricePerWeek`) are unreliable / inconsistent with the formatted strings — e.g. an annual product reported a near-zero `price` while `pricePerYearString` was a normal value, producing a bogus computed "Save 100%".
+In the Expo **web preview** / Expo Go the RevenueCat JS SDK runs in "Browser Mode" with the RC **Test store** (`purchases-js`). Two distinct gotchas, do not conflate them:
 
-The formatted string fields (`priceString`, `pricePerYearString`, etc.) are fine in web mode.
+1. **Normalized per-period NUMERIC fields are frequently unpopulated** — `pricePerYear`, `pricePerMonth`, `pricePerWeek` come back `undefined`/`0` in Browser Mode. Any savings/discount math that relies on them silently computes nothing, so the "Save X%" pill never renders. This was the actual cause of "I don't see the percentage saving".
+2. **Raw `product.price` is the value that backs `priceString`** and was reliable enough here to compute correct discounts (verified: Monthly "Save 40%", Annual "Save 36%" matched hand math). Prefer it for percentage math. Caveat: it has historically been seen near-zero in some Test-store/SDK combos (producing a bogus "Save 100%"), so never trust it blindly.
 
-**Why:** any paywall math that divides/compares the numeric fields (discount %, "save X%", strikethrough) can render nonsense in the web preview even though it is correct on a real device.
+The formatted string fields (`priceString`, `pricePerYearString`, `pricePerMonthString`, …) are always fine in web mode — use them for any displayed/strikethrough price.
+
+**Why:** paywall savings math must survive an environment where the SDK's convenience numbers are missing AND where a raw number can occasionally be junk.
 
 **How to apply:**
-- Never hardcode prices — always display `product.priceString` (also App Store compliance).
-- When computing a discount %, clamp to a sane range (we hide the savings pill + strikethrough unless `0 < percent < 90`) so incomplete data degrades to "show nothing" instead of a wrong number.
-- Verify real price numbers (and any savings %) on a device via Expo Go, not the web preview.
-- Actual displayed prices ($/period) come from the RevenueCat product config / App Store Connect, NOT the app code — tell the user to set them there.
+- Compute discount % from raw `product.price`, annualized with explicit multipliers (Annual vs `monthly.price * 12`, Monthly vs `weekly.price * 52`) — NOT from `pricePerYear`/`pricePerMonth`.
+- Guard hard: require both values `Number.isFinite`, `price > 0`, `baseline > price`, and clamp the result to `0 < percent < 95`, so missing/garbage data degrades to "show nothing" instead of a wrong number.
+- Render the struck-through "before" price from the reliable `*String` fields, and treat that string as optional (it can be null) — gate the strikethrough on it independently of the percentage.
+- Never hardcode prices — display `product.priceString` (also App Store compliance). Actual $/period live in RevenueCat product config / App Store Connect, not app code.
+- Verify the real numbers on a device via Expo Go, not just the web preview.

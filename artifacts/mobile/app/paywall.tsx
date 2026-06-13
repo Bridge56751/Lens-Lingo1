@@ -219,40 +219,42 @@ export default function PaywallScreen() {
     () => packages.find((p) => p.packageType === "MONTHLY"),
     [packages],
   );
-  // Percentage `price` saves against a `baseline` for the same span, using
-  // RevenueCat's own normalized per-period numbers (never a hardcoded
-  // multiplier). `strike` is the higher baseline price to render struck through.
-  // Returns null when data is missing or implausible — e.g. the RevenueCat web
-  // test store leaves some numeric price fields unreliable — so the pill simply
-  // doesn't render (a real discount comfortably falls below 90%).
-  const savingsAgainst = (
-    price: number,
-    baselinePrice: number | null | undefined,
-    baselineStr: string | null | undefined,
-  ): { percent: number; strike: string } | null => {
-    if (!baselinePrice || !baselineStr || price <= 0 || baselinePrice <= price) return null;
-    const percent = Math.round((1 - price / baselinePrice) * 100);
-    if (percent <= 0 || percent >= 90) return null;
-    return { percent, strike: baselineStr };
-  };
-  // Annual is compared to the monthly plan annualized; Monthly to the weekly
-  // plan over a month. Weekly is the baseline, so it shows no discount.
-  const planSavings = (pkg: PurchasesPackage): { percent: number; strike: string } | null => {
-    if (pkg.packageType === "ANNUAL") {
-      return savingsAgainst(
-        pkg.product.price,
-        monthlyPkg?.product.pricePerYear,
-        monthlyPkg?.product.pricePerYearString,
-      );
+  // Each plan's percentage saving vs. the next-shorter cadence, compared on an
+  // annualized basis from each package's real `price` (Annual vs 12× monthly,
+  // Monthly vs 52× weekly). We use the raw price ratio rather than the SDK's
+  // normalized pricePerYear/pricePerMonth numbers — those are frequently
+  // unpopulated in RevenueCat Browser Mode (Expo Go / web), which is why no
+  // percentage was showing. `strike` is the formatted "before" price (a reliable
+  // *String field) to render struck through, or null when unavailable. Returns
+  // null when data is missing or implausible so nothing bogus renders.
+  const planSavings = (
+    pkg: PurchasesPackage,
+  ): { percent: number; strike: string | null } | null => {
+    let priceAnnualized: number | null = null;
+    let baselineAnnualized: number | null = null;
+    let strike: string | null = null;
+    if (pkg.packageType === "ANNUAL" && monthlyPkg) {
+      priceAnnualized = pkg.product.price;
+      baselineAnnualized = monthlyPkg.product.price * 12;
+      strike = monthlyPkg.product.pricePerYearString ?? null;
+    } else if (pkg.packageType === "MONTHLY" && weeklyPkg) {
+      priceAnnualized = pkg.product.price * 12;
+      baselineAnnualized = weeklyPkg.product.price * 52;
+      strike = weeklyPkg.product.pricePerMonthString ?? null;
     }
-    if (pkg.packageType === "MONTHLY") {
-      return savingsAgainst(
-        pkg.product.price,
-        weeklyPkg?.product.pricePerMonth,
-        weeklyPkg?.product.pricePerMonthString,
-      );
+    if (
+      priceAnnualized == null ||
+      baselineAnnualized == null ||
+      !Number.isFinite(priceAnnualized) ||
+      !Number.isFinite(baselineAnnualized) ||
+      priceAnnualized <= 0 ||
+      baselineAnnualized <= priceAnnualized
+    ) {
+      return null;
     }
-    return null;
+    const percent = Math.round((1 - priceAnnualized / baselineAnnualized) * 100);
+    if (percent <= 0 || percent >= 95) return null;
+    return { percent, strike };
   };
 
   const [result, setResult] = useState<ResultKind>(null);
@@ -592,7 +594,7 @@ export default function PaywallScreen() {
                       <Text style={[styles.bigPrice, { color: accent, fontFamily: "Inter_700Bold" }]}>
                         {pkg.product.priceString}
                       </Text>
-                      {savings ? (
+                      {savings?.strike ? (
                         <Text style={[styles.strikePrice, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
                           {savings.strike}
                           {meta.suffix}
