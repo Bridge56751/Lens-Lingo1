@@ -25,6 +25,9 @@ RNFirebase native modules don't exist in Expo Go or web. To keep the dev env ali
 - Deps + plugin files live under `artifacts/mobile/node_modules`, NOT root (pnpm monorepo) — check there, not `node_modules/@react-native-firebase`.
 
 ## Reporting caveats
-- Analytics won't appear until Google Analytics is enabled for the Firebase project and the plist re-downloaded (a plist with `IS_ANALYTICS_ENABLED=false` means GA isn't linked). Runtime `setAnalyticsCollectionEnabled(true)` only flips the collection default. Crashlytics works regardless.
+- The real prerequisite for Analytics data is enabling **Google Analytics on the Firebase project** (creates the GA property + data stream) — NOT any plist flag.
+- **`IS_ANALYTICS_ENABLED` (and the other `IS_*_ENABLED` keys) in the iOS `GoogleService-Info.plist` are LEGACY and ignored by the modern Firebase iOS SDK.** Verified empirically: after enabling GA on the project, re-downloading the plist left `IS_ANALYTICS_ENABLED=false` and the file byte-identical. Do NOT chase flipping that flag or keep re-downloading the plist — it never changes and doesn't gate anything on iOS.
+  **Why:** these flags came from the old Google-Services config format; current SDK enables Analytics by SDK default + Info.plist `FIREBASE_ANALYTICS_COLLECTION_ENABLED` / runtime `setAnalyticsCollectionEnabled(true)`.
+  **How to apply:** if iOS analytics isn't reporting, check (1) GA enabled on the project, (2) Analytics SDK linked, (3) runtime collection enabled, (4) you're on a real `eas build` — never the plist's `IS_*_ENABLED` keys.
 - Verify ONLY via `eas build` (dev/prod) — never Expo Go / web preview.
 - The Firebase iOS API key in the plist is a client identifier, safe to commit.
