@@ -423,6 +423,7 @@ export type TKey =
   | "paywall.perMonth"
   | "paywall.perYear"
   | "paywall.bestValue"
+  | "paywall.mostPopular"
   | "paywall.loading"
   | "paywall.unavailable"
   | "paywall.subscribe"
@@ -950,6 +951,7 @@ const en: Record<TKey, string> = {
   "paywall.perMonth": " / month",
   "paywall.perYear": " / year",
   "paywall.bestValue": "BEST VALUE",
+  "paywall.mostPopular": "MOST POPULAR",
   "paywall.loading": "Loading plans…",
   "paywall.unavailable": "Plans aren't available right now. Please try again later.",
   "paywall.subscribe": "Subscribe",

@@ -99,6 +99,9 @@ const FEATURE_THEMES: Record<
   },
 };
 
+// Sort weight so plan cards always render shortest → longest cadence.
+const PACKAGE_ORDER: Record<string, number> = { WEEKLY: 0, MONTHLY: 1, ANNUAL: 2 };
+
 // Maps a RevenueCat package's billing period to a friendly name + price suffix +
 // subtitle. Prices themselves always come from product.priceString (never hardcoded).
 function packageMeta(
@@ -187,10 +190,14 @@ export default function PaywallScreen() {
     isRestoring,
   } = useSubscription();
 
-  const packages = useMemo<PurchasesPackage[]>(
-    () => offerings?.current?.availablePackages ?? [],
-    [offerings],
-  );
+  // Always list plans shortest → longest (Weekly, Monthly, Annual), regardless
+  // of the order the offering happens to return them in.
+  const packages = useMemo<PurchasesPackage[]>(() => {
+    const list = offerings?.current?.availablePackages ?? [];
+    return [...list].sort(
+      (a, b) => (PACKAGE_ORDER[a.packageType] ?? 99) - (PACKAGE_ORDER[b.packageType] ?? 99),
+    );
+  }, [offerings]);
 
   // Default-select the annual plan (best value) when present, else the first.
   const defaultId = useMemo(() => {
@@ -202,24 +209,50 @@ export default function PaywallScreen() {
   const activeId = selectedId ?? defaultId;
   const selectedPackage = packages.find((p) => p.identifier === activeId) ?? null;
 
-  // Compute annual savings vs. paying monthly for a year, using RevenueCat's own
-  // annualized number for the monthly product. Only shown when both plans exist
-  // and the annual price is genuinely cheaper.
+  // Reference packages used to compute each plan's discount vs. the next-shorter
+  // cadence (Annual vs 12× monthly, Monthly vs ~4.3× weekly).
+  const weeklyPkg = useMemo(
+    () => packages.find((p) => p.packageType === "WEEKLY"),
+    [packages],
+  );
   const monthlyPkg = useMemo(
     () => packages.find((p) => p.packageType === "MONTHLY"),
     [packages],
   );
-  const annualSavings = (annualPkg: PurchasesPackage): { percent: number; strike: string } | null => {
-    const annual = annualPkg.product.price;
-    const perYear = monthlyPkg?.product.pricePerYear ?? null;
-    const perYearStr = monthlyPkg?.product.pricePerYearString ?? null;
-    if (!perYear || !perYearStr || annual <= 0 || perYear <= annual) return null;
-    const percent = Math.round((1 - annual / perYear) * 100);
-    // Guard against implausible values from incomplete price data (e.g. the
-    // RevenueCat web test store leaves some numeric fields unreliable). A real
-    // annual-vs-monthly discount comfortably falls below 90%.
+  // Percentage `price` saves against a `baseline` for the same span, using
+  // RevenueCat's own normalized per-period numbers (never a hardcoded
+  // multiplier). `strike` is the higher baseline price to render struck through.
+  // Returns null when data is missing or implausible — e.g. the RevenueCat web
+  // test store leaves some numeric price fields unreliable — so the pill simply
+  // doesn't render (a real discount comfortably falls below 90%).
+  const savingsAgainst = (
+    price: number,
+    baselinePrice: number | null | undefined,
+    baselineStr: string | null | undefined,
+  ): { percent: number; strike: string } | null => {
+    if (!baselinePrice || !baselineStr || price <= 0 || baselinePrice <= price) return null;
+    const percent = Math.round((1 - price / baselinePrice) * 100);
     if (percent <= 0 || percent >= 90) return null;
-    return { percent, strike: perYearStr };
+    return { percent, strike: baselineStr };
+  };
+  // Annual is compared to the monthly plan annualized; Monthly to the weekly
+  // plan over a month. Weekly is the baseline, so it shows no discount.
+  const planSavings = (pkg: PurchasesPackage): { percent: number; strike: string } | null => {
+    if (pkg.packageType === "ANNUAL") {
+      return savingsAgainst(
+        pkg.product.price,
+        monthlyPkg?.product.pricePerYear,
+        monthlyPkg?.product.pricePerYearString,
+      );
+    }
+    if (pkg.packageType === "MONTHLY") {
+      return savingsAgainst(
+        pkg.product.price,
+        weeklyPkg?.product.pricePerMonth,
+        weeklyPkg?.product.pricePerMonthString,
+      );
+    }
+    return null;
   };
 
   const [result, setResult] = useState<ResultKind>(null);
@@ -496,7 +529,13 @@ export default function PaywallScreen() {
               const selected = pkg.identifier === activeId;
               const meta = packageMeta(pkg, t);
               const isAnnual = pkg.packageType === "ANNUAL";
-              const savings = isAnnual ? annualSavings(pkg) : null;
+              const isMonthly = pkg.packageType === "MONTHLY";
+              const savings = planSavings(pkg);
+              const badgeLabel = isAnnual
+                ? t("paywall.bestValue")
+                : isMonthly
+                  ? t("paywall.mostPopular")
+                  : null;
               const trial = freeTrial(pkg, ineligibleTrialProductIds);
               return (
                 <TouchableOpacity
@@ -514,13 +553,15 @@ export default function PaywallScreen() {
                   }}
                   activeOpacity={0.85}
                 >
-                  {isAnnual && (
+                  {(badgeLabel || savings) && (
                     <View style={styles.planTopRow}>
-                      <View style={[styles.bestValue, { backgroundColor: accent }]}>
-                        <Text style={[styles.bestValueText, { color: "#FFFFFF", fontFamily: "Inter_700Bold" }]}>
-                          {t("paywall.bestValue")}
-                        </Text>
-                      </View>
+                      {badgeLabel && (
+                        <View style={[styles.bestValue, { backgroundColor: accent }]}>
+                          <Text style={[styles.bestValueText, { color: "#FFFFFF", fontFamily: "Inter_700Bold" }]}>
+                            {badgeLabel}
+                          </Text>
+                        </View>
+                      )}
                       {savings && (
                         <View style={[styles.savePill, { backgroundColor: "#DCFCE7" }]}>
                           <Text style={[styles.savePillText, { color: "#15803D", fontFamily: "Inter_700Bold" }]}>
