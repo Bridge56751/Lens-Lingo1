@@ -268,8 +268,15 @@ export default function PaywallScreen() {
 
   const dismissResult = () => {
     const wasUnlock = result === "success" || result === "restored";
+    if (wasUnlock) {
+      // Keep the success modal on screen while we navigate away. Clearing the
+      // result first would briefly reveal the "You're already Pro" branch (now
+      // that isSubscribed is true) — a redundant second confirmation. Leaving
+      // it set means the paywall just unmounts on close with no flash.
+      close();
+      return;
+    }
     setResult(null);
-    if (wasUnlock) close();
   };
 
   const selectedTrial = selectedPackage ? freeTrial(selectedPackage, ineligibleTrialProductIds) : null;
@@ -343,8 +350,11 @@ export default function PaywallScreen() {
   );
 
   // A Pro user reaching the paywall (e.g. opened from settings) sees a simple
-  // confirmation rather than purchase options.
-  if (isSubscribed) {
+  // confirmation rather than purchase options. Guard on `result === null` so a
+  // just-completed purchase keeps showing its own success modal instead of
+  // immediately flipping to this branch — otherwise the user gets two
+  // back-to-back "thank you" screens.
+  if (isSubscribed && result === null) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background, paddingTop: topPadding }]}>
         <View style={styles.header}>
