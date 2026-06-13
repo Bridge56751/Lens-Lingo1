@@ -18,6 +18,7 @@
       "bundleIdentifier": "com.lenslingo.mobile",
       "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "Lens Lingo uses your camera to scan real-world objects so it can identify them and start a language lesson.",
         "NSMicrophoneUsageDescription": "Lens Lingo uses your microphone so you can speak with your AI tutor and practice your pronunciation.",
         "NSPhotoLibraryUsageDescription": "Lens Lingo accesses your photos so you can choose a picture of an object to identify and learn its translation."
