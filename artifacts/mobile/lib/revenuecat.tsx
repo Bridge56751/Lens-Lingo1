@@ -209,10 +209,11 @@ type SubscriptionContextValue = ReturnType<typeof useSubscriptionContext>;
 const Context = createContext<SubscriptionContextValue | null>(null);
 
 /**
- * Associates the RevenueCat app user id with our customer identity so the
- * server's RevenueCat webhook can resolve the right `customers` row. We log in
- * with the signed-in Clerk user id when available, otherwise the anonymous
- * device id — the same keys the server matches on (`auth_user_id` / `device_id`).
+ * Associates the RevenueCat app user id with our customer identity so the server
+ * can resolve the right `customers` row when it pulls entitlements from
+ * RevenueCat's REST API on read (no webhook). We log in with the signed-in Clerk
+ * user id when available, otherwise the anonymous device id — the same keys the
+ * server matches on (`auth_user_id` / `device_id`), in the same precedence.
  * Calling logIn when signed out (no Clerk session) falls back to the device id
  * so an anonymous purchaser is still keyed to a row the server can find.
  */
