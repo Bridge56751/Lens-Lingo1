@@ -52,21 +52,56 @@ export function initializeRevenueCat() {
   console.log("Configured RevenueCat");
 }
 
+const APP_STORE_SUBSCRIPTIONS_URL = "https://apps.apple.com/account/subscriptions";
+const PLAY_STORE_SUBSCRIPTIONS_URL =
+  "https://play.google.com/store/account/subscriptions";
+
 /**
  * Opens the OS-level subscription management UI so an existing subscriber can
  * switch plans (e.g. monthly → annual) or cancel — the only store-compliant
- * place to do this. On iOS/Android this is the native App Store / Play Store
- * subscriptions sheet; on web (and any other platform) we fall back to the
- * RevenueCat-provided management URL when one is available.
+ * place to do either. Cancellation is intentionally NOT possible inside the app;
+ * we always hand off to the store's subscription settings.
+ *
+ * Attempt order:
+ *   1. Native store sheet (iOS/Android) via RevenueCat.
+ *   2. The RevenueCat-provided management URL, when present.
+ *   3. The platform's public subscriptions page (App Store / Play Store).
+ *
+ * Returns `true` when something was opened, `false` when nothing could be
+ * (e.g. the web preview with no management URL) so the caller can tell the user
+ * to manage their subscription from the store on their device.
  */
-export async function openManageSubscriptions(managementURL?: string | null) {
+export async function openManageSubscriptions(
+  managementURL?: string | null,
+): Promise<boolean> {
   if (Platform.OS === "ios" || Platform.OS === "android") {
-    await Purchases.showManageSubscriptions();
-    return;
+    try {
+      await Purchases.showManageSubscriptions();
+      return true;
+    } catch {
+      // Native sheet unavailable (e.g. no store account on this device) —
+      // fall through to a URL-based fallback below.
+    }
   }
-  if (managementURL) {
-    await Linking.openURL(managementURL);
+
+  const fallbackURL =
+    managementURL ??
+    (Platform.OS === "android"
+      ? PLAY_STORE_SUBSCRIPTIONS_URL
+      : Platform.OS === "ios"
+        ? APP_STORE_SUBSCRIPTIONS_URL
+        : null);
+
+  if (fallbackURL) {
+    try {
+      await Linking.openURL(fallbackURL);
+      return true;
+    } catch {
+      // ignore — reported to the caller via the return value
+    }
   }
+
+  return false;
 }
 
 /**

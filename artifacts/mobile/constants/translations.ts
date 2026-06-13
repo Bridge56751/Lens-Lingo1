@@ -409,6 +409,8 @@ export type TKey =
   | "pro.restoreSub"
   | "pro.manageTitle"
   | "pro.manageSub"
+  | "pro.manageUnavailableTitle"
+  | "pro.manageUnavailableBody"
   | "paywall.title"
   | "paywall.subtitle"
   | "paywall.feature.chat"
@@ -882,8 +884,11 @@ const en: Record<TKey, string> = {
   "pro.upgradeSub": "Unlock tutor chat, voice, Word Bank & all languages",
   "pro.restoreTitle": "Restore purchases",
   "pro.restoreSub": "Already subscribed? Restore your Pro access",
-  "pro.manageTitle": "Change plan",
-  "pro.manageSub": "Switch to annual or cancel anytime",
+  "pro.manageTitle": "Manage subscription",
+  "pro.manageSub": "Change your plan or cancel in your store's subscription settings",
+  "pro.manageUnavailableTitle": "Manage in the store",
+  "pro.manageUnavailableBody":
+    "To change or cancel your subscription, open the App Store or Play Store on your device and go to your subscription settings.",
   "paywall.title": "Unlock Your",
   "paywall.titleAccent": "Full Learning Potential",
   "paywall.subtitle":
@@ -975,6 +980,11 @@ const en: Record<TKey, string> = {
 type Dict = Partial<Record<TKey, string>>;
 
 const es: Dict = {
+  "pro.manageTitle": "Gestionar suscripción",
+  "pro.manageSub": "Cambia de plan o cancela en los ajustes de suscripción de tu tienda",
+  "pro.manageUnavailableTitle": "Gestiónala en la tienda",
+  "pro.manageUnavailableBody":
+    "Para cambiar o cancelar tu suscripción, abre la App Store o la Play Store en tu dispositivo y ve a los ajustes de suscripción.",
   "home.greeting": "¡Hola, {name}!",
   "home.subtitleLine1": "Escanea algo a tu alrededor",
   "home.subtitleLine2": "e inicia una conversación real.",
@@ -1059,6 +1069,11 @@ const es: Dict = {
 };
 
 const fr: Dict = {
+  "pro.manageTitle": "Gérer l'abonnement",
+  "pro.manageSub": "Changez de formule ou résiliez dans les réglages d'abonnement de votre store",
+  "pro.manageUnavailableTitle": "Gérer dans le store",
+  "pro.manageUnavailableBody":
+    "Pour changer ou résilier votre abonnement, ouvrez l'App Store ou le Play Store sur votre appareil et accédez aux réglages d'abonnement.",
   "home.greeting": "Bonjour, {name} !",
   "home.subtitleLine1": "Scannez quelque chose autour de vous",
   "home.subtitleLine2": "et commencez une vraie conversation.",
@@ -1143,6 +1158,11 @@ const fr: Dict = {
 };
 
 const de: Dict = {
+  "pro.manageTitle": "Abo verwalten",
+  "pro.manageSub": "Tarif ändern oder kündigen in den Abo-Einstellungen deines Stores",
+  "pro.manageUnavailableTitle": "Im Store verwalten",
+  "pro.manageUnavailableBody":
+    "Um dein Abo zu ändern oder zu kündigen, öffne den App Store oder Play Store auf deinem Gerät und gehe zu den Abo-Einstellungen.",
   "home.greeting": "Hallo, {name}!",
   "home.subtitleLine1": "Scanne etwas in deiner Umgebung",
   "home.subtitleLine2": "und starte ein echtes Gespräch.",
@@ -1227,6 +1247,11 @@ const de: Dict = {
 };
 
 const it: Dict = {
+  "pro.manageTitle": "Gestisci abbonamento",
+  "pro.manageSub": "Cambia piano o annulla nelle impostazioni abbonamento del tuo store",
+  "pro.manageUnavailableTitle": "Gestisci nello store",
+  "pro.manageUnavailableBody":
+    "Per cambiare o annullare l'abbonamento, apri l'App Store o il Play Store sul tuo dispositivo e vai alle impostazioni dell'abbonamento.",
   "home.greeting": "Ciao, {name}!",
   "home.subtitleLine1": "Scansiona qualcosa intorno a te",
   "home.subtitleLine2": "e inizia una vera conversazione.",
@@ -1311,6 +1336,11 @@ const it: Dict = {
 };
 
 const pt: Dict = {
+  "pro.manageTitle": "Gerenciar assinatura",
+  "pro.manageSub": "Mude de plano ou cancele nas configurações de assinatura da sua loja",
+  "pro.manageUnavailableTitle": "Gerencie na loja",
+  "pro.manageUnavailableBody":
+    "Para mudar ou cancelar sua assinatura, abra a App Store ou a Play Store no seu dispositivo e acesse as configurações de assinatura.",
   "home.greeting": "Olá, {name}!",
   "home.subtitleLine1": "Escaneie algo ao seu redor",
   "home.subtitleLine2": "e comece uma conversa real.",
@@ -1395,6 +1425,11 @@ const pt: Dict = {
 };
 
 const ja: Dict = {
+  "pro.manageTitle": "サブスクリプションを管理",
+  "pro.manageSub": "プランの変更や解約はストアのサブスクリプション設定で行えます",
+  "pro.manageUnavailableTitle": "ストアで管理",
+  "pro.manageUnavailableBody":
+    "プランの変更や解約は、デバイスのApp StoreまたはPlay Storeを開き、サブスクリプション設定から行ってください。",
   "home.greeting": "こんにちは、{name}さん！",
   "home.subtitleLine1": "身の回りのものをスキャンして",
   "home.subtitleLine2": "本物の会話を始めましょう。",
@@ -1479,6 +1514,11 @@ const ja: Dict = {
 };
 
 const zh: Dict = {
+  "pro.manageTitle": "管理订阅",
+  "pro.manageSub": "在你的应用商店订阅设置中更改套餐或取消",
+  "pro.manageUnavailableTitle": "在商店中管理",
+  "pro.manageUnavailableBody":
+    "如需更改或取消订阅，请在设备上打开 App Store 或 Play Store，然后进入订阅设置。",
   "home.greeting": "你好，{name}！",
   "home.subtitleLine1": "扫描你身边的物品",
   "home.subtitleLine2": "开始一段真实对话。",
@@ -1563,6 +1603,11 @@ const zh: Dict = {
 };
 
 const ko: Dict = {
+  "pro.manageTitle": "구독 관리",
+  "pro.manageSub": "스토어 구독 설정에서 요금제를 변경하거나 취소하세요",
+  "pro.manageUnavailableTitle": "스토어에서 관리",
+  "pro.manageUnavailableBody":
+    "구독을 변경하거나 취소하려면 기기에서 App Store 또는 Play Store를 열고 구독 설정으로 이동하세요.",
   "home.greeting": "안녕하세요, {name}님!",
   "home.subtitleLine1": "주변의 사물을 스캔하고",
   "home.subtitleLine2": "진짜 대화를 시작하세요.",
@@ -1647,6 +1692,11 @@ const ko: Dict = {
 };
 
 const ar: Dict = {
+  "pro.manageTitle": "إدارة الاشتراك",
+  "pro.manageSub": "غيّر خطتك أو ألغِ الاشتراك من إعدادات الاشتراك في متجرك",
+  "pro.manageUnavailableTitle": "الإدارة من المتجر",
+  "pro.manageUnavailableBody":
+    "لتغيير اشتراكك أو إلغائه، افتح App Store أو Play Store على جهازك وانتقل إلى إعدادات الاشتراك.",
   "home.greeting": "مرحبًا، {name}!",
   "home.subtitleLine1": "امسح شيئًا من حولك",
   "home.subtitleLine2": "وابدأ محادثة حقيقية.",
@@ -1731,6 +1781,11 @@ const ar: Dict = {
 };
 
 const ru: Dict = {
+  "pro.manageTitle": "Управление подпиской",
+  "pro.manageSub": "Смените план или отмените подписку в настройках подписок вашего магазина",
+  "pro.manageUnavailableTitle": "Управление в магазине",
+  "pro.manageUnavailableBody":
+    "Чтобы изменить или отменить подписку, откройте App Store или Play Store на устройстве и перейдите в настройки подписок.",
   "home.greeting": "Привет, {name}!",
   "home.subtitleLine1": "Отсканируйте что-нибудь рядом",
   "home.subtitleLine2": "и начните настоящий разговор.",
@@ -1815,6 +1870,11 @@ const ru: Dict = {
 };
 
 const hi: Dict = {
+  "pro.manageTitle": "सदस्यता प्रबंधित करें",
+  "pro.manageSub": "अपने स्टोर की सदस्यता सेटिंग में प्लान बदलें या रद्द करें",
+  "pro.manageUnavailableTitle": "स्टोर में प्रबंधित करें",
+  "pro.manageUnavailableBody":
+    "अपनी सदस्यता बदलने या रद्द करने के लिए, अपने डिवाइस पर App Store या Play Store खोलें और सदस्यता सेटिंग में जाएं।",
   "home.greeting": "नमस्ते, {name}!",
   "home.subtitleLine1": "अपने आस-पास कुछ स्कैन करें",
   "home.subtitleLine2": "और असली बातचीत शुरू करें।",
@@ -1899,6 +1959,11 @@ const hi: Dict = {
 };
 
 const nl: Dict = {
+  "pro.manageTitle": "Abonnement beheren",
+  "pro.manageSub": "Wijzig je abonnement of zeg op in de abonnementsinstellingen van je store",
+  "pro.manageUnavailableTitle": "Beheren in de store",
+  "pro.manageUnavailableBody":
+    "Om je abonnement te wijzigen of op te zeggen, open de App Store of Play Store op je apparaat en ga naar de abonnementsinstellingen.",
   "home.greeting": "Hallo, {name}!",
   "home.subtitleLine1": "Scan iets in je omgeving",
   "home.subtitleLine2": "en begin een echt gesprek.",

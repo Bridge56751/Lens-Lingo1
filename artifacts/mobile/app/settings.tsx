@@ -214,13 +214,18 @@ export default function SettingsScreen() {
 
   // Send subscribers to the OS subscription management sheet (App Store / Play
   // Store) where plan changes (monthly → annual) and cancellation actually
-  // happen. Best-effort: a thrown native call shouldn't surface an error.
+  // happen — the app never cancels a subscription itself. If nothing can be
+  // opened (e.g. the web preview), tell the user to manage it from the store.
   const handleManagePlan = async () => {
     Haptics.selectionAsync();
+    let opened = false;
     try {
-      await openManageSubscriptions(customerInfo?.managementURL ?? null);
+      opened = await openManageSubscriptions(customerInfo?.managementURL ?? null);
     } catch {
-      // no-op — the OS sheet may be unavailable (e.g. web preview)
+      opened = false;
+    }
+    if (!opened) {
+      Alert.alert(t("pro.manageUnavailableTitle"), t("pro.manageUnavailableBody"));
     }
   };
 
