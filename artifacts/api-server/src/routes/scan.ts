@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { db } from "@workspace/db";
 import { conversations, customers, messages } from "@workspace/db";
 import { openai } from "@workspace/integrations-openai-ai-server";
@@ -9,6 +9,12 @@ import {
 } from "../lib/difficulty";
 import { SUPPORTED_LANGUAGES } from "../lib/languages";
 import { scanTutorSystemPrompt } from "../lib/prompts";
+import { customerHasPro } from "../lib/plan";
+import {
+  FREE_DAILY_SCAN_LIMIT,
+  buildScanUsage,
+  utcDayKey,
+} from "../lib/scanLimit";
 
 const router = Router();
 
@@ -49,6 +55,47 @@ router.post("/scan", async (req, res) => {
     return;
   }
   const customerId = req.customerId;
+
+  // Resolve entitlement first: Pro users are unlimited; free users get
+  // FREE_DAILY_SCAN_LIMIT scans per UTC day. This server-side limit is
+  // authoritative — the client counter is advisory only.
+  const appUserId = req.authUserId ?? req.deviceId;
+  const isPro = await customerHasPro({ customerId, appUserId, log: req.log });
+  const now = new Date();
+  const todayKey = utcDayKey(now);
+
+  // For free users, atomically RESERVE a scan slot before any (expensive) AI
+  // work. This conditional UPDATE bumps the per-day counter only while under the
+  // cap (or resets it to 1 when the stored day key is stale → lazy UTC-midnight
+  // refill). If it updates no row the user is already at the limit, so we deny
+  // up front. A single conditional write — rather than a read-then-write — is
+  // what keeps the limit correct under concurrency: N simultaneous scans can't
+  // all pass a stale "used < limit" read and overshoot.
+  let reservedScanCount = 0;
+  if (!isPro) {
+    const [reserved] = await db
+      .update(customers)
+      .set({
+        scanDayCount: sql`CASE WHEN ${customers.scanDayKey} = ${todayKey} THEN ${customers.scanDayCount} + 1 ELSE 1 END`,
+        scanDayKey: todayKey,
+      })
+      .where(
+        and(
+          eq(customers.id, customerId),
+          sql`(${customers.scanDayKey} IS DISTINCT FROM ${todayKey} OR ${customers.scanDayCount} < ${FREE_DAILY_SCAN_LIMIT})`,
+        ),
+      )
+      .returning({ scanDayCount: customers.scanDayCount });
+
+    if (!reserved) {
+      res.status(403).json({
+        error: "scan_limit_reached",
+        ...buildScanUsage(FREE_DAILY_SCAN_LIMIT, false, now),
+      });
+      return;
+    }
+    reservedScanCount = reserved.scanDayCount;
+  }
 
   // Use GPT vision to identify the item
   let itemName = "Unknown Item";
@@ -122,43 +169,61 @@ router.post("/scan", async (req, res) => {
     req.log.error({ err }, "Initial message generation failed");
   }
 
-  // Persist conversation, its seed messages, and the usage counters together so
-  // the chat artifacts and the counts can never drift apart on partial failure.
-  const conversation = await db.transaction(async (tx) => {
-    const [conv] = await tx
-      .insert(conversations)
-      .values({
-        title: `${itemName} • ${targetLanguage}`,
-        targetLanguage,
-        nativeLanguage,
-        difficulty,
-        customerId,
-      })
-      .returning();
+  // Persist the conversation, its seed messages, and the lifetime usage counters
+  // together so the chat artifacts and counts can't drift on partial failure.
+  // The per-day scan counter was already reserved above; if this transaction
+  // fails we release that reservation so a failed scan doesn't burn the user's
+  // daily quota.
+  const conv = await db
+    .transaction(async (tx) => {
+      const [created] = await tx
+        .insert(conversations)
+        .values({
+          title: `${itemName} • ${targetLanguage}`,
+          targetLanguage,
+          nativeLanguage,
+          difficulty,
+          customerId,
+        })
+        .returning();
 
-    await tx.insert(messages).values([
-      { conversationId: conv.id, role: "system", content: systemPrompt },
-      { conversationId: conv.id, role: "user", content: triggerMessage },
-      { conversationId: conv.id, role: "assistant", content: initialContent },
-    ]);
+      await tx.insert(messages).values([
+        { conversationId: created.id, role: "system", content: systemPrompt },
+        { conversationId: created.id, role: "user", content: triggerMessage },
+        { conversationId: created.id, role: "assistant", content: initialContent },
+      ]);
 
-    // Track usage: one picture taken and one chat started.
-    await tx
-      .update(customers)
-      .set({
-        scanCount: sql`${customers.scanCount} + 1`,
-        chatCount: sql`${customers.chatCount} + 1`,
-      })
-      .where(eq(customers.id, customerId));
+      // Lifetime counters: one picture taken and one chat started.
+      await tx
+        .update(customers)
+        .set({
+          scanCount: sql`${customers.scanCount} + 1`,
+          chatCount: sql`${customers.chatCount} + 1`,
+        })
+        .where(eq(customers.id, customerId));
 
-    return conv;
-  });
+      return created;
+    })
+    .catch(async (err) => {
+      if (!isPro) {
+        // Best-effort release of the reserved daily slot (same UTC day only).
+        await db
+          .update(customers)
+          .set({
+            scanDayCount: sql`CASE WHEN ${customers.scanDayKey} = ${todayKey} THEN GREATEST(${customers.scanDayCount} - 1, 0) ELSE ${customers.scanDayCount} END`,
+          })
+          .where(eq(customers.id, customerId))
+          .catch(() => {});
+      }
+      throw err;
+    });
 
   res.status(201).json({
-    conversationId: conversation.id,
+    conversationId: conv.id,
     itemName,
     itemNameTranslated,
     initialMessage: initialContent,
+    ...buildScanUsage(reservedScanCount, isPro, now),
   });
 });
 

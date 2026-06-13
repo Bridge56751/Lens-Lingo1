@@ -18,6 +18,7 @@ import * as Haptics from "expo-haptics";
 import {
   useListOpenaiConversations,
   useStartOpenaiChat,
+  useGetMyPlan,
 } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { usePreferences, LANGUAGES, LANGUAGE_FLAGS, type Language } from "@/hooks/usePreferences";
@@ -267,13 +268,23 @@ export default function HomeScreen() {
   const { languageProgress } = useAlphabetProgress();
   const alphabet = languageProgress(prefs.targetLanguage);
   const { data: conversations, refetch } = useListOpenaiConversations();
+  const { data: plan, refetch: refetchPlan } = useGetMyPlan();
+
+  // Free users get a daily scan allowance; show a live counter and gate the scan
+  // entry point once it's exhausted. Pro users report `scansRemaining: null`
+  // (unlimited) and never see the counter.
+  const scansRemaining = plan?.scansRemaining ?? null;
+  const scanLimit = plan?.scanLimit ?? 10;
+  const showScanCounter = !isPro && !planLoading && scansRemaining != null;
+  const outOfScans = showScanCounter && scansRemaining <= 0;
 
   // Tab screens stay mounted in Expo Router, so refetch on focus to keep the
-  // chat count fresh after a new conversation is started elsewhere.
+  // chat count and scan allowance fresh after they change on another screen.
   useFocusEffect(
     useCallback(() => {
       refetch();
-    }, [refetch]),
+      refetchPlan();
+    }, [refetch, refetchPlan]),
   );
 
   const list = (conversations ?? []) as Conversation[];
@@ -289,6 +300,19 @@ export default function HomeScreen() {
 
   const goScan = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    // Out of today's free scans — send them to the paywall with a clear message
+    // instead of into the scanner only to be blocked by the server's 403.
+    if (outOfScans) {
+      Alert.alert(
+        t("scanLimit.reachedTitle"),
+        t("scanLimit.reachedBody", { limit: scanLimit }),
+        [
+          { text: t("scanLimit.cancel"), style: "cancel" },
+          { text: t("scanLimit.upgrade"), onPress: () => router.push("/paywall") },
+        ],
+      );
+      return;
+    }
     router.push("/scan");
   };
 
@@ -363,6 +387,39 @@ export default function HomeScreen() {
         </View>
 
         <View style={[styles.headerDivider, { backgroundColor: colors.border }]} />
+
+        {/* Free-tier daily scan counter. Always visible for free users; taps
+            open the paywall. Hidden entirely for Pro (unlimited). */}
+        {showScanCounter && (
+          <TouchableOpacity
+            style={[
+              styles.scanCounter,
+              {
+                backgroundColor: outOfScans ? colors.primarySoft : colors.card,
+                borderColor: outOfScans ? colors.primary : colors.border,
+              },
+            ]}
+            activeOpacity={0.7}
+            onPress={() => {
+              Haptics.selectionAsync();
+              router.push("/paywall");
+            }}
+          >
+            <Ionicons
+              name={outOfScans ? "lock-closed" : "scan-outline"}
+              size={16}
+              color={colors.primary}
+            />
+            <Text
+              style={[styles.scanCounterText, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}
+            >
+              {outOfScans
+                ? t("scanLimit.none")
+                : t("scanLimit.left", { count: scansRemaining ?? 0, limit: scanLimit })}
+            </Text>
+            <Ionicons name="chevron-forward" size={14} color={colors.mutedForeground} />
+          </TouchableOpacity>
+        )}
 
         {/* Hero card */}
         <TouchableOpacity
@@ -653,6 +710,17 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
   },
   learningChipText: { fontSize: 16 },
+  scanCounter: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    alignSelf: "flex-start",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 999,
+    borderWidth: 1,
+  },
+  scanCounterText: { fontSize: 13 },
   modalBackdrop: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.45)",

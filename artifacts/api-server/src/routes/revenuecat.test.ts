@@ -217,7 +217,7 @@ describe("GET /me/plan — Pro status sync", () => {
     // No ctx.customerId set -> req.customerId is undefined.
     const { status, body } = await getPlan();
     expect(status).toBe(200);
-    expect(body).toEqual({ plan: "free", proSince: null });
+    expect(body).toMatchObject({ plan: "free", proSince: null });
     expect(h.activeEntitlementsMock).not.toHaveBeenCalled();
   });
 
@@ -229,7 +229,7 @@ describe("GET /me/plan — Pro status sync", () => {
     const { status, body } = await getPlan();
 
     expect(status).toBe(200);
-    expect(body).toEqual({ plan: "free", proSince: null });
+    expect(body).toMatchObject({ plan: "free", proSince: null });
     expect(h.row).toMatchObject({ plan: "free", proSince: null });
   });
 
@@ -270,7 +270,7 @@ describe("GET /me/plan — Pro status sync", () => {
     const { status, body } = await getPlan();
 
     expect(status).toBe(200);
-    expect(body).toEqual({ plan: "free", proSince: null });
+    expect(body).toMatchObject({ plan: "free", proSince: null });
     expect(h.row).toMatchObject({ plan: "free", proSince: null });
   });
 
@@ -283,7 +283,7 @@ describe("GET /me/plan — Pro status sync", () => {
     const { status, body } = await getPlan();
 
     expect(status).toBe(200);
-    expect(body).toEqual({ plan: "free", proSince: null });
+    expect(body).toMatchObject({ plan: "free", proSince: null });
     expect(h.row).toMatchObject({ plan: "free", proSince: null });
   });
 
@@ -294,7 +294,7 @@ describe("GET /me/plan — Pro status sync", () => {
 
     // sanity: empty entitlements means free
     const { body } = await getPlan();
-    expect(body).toEqual({ plan: "free", proSince: null });
+    expect(body).toMatchObject({ plan: "free", proSince: null });
   });
 
   it("serves the last-known stored plan (no 5xx) when RevenueCat is unreachable", async () => {

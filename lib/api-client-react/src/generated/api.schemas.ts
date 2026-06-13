@@ -33,6 +33,14 @@ export interface PlanStatus {
   plan: string;
   /** When the customer became pro; null while on the free plan. */
   proSince?: string | null;
+  /** Daily free-tier scan allowance. */
+  scanLimit?: number;
+  /** Scans used so far during the current UTC day. */
+  scansUsedToday?: number;
+  /** Scans remaining today; null means unlimited (Pro). */
+  scansRemaining?: number | null;
+  /** When the daily scan allowance refills (next UTC midnight). */
+  scanResetsAt?: string;
 }
 
 export interface ScanRequest {
@@ -54,6 +62,14 @@ export interface ScanResult {
   itemNameTranslated: string;
   /** First AI message to start the conversation */
   initialMessage: string;
+  /** Daily free-tier scan allowance. */
+  scanLimit?: number;
+  /** Scans used so far during the current UTC day (including this one). */
+  scansUsedToday?: number;
+  /** Scans remaining today after this one; null means unlimited (Pro). */
+  scansRemaining?: number | null;
+  /** When the daily scan allowance refills (next UTC midnight). */
+  scanResetsAt?: string;
 }
 
 export interface ApiError {

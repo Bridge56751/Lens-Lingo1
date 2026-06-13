@@ -605,6 +605,20 @@ components:
           format: date-time
           nullable: true
           description: When the customer became pro; null while on the free plan.
+        scanLimit:
+          type: integer
+          description: Daily free-tier scan allowance.
+        scansUsedToday:
+          type: integer
+          description: Scans used so far during the current UTC day.
+        scansRemaining:
+          type: integer
+          nullable: true
+          description: Scans remaining today; null means unlimited (Pro).
+        scanResetsAt:
+          type: string
+          format: date-time
+          description: When the daily scan allowance refills (next UTC midnight).
       required:
         - plan
     ScanRequest:
@@ -640,6 +654,20 @@ components:
         initialMessage:
           type: string
           description: First AI message to start the conversation
+        scanLimit:
+          type: integer
+          description: Daily free-tier scan allowance.
+        scansUsedToday:
+          type: integer
+          description: Scans used so far during the current UTC day (including this one).
+        scansRemaining:
+          type: integer
+          nullable: true
+          description: Scans remaining today after this one; null means unlimited (Pro).
+        scanResetsAt:
+          type: string
+          format: date-time
+          description: When the daily scan allowance refills (next UTC midnight).
       required:
         - conversationId
         - itemName

@@ -11,4 +11,12 @@ export interface PlanStatus {
   plan: string;
   /** When the customer became pro; null while on the free plan. */
   proSince?: Date | null;
+  /** Daily free-tier scan allowance. */
+  scanLimit?: number;
+  /** Scans used so far during the current UTC day. */
+  scansUsedToday?: number;
+  /** Scans remaining today; null means unlimited (Pro). */
+  scansRemaining?: number | null;
+  /** When the daily scan allowance refills (next UTC midnight). */
+  scanResetsAt?: Date;
 }

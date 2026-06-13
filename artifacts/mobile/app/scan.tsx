@@ -27,6 +27,8 @@ import Animated, {
   Easing,
 } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
+import { useQueryClient } from "@tanstack/react-query";
+import { getGetMyPlanQueryKey } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { usePreferences, DIFFICULTIES, type Difficulty } from "@/hooks/usePreferences";
 import { useRomanizations } from "@/hooks/useRomanizations";
@@ -44,6 +46,7 @@ export default function ScanScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const { prefs, update } = usePreferences();
   const { requirePro } = usePro();
+  const queryClient = useQueryClient();
   const selectedLanguage = prefs.targetLanguage;
   const [levelPickerOpen, setLevelPickerOpen] = useState(false);
   const [scannedImage, setScannedImage] = useState<string | null>(null);
@@ -147,6 +150,29 @@ export default function ScanScreen() {
         }),
       });
 
+      // Free users get a daily scan limit; the server returns 403 once it's hit.
+      // Route them to the paywall with a clear message rather than a generic fail.
+      if (response.status === 403) {
+        const body = (await response.json().catch(() => null)) as
+          | { error?: string; scanLimit?: number }
+          | null;
+        if (body?.error === "scan_limit_reached") {
+          setScannedImage(null);
+          Alert.alert(
+            t("scanLimit.reachedTitle"),
+            t("scanLimit.reachedBody", { limit: body.scanLimit ?? 10 }),
+            [
+              { text: t("scanLimit.cancel"), style: "cancel" },
+              {
+                text: t("scanLimit.upgrade"),
+                onPress: () => router.push("/paywall"),
+              },
+            ],
+          );
+          return;
+        }
+      }
+
       if (!response.ok) throw new Error(`Scan failed: ${response.status}`);
 
       const data = (await response.json()) as {
@@ -157,6 +183,8 @@ export default function ScanScreen() {
       };
 
       setScanResult(data);
+      // This scan consumed part of today's free allowance — refresh the home counter.
+      queryClient.invalidateQueries({ queryKey: getGetMyPlanQueryKey() });
       // Warm the TTS cache so the "tap to hear" button plays instantly.
       prefetchSpeech(data.itemNameTranslated, selectedLanguage);
       prefetchSpeech(data.initialMessage, selectedLanguage);

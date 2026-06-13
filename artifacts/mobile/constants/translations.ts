@@ -411,6 +411,12 @@ export type TKey =
   | "pro.manageSub"
   | "pro.manageUnavailableTitle"
   | "pro.manageUnavailableBody"
+  | "scanLimit.left"
+  | "scanLimit.none"
+  | "scanLimit.reachedTitle"
+  | "scanLimit.reachedBody"
+  | "scanLimit.upgrade"
+  | "scanLimit.cancel"
   | "paywall.title"
   | "paywall.subtitle"
   | "paywall.feature.chat"
@@ -889,6 +895,13 @@ const en: Record<TKey, string> = {
   "pro.manageUnavailableTitle": "Manage in the store",
   "pro.manageUnavailableBody":
     "To change or cancel your subscription, open the App Store or Play Store on your device and go to your subscription settings.",
+  "scanLimit.left": "{count} of {limit} free scans left today",
+  "scanLimit.none": "No free scans left today",
+  "scanLimit.reachedTitle": "Out of free scans",
+  "scanLimit.reachedBody":
+    "You've used all {limit} free scans today. They refill tomorrow — upgrade to Pro for unlimited scans.",
+  "scanLimit.upgrade": "Upgrade",
+  "scanLimit.cancel": "Not now",
   "paywall.title": "Unlock Your",
   "paywall.titleAccent": "Full Learning Potential",
   "paywall.subtitle":
@@ -980,6 +993,13 @@ const en: Record<TKey, string> = {
 type Dict = Partial<Record<TKey, string>>;
 
 const es: Dict = {
+  "scanLimit.left": "Te quedan {count} de {limit} escaneos gratis hoy",
+  "scanLimit.none": "No te quedan escaneos gratis hoy",
+  "scanLimit.reachedTitle": "Sin escaneos gratis",
+  "scanLimit.reachedBody":
+    "Has usado tus {limit} escaneos gratis de hoy. Se renuevan mañana; hazte Pro para escaneos ilimitados.",
+  "scanLimit.upgrade": "Mejorar",
+  "scanLimit.cancel": "Ahora no",
   "pro.manageTitle": "Gestionar suscripción",
   "pro.manageSub": "Cambia de plan o cancela en los ajustes de suscripción de tu tienda",
   "pro.manageUnavailableTitle": "Gestiónala en la tienda",
@@ -1069,6 +1089,13 @@ const es: Dict = {
 };
 
 const fr: Dict = {
+  "scanLimit.left": "{count} sur {limit} scans gratuits restants aujourd'hui",
+  "scanLimit.none": "Plus de scans gratuits aujourd'hui",
+  "scanLimit.reachedTitle": "Plus de scans gratuits",
+  "scanLimit.reachedBody":
+    "Vous avez utilisé vos {limit} scans gratuits du jour. Ils se renouvellent demain — passez à Pro pour des scans illimités.",
+  "scanLimit.upgrade": "Passer à Pro",
+  "scanLimit.cancel": "Plus tard",
   "pro.manageTitle": "Gérer l'abonnement",
   "pro.manageSub": "Changez de formule ou résiliez dans les réglages d'abonnement de votre store",
   "pro.manageUnavailableTitle": "Gérer dans le store",
@@ -1158,6 +1185,13 @@ const fr: Dict = {
 };
 
 const de: Dict = {
+  "scanLimit.left": "Noch {count} von {limit} kostenlosen Scans heute",
+  "scanLimit.none": "Heute keine kostenlosen Scans mehr",
+  "scanLimit.reachedTitle": "Keine kostenlosen Scans mehr",
+  "scanLimit.reachedBody":
+    "Du hast alle {limit} kostenlosen Scans für heute genutzt. Sie werden morgen erneuert – hol dir Pro für unbegrenzte Scans.",
+  "scanLimit.upgrade": "Upgrade",
+  "scanLimit.cancel": "Später",
   "pro.manageTitle": "Abo verwalten",
   "pro.manageSub": "Tarif ändern oder kündigen in den Abo-Einstellungen deines Stores",
   "pro.manageUnavailableTitle": "Im Store verwalten",
@@ -1247,6 +1281,13 @@ const de: Dict = {
 };
 
 const it: Dict = {
+  "scanLimit.left": "{count} di {limit} scansioni gratuite rimaste oggi",
+  "scanLimit.none": "Nessuna scansione gratuita rimasta oggi",
+  "scanLimit.reachedTitle": "Scansioni gratuite esaurite",
+  "scanLimit.reachedBody":
+    "Hai usato tutte le {limit} scansioni gratuite di oggi. Si rinnovano domani: passa a Pro per scansioni illimitate.",
+  "scanLimit.upgrade": "Passa a Pro",
+  "scanLimit.cancel": "Non ora",
   "pro.manageTitle": "Gestisci abbonamento",
   "pro.manageSub": "Cambia piano o annulla nelle impostazioni abbonamento del tuo store",
   "pro.manageUnavailableTitle": "Gestisci nello store",
@@ -1336,6 +1377,13 @@ const it: Dict = {
 };
 
 const pt: Dict = {
+  "scanLimit.left": "{count} de {limit} escaneamentos grátis restantes hoje",
+  "scanLimit.none": "Sem escaneamentos grátis hoje",
+  "scanLimit.reachedTitle": "Sem escaneamentos grátis",
+  "scanLimit.reachedBody":
+    "Você usou seus {limit} escaneamentos grátis de hoje. Eles renovam amanhã — assine o Pro para escaneamentos ilimitados.",
+  "scanLimit.upgrade": "Assinar Pro",
+  "scanLimit.cancel": "Agora não",
   "pro.manageTitle": "Gerenciar assinatura",
   "pro.manageSub": "Mude de plano ou cancele nas configurações de assinatura da sua loja",
   "pro.manageUnavailableTitle": "Gerencie na loja",
@@ -1425,6 +1473,13 @@ const pt: Dict = {
 };
 
 const ja: Dict = {
+  "scanLimit.left": "本日の無料スキャンは残り{count}/{limit}回です",
+  "scanLimit.none": "本日の無料スキャンは終了しました",
+  "scanLimit.reachedTitle": "無料スキャンを使い切りました",
+  "scanLimit.reachedBody":
+    "本日の無料スキャン{limit}回をすべて使いました。明日リセットされます。Proにアップグレードすると無制限になります。",
+  "scanLimit.upgrade": "アップグレード",
+  "scanLimit.cancel": "後で",
   "pro.manageTitle": "サブスクリプションを管理",
   "pro.manageSub": "プランの変更や解約はストアのサブスクリプション設定で行えます",
   "pro.manageUnavailableTitle": "ストアで管理",
@@ -1514,6 +1569,13 @@ const ja: Dict = {
 };
 
 const zh: Dict = {
+  "scanLimit.left": "今天还剩 {count}/{limit} 次免费扫描",
+  "scanLimit.none": "今天的免费扫描已用完",
+  "scanLimit.reachedTitle": "免费扫描已用完",
+  "scanLimit.reachedBody":
+    "您今天的 {limit} 次免费扫描已用完，明天将刷新。升级到 Pro 即可无限扫描。",
+  "scanLimit.upgrade": "升级",
+  "scanLimit.cancel": "暂不",
   "pro.manageTitle": "管理订阅",
   "pro.manageSub": "在你的应用商店订阅设置中更改套餐或取消",
   "pro.manageUnavailableTitle": "在商店中管理",
@@ -1603,6 +1665,13 @@ const zh: Dict = {
 };
 
 const ko: Dict = {
+  "scanLimit.left": "오늘 무료 스캔 {limit}회 중 {count}회 남음",
+  "scanLimit.none": "오늘 무료 스캔을 모두 사용했어요",
+  "scanLimit.reachedTitle": "무료 스캔 소진",
+  "scanLimit.reachedBody":
+    "오늘 무료 스캔 {limit}회를 모두 사용했어요. 내일 다시 충전됩니다 — Pro로 업그레이드하면 무제한으로 사용할 수 있어요.",
+  "scanLimit.upgrade": "업그레이드",
+  "scanLimit.cancel": "나중에",
   "pro.manageTitle": "구독 관리",
   "pro.manageSub": "스토어 구독 설정에서 요금제를 변경하거나 취소하세요",
   "pro.manageUnavailableTitle": "스토어에서 관리",
@@ -1692,6 +1761,13 @@ const ko: Dict = {
 };
 
 const ar: Dict = {
+  "scanLimit.left": "تبقّى {count} من {limit} عمليات مسح مجانية اليوم",
+  "scanLimit.none": "لا توجد عمليات مسح مجانية متبقية اليوم",
+  "scanLimit.reachedTitle": "انتهت عمليات المسح المجانية",
+  "scanLimit.reachedBody":
+    "لقد استخدمت كل عمليات المسح المجانية ({limit}) لهذا اليوم. ستتجدد غدًا — اشترك في Pro للحصول على مسح غير محدود.",
+  "scanLimit.upgrade": "الترقية",
+  "scanLimit.cancel": "ليس الآن",
   "pro.manageTitle": "إدارة الاشتراك",
   "pro.manageSub": "غيّر خطتك أو ألغِ الاشتراك من إعدادات الاشتراك في متجرك",
   "pro.manageUnavailableTitle": "الإدارة من المتجر",
@@ -1781,6 +1857,13 @@ const ar: Dict = {
 };
 
 const ru: Dict = {
+  "scanLimit.left": "Осталось {count} из {limit} бесплатных сканирований сегодня",
+  "scanLimit.none": "Бесплатные сканирования на сегодня закончились",
+  "scanLimit.reachedTitle": "Бесплатные сканирования закончились",
+  "scanLimit.reachedBody":
+    "Вы использовали все {limit} бесплатных сканирований за сегодня. Они обновятся завтра — оформите Pro для безлимитного сканирования.",
+  "scanLimit.upgrade": "Оформить Pro",
+  "scanLimit.cancel": "Не сейчас",
   "pro.manageTitle": "Управление подпиской",
   "pro.manageSub": "Смените план или отмените подписку в настройках подписок вашего магазина",
   "pro.manageUnavailableTitle": "Управление в магазине",
@@ -1870,6 +1953,13 @@ const ru: Dict = {
 };
 
 const hi: Dict = {
+  "scanLimit.left": "आज {limit} में से {count} मुफ़्त स्कैन बाकी",
+  "scanLimit.none": "आज कोई मुफ़्त स्कैन नहीं बचा",
+  "scanLimit.reachedTitle": "मुफ़्त स्कैन खत्म",
+  "scanLimit.reachedBody":
+    "आपने आज के सभी {limit} मुफ़्त स्कैन इस्तेमाल कर लिए हैं। ये कल फिर से भर जाएंगे — असीमित स्कैन के लिए Pro लें।",
+  "scanLimit.upgrade": "अपग्रेड करें",
+  "scanLimit.cancel": "अभी नहीं",
   "pro.manageTitle": "सदस्यता प्रबंधित करें",
   "pro.manageSub": "अपने स्टोर की सदस्यता सेटिंग में प्लान बदलें या रद्द करें",
   "pro.manageUnavailableTitle": "स्टोर में प्रबंधित करें",
@@ -1959,6 +2049,13 @@ const hi: Dict = {
 };
 
 const nl: Dict = {
+  "scanLimit.left": "Nog {count} van {limit} gratis scans vandaag",
+  "scanLimit.none": "Geen gratis scans meer vandaag",
+  "scanLimit.reachedTitle": "Geen gratis scans meer",
+  "scanLimit.reachedBody":
+    "Je hebt al je {limit} gratis scans van vandaag gebruikt. Ze worden morgen vernieuwd — upgrade naar Pro voor onbeperkt scannen.",
+  "scanLimit.upgrade": "Upgraden",
+  "scanLimit.cancel": "Niet nu",
   "pro.manageTitle": "Abonnement beheren",
   "pro.manageSub": "Wijzig je abonnement of zeg op in de abonnementsinstellingen van je store",
   "pro.manageUnavailableTitle": "Beheren in de store",

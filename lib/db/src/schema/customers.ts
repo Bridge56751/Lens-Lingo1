@@ -23,6 +23,18 @@ export const customers = pgTable("customers", {
   chatCount: integer("chat_count").notNull().default(0),
   /** Number of messages the customer has sent to the tutor. */
   messageCount: integer("message_count").notNull().default(0),
+  /**
+   * Scans used during the current UTC day — the counter behind the free-tier
+   * daily scan limit. Reset lazily: a scan on a new UTC day overwrites this to 1
+   * (see `scanDayKey`). Distinct from the lifetime `scanCount` above.
+   */
+  scanDayCount: integer("scan_day_count").notNull().default(0),
+  /**
+   * UTC calendar day (YYYY-MM-DD) that `scanDayCount` applies to; null until the
+   * first scan. When it no longer equals today's UTC key the count is stale and
+   * treated as 0, so the allowance refills at UTC midnight without a cron job.
+   */
+  scanDayKey: text("scan_day_key"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).defaultNow().notNull(),
 });
