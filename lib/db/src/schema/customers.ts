@@ -24,17 +24,20 @@ export const customers = pgTable("customers", {
   /** Number of messages the customer has sent to the tutor. */
   messageCount: integer("message_count").notNull().default(0),
   /**
-   * Scans used during the current UTC day — the counter behind the free-tier
-   * daily scan limit. Reset lazily: a scan on a new UTC day overwrites this to 1
-   * (see `scanDayKey`). Distinct from the lifetime `scanCount` above.
+   * Scans used in the current free-tier period — the counter behind the daily
+   * scan limit. Reset to 1 when a new period starts (see `scanResetsAt`).
+   * Distinct from the lifetime `scanCount` above.
    */
   scanDayCount: integer("scan_day_count").notNull().default(0),
   /**
-   * UTC calendar day (YYYY-MM-DD) that `scanDayCount` applies to; null until the
-   * first scan. When it no longer equals today's UTC key the count is stale and
-   * treated as 0, so the allowance refills at UTC midnight without a cron job.
+   * Absolute instant (ISO-8601 UTC) the current scan allowance refills — the
+   * caller's next LOCAL midnight, floored so a tampered `x-tz-offset` can't
+   * shrink the window. The period is "active" only while real server time is
+   * before this, so the allowance refills without a cron and the cap can't be
+   * bypassed by rotating the offset header. NOTE: the DB column is still named
+   * `scan_day_key` (legacy — it once held a YYYY-MM-DD day key).
    */
-  scanDayKey: text("scan_day_key"),
+  scanResetsAt: text("scan_day_key"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).defaultNow().notNull(),
 });

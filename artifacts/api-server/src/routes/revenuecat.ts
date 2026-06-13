@@ -2,7 +2,10 @@ import { Router } from "express";
 import { eq } from "drizzle-orm";
 import { db, customers } from "@workspace/db";
 import { reconcileAndGetPlan } from "../lib/plan";
-import { buildScanUsage, scansUsedToday } from "../lib/scanLimit";
+import {
+  parseTimezoneOffset,
+  readScanUsage,
+} from "../lib/scanLimit";
 
 const router = Router();
 
@@ -20,10 +23,17 @@ const router = Router();
 router.get("/me/plan", async (req, res) => {
   const customerId = req.customerId;
   const now = new Date();
+  // Client sends its UTC offset so the daily counter resets at the user's own
+  // local midnight; missing/invalid falls back to UTC (offset 0).
+  const tzOffset = parseTimezoneOffset(req.headers["x-tz-offset"]);
   if (customerId == null) {
     // No customer attached (no device id / not signed in) — a clean free row
     // that hasn't used any of today's allowance.
-    res.json({ plan: "free", proSince: null, ...buildScanUsage(0, false, now) });
+    res.json({
+      plan: "free",
+      proSince: null,
+      ...readScanUsage({ count: 0, resetsAt: null }, false, now, tzOffset),
+    });
     return;
   }
 
@@ -44,20 +54,20 @@ router.get("/me/plan", async (req, res) => {
     // Surface today's scan usage so the home screen can render a live counter.
     const [usageRow] = await db
       .select({
-        scanDayCount: customers.scanDayCount,
-        scanDayKey: customers.scanDayKey,
+        count: customers.scanDayCount,
+        resetsAt: customers.scanResetsAt,
       })
       .from(customers)
       .where(eq(customers.id, customerId))
       .limit(1);
-    const usedToday = scansUsedToday(
-      usageRow?.scanDayKey,
-      usageRow?.scanDayCount,
-      now,
-    );
     res.json({
       ...plan,
-      ...buildScanUsage(usedToday, plan.plan === "pro", now),
+      ...readScanUsage(
+        { count: usageRow?.count, resetsAt: usageRow?.resetsAt },
+        plan.plan === "pro",
+        now,
+        tzOffset,
+      ),
     });
   } catch (err) {
     req.log.error({ err }, "Failed to read plan");

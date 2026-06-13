@@ -12,29 +12,34 @@ import type { Server } from "node:http";
 import type { AddressInfo } from "node:net";
 
 // Route-level coverage for the free-tier DAILY scan limit enforced by POST
-// /api/scan. The actual concurrency safety lives in Postgres (a single
-// conditional UPDATE that increments only while under the cap), which can't be
+// /api/scan. The actual concurrency safety lives in Postgres (the reservation
+// runs in a transaction that locks the customer row with SELECT … FOR UPDATE,
+// recomputes the period, and writes the new count), which can't be fully
 // exercised against the mocked db here. What we CAN pin down is the wiring that
 // makes the limit authoritative:
-//   - the gate reserves a slot via that conditional UPDATE and denies (403)
-//     purely on its result — BEFORE any expensive AI call,
+//   - the gate reserves a slot inside a row-locked txn and denies (403) purely
+//     on the recomputed reservation — BEFORE any expensive AI call,
 //   - Pro callers skip the reservation entirely (stay unlimited),
 //   - a failed persist releases the reserved slot so it isn't burned.
 //
 // The db is mocked (no real Postgres) and OpenAI is stubbed (no network). We
-// distinguish which UPDATEs ran by the SET payload's key signature.
+// distinguish which UPDATEs ran by the SET payload's key signature, and we
+// drive the stored period via `h.storedScan`.
 
 const h = vi.hoisted(() => ({
   // Drives customerHasPro: reconcileAndGetPlan returns the STORED row plan, so
   // this is the source of truth for free vs pro in these tests.
   plan: "free" as "free" | "pro",
-  // What the reservation's `.returning()` yields: one row = reserved (under the
-  // cap), empty = at the cap (deny).
-  reserved: [] as { scanDayCount: number }[],
-  // When true the persistence transaction throws, exercising the release path.
+  // The stored scan period the FOR UPDATE select returns. `resetsAt` far in the
+  // future = an ACTIVE period; `count` at the cap (10) = deny.
+  storedScan: { count: 0, resetsAt: null as string | null },
+  // When true the PERSISTENCE transaction (the 2nd txn) throws, exercising the
+  // release path. The reservation txn (1st) always succeeds.
   txThrows: false,
+  // Counts db.transaction calls so txThrows targets only the persist (2nd) txn.
+  txCalls: 0,
   // SET key signatures for every update().set(...) call, e.g.
-  // "scanDayCount,scanDayKey" (reserve) / "scanDayCount" (release) /
+  // "scanDayCount,scanResetsAt" (reserve) / "scanDayCount" (release) /
   // "chatCount,scanCount" (lifetime). Lets us assert which writes happened.
   setKeys: [] as string[],
   openaiCreate: vi.fn(),
@@ -59,23 +64,15 @@ vi.mock("@workspace/integrations-openai-ai-server", () => ({
   openai: { chat: { completions: { create: h.openaiCreate } } },
 }));
 
-// Minimal drizzle stand-in. A thenable that ALSO exposes `.returning()` so the
-// same update().set().where() chain serves both the awaited writes (reconcile,
-// lifetime counters, release) and the reservation (which reads `.returning()`).
+// Minimal drizzle stand-in. `update().set().where()` is a thenable used by the
+// reconcile / lifetime / release writes. `select()` supports BOTH shapes: the
+// plan read (`.where().limit()`) and the reservation read
+// (`.where().for("update").limit()` → the stored period).
 vi.mock("@workspace/db", () => {
-  const whereResult = () => {
-    const base = Promise.resolve(undefined);
-    return {
-      returning: () => Promise.resolve(h.reserved),
-      then: base.then.bind(base),
-      catch: base.catch.bind(base),
-      finally: base.finally.bind(base),
-    };
-  };
   const update = () => ({
     set: (payload: Record<string, unknown>) => {
       h.setKeys.push(Object.keys(payload).sort().join(","));
-      return { where: () => whereResult() };
+      return { where: () => Promise.resolve(undefined) };
     },
   });
   const insert = () => ({
@@ -88,6 +85,12 @@ vi.mock("@workspace/db", () => {
     from: () => ({
       where: () => ({
         limit: () => Promise.resolve([{ plan: h.plan, proSince: null }]),
+        for: () => ({
+          limit: () =>
+            Promise.resolve([
+              { count: h.storedScan.count, resetsAt: h.storedScan.resetsAt },
+            ]),
+        }),
       }),
     }),
   });
@@ -96,8 +99,10 @@ vi.mock("@workspace/db", () => {
     insert,
     select,
     transaction: async (cb: (tx: unknown) => unknown) => {
-      if (h.txThrows) throw new Error("tx failed");
-      return cb({ insert, update });
+      h.txCalls += 1;
+      // 1st txn = reservation (must succeed); 2nd txn = persistence.
+      if (h.txThrows && h.txCalls >= 2) throw new Error("tx failed");
+      return cb({ select, insert, update });
     },
   };
   return {
@@ -110,7 +115,7 @@ vi.mock("@workspace/db", () => {
       scanCount: "scanCount",
       chatCount: "chatCount",
       scanDayCount: "scanDayCount",
-      scanDayKey: "scanDayKey",
+      scanResetsAt: "scanResetsAt",
     },
     conversations: {},
     messages: {},
@@ -156,10 +161,15 @@ afterAll(() => {
   server?.close();
 });
 
+// Far enough out that the stored period is ALWAYS active regardless of the real
+// wall-clock the test runs at.
+const FUTURE = "2099-01-01T00:00:00.000Z";
+
 beforeEach(() => {
   h.plan = "free";
-  h.reserved = [];
+  h.storedScan = { count: 0, resetsAt: null };
   h.txThrows = false;
+  h.txCalls = 0;
   h.setKeys = [];
   h.openaiCreate.mockReset();
   h.openaiCreate.mockResolvedValue({
@@ -202,7 +212,7 @@ async function postScan(): Promise<{ status: number; body: any }> {
 
 describe("POST /api/scan free-tier daily limit", () => {
   it("reserves a slot and succeeds when a free user is under the cap", async () => {
-    h.reserved = [{ scanDayCount: 3 }];
+    h.storedScan = { count: 2, resetsAt: FUTURE }; // active period, under cap
     const { status, body } = await postScan();
 
     expect(status).toBe(201);
@@ -210,21 +220,23 @@ describe("POST /api/scan free-tier daily limit", () => {
     expect(body.scanLimit).toBe(10);
     expect(body.scansUsedToday).toBe(3);
     expect(body.scansRemaining).toBe(7);
-    // The conditional reservation UPDATE ran (sets count + day key together).
-    expect(h.setKeys).toContain("scanDayCount,scanDayKey");
+    // The reservation UPDATE ran (sets count + reset boundary together).
+    expect(h.setKeys).toContain("scanDayCount,scanResetsAt");
     // AI work happened (vision + initial message).
     expect(h.openaiCreate).toHaveBeenCalled();
   });
 
-  it("denies with 403 BEFORE any AI work when the reservation returns no row", async () => {
-    h.reserved = []; // at the cap → conditional UPDATE matches nothing
+  it("denies with 403 BEFORE any AI work when the active period is at the cap", async () => {
+    h.storedScan = { count: 10, resetsAt: FUTURE }; // active period, AT cap
     const { status, body } = await postScan();
 
     expect(status).toBe(403);
     expect(body.error).toBe("scan_limit_reached");
     expect(body.scansRemaining).toBe(0);
     expect(body.scanLimit).toBe(10);
-    // The whole point of reserving first: no expensive AI call on a denial.
+    // Denied without writing a reservation…
+    expect(h.setKeys).not.toContain("scanDayCount,scanResetsAt");
+    // …and the whole point of reserving first: no expensive AI call on a denial.
     expect(h.openaiCreate).not.toHaveBeenCalled();
   });
 
@@ -235,18 +247,18 @@ describe("POST /api/scan free-tier daily limit", () => {
     expect(status).toBe(201);
     expect(body.scansRemaining).toBeNull();
     // No reservation write for Pro.
-    expect(h.setKeys).not.toContain("scanDayCount,scanDayKey");
+    expect(h.setKeys).not.toContain("scanDayCount,scanResetsAt");
     expect(h.openaiCreate).toHaveBeenCalled();
   });
 
   it("releases the reserved slot when persistence fails", async () => {
-    h.reserved = [{ scanDayCount: 5 }];
-    h.txThrows = true;
+    h.storedScan = { count: 4, resetsAt: FUTURE };
+    h.txThrows = true; // the persist (2nd) txn throws
     const { status } = await postScan();
 
     expect(status).toBe(500);
     // Reserve happened, then the release (single scanDayCount SET) compensated.
-    expect(h.setKeys).toContain("scanDayCount,scanDayKey");
+    expect(h.setKeys).toContain("scanDayCount,scanResetsAt");
     expect(h.setKeys).toContain("scanDayCount");
   });
 });

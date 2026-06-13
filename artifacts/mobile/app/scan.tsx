@@ -28,7 +28,10 @@ import Animated, {
 } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { useQueryClient } from "@tanstack/react-query";
-import { getGetMyPlanQueryKey } from "@workspace/api-client-react";
+import {
+  getGetMyPlanQueryKey,
+  localTimezoneOffsetMinutes,
+} from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { usePreferences, DIFFICULTIES, type Difficulty } from "@/hooks/usePreferences";
 import { useRomanizations } from "@/hooks/useRomanizations";
@@ -136,11 +139,14 @@ export default function ScanScreen() {
         ? `https://${process.env.EXPO_PUBLIC_DOMAIN}`
         : "";
 
+      const tzOffset = localTimezoneOffsetMinutes();
       const response = await fetch(`${baseUrl}/api/scan`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           ...(getDeviceIdSync() ? { "x-device-id": getDeviceIdSync()! } : {}),
+          // Reset the daily scan limit at the user's local midnight, not UTC.
+          ...(tzOffset != null ? { "x-tz-offset": String(tzOffset) } : {}),
         },
         body: JSON.stringify({
           imageBase64,

@@ -54,6 +54,20 @@ export function setDeviceId(deviceId: string | null): void {
   _deviceId = deviceId && deviceId.trim() !== "" ? deviceId : null;
 }
 
+/**
+ * The caller's current UTC offset in minutes, per `Date#getTimezoneOffset()`
+ * (positive when behind UTC, e.g. UTC-7 → 420). Computed per request so it
+ * follows DST changes and travel. Returns null if the runtime can't provide it.
+ */
+export function localTimezoneOffsetMinutes(): number | null {
+  try {
+    const offset = new Date().getTimezoneOffset();
+    return Number.isFinite(offset) ? offset : null;
+  } catch {
+    return null;
+  }
+}
+
 function isRequest(input: RequestInfo | URL): input is Request {
   return typeof Request !== "undefined" && input instanceof Request;
 }
@@ -363,6 +377,15 @@ export async function customFetch<T = unknown>(
   // and not already explicitly provided.
   if (_deviceId && !headers.has("x-device-id")) {
     headers.set("x-device-id", _deviceId);
+  }
+
+  // Attach the caller's UTC offset so the server can reset per-day quotas (e.g.
+  // the free-tier scan limit) at the user's own local midnight rather than UTC.
+  if (!headers.has("x-tz-offset")) {
+    const tzOffset = localTimezoneOffsetMinutes();
+    if (tzOffset != null) {
+      headers.set("x-tz-offset", String(tzOffset));
+    }
   }
 
   // Attach bearer token when an auth getter is configured and no

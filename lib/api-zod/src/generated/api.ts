@@ -339,9 +339,9 @@ export const GetMyPlanResponse = zod.object({
   "plan": zod.string().describe('Subscription tier — \'free\' or \'pro\'.'),
   "proSince": zod.coerce.date().nullish().describe('When the customer became pro; null while on the free plan.'),
   "scanLimit": zod.number().optional().describe('Daily free-tier scan allowance.'),
-  "scansUsedToday": zod.number().optional().describe('Scans used so far during the current UTC day.'),
+  "scansUsedToday": zod.number().optional().describe('Scans used so far during the caller\'s current local day.'),
   "scansRemaining": zod.number().nullish().describe('Scans remaining today; null means unlimited (Pro).'),
-  "scanResetsAt": zod.coerce.date().optional().describe('When the daily scan allowance refills (next UTC midnight).')
+  "scanResetsAt": zod.coerce.date().optional().describe('When the daily scan allowance refills (the caller\'s next local midnight), as an absolute UTC instant.')
 })
 
 

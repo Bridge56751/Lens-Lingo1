@@ -11,9 +11,11 @@ import { SUPPORTED_LANGUAGES } from "../lib/languages";
 import { scanTutorSystemPrompt } from "../lib/prompts";
 import { customerHasPro } from "../lib/plan";
 import {
-  FREE_DAILY_SCAN_LIMIT,
   buildScanUsage,
-  utcDayKey,
+  nextLocalMidnight,
+  parseTimezoneOffset,
+  reserveScan,
+  type ScanReservation,
 } from "../lib/scanLimit";
 
 const router = Router();
@@ -57,44 +59,55 @@ router.post("/scan", async (req, res) => {
   const customerId = req.customerId;
 
   // Resolve entitlement first: Pro users are unlimited; free users get
-  // FREE_DAILY_SCAN_LIMIT scans per UTC day. This server-side limit is
-  // authoritative — the client counter is advisory only.
+  // FREE_DAILY_SCAN_LIMIT scans per LOCAL day (the client sends its UTC offset
+  // in `x-tz-offset` so the allowance refills at the user's own midnight). This
+  // server-side limit is authoritative — the client counter is advisory only.
   const appUserId = req.authUserId ?? req.deviceId;
   const isPro = await customerHasPro({ customerId, appUserId, log: req.log });
   const now = new Date();
-  const todayKey = utcDayKey(now);
+  const tzOffset = parseTimezoneOffset(req.headers["x-tz-offset"]);
 
   // For free users, atomically RESERVE a scan slot before any (expensive) AI
-  // work. This conditional UPDATE bumps the per-day counter only while under the
-  // cap (or resets it to 1 when the stored day key is stale → lazy UTC-midnight
-  // refill). If it updates no row the user is already at the limit, so we deny
-  // up front. A single conditional write — rather than a read-then-write — is
-  // what keeps the limit correct under concurrency: N simultaneous scans can't
-  // all pass a stale "used < limit" read and overshoot.
-  let reservedScanCount = 0;
+  // work. We lock the customer row (SELECT … FOR UPDATE) and recompute the
+  // period inside the txn so concurrent scans serialise and can't overshoot the
+  // cap. The period is keyed on an ABSOLUTE reset instant (stored in
+  // `scan_day_key`) that only advances when real server time passes it — the
+  // client-supplied `x-tz-offset` can shift where the NEXT boundary lands but can
+  // never expire the current one early, so the cap stays authoritative even if
+  // the offset header is tampered with.
+  let reservation: ScanReservation | null = null;
   if (!isPro) {
-    const [reserved] = await db
-      .update(customers)
-      .set({
-        scanDayCount: sql`CASE WHEN ${customers.scanDayKey} = ${todayKey} THEN ${customers.scanDayCount} + 1 ELSE 1 END`,
-        scanDayKey: todayKey,
-      })
-      .where(
-        and(
-          eq(customers.id, customerId),
-          sql`(${customers.scanDayKey} IS DISTINCT FROM ${todayKey} OR ${customers.scanDayCount} < ${FREE_DAILY_SCAN_LIMIT})`,
-        ),
-      )
-      .returning({ scanDayCount: customers.scanDayCount });
+    reservation = await db.transaction(async (tx) => {
+      const [row] = await tx
+        .select({
+          count: customers.scanDayCount,
+          resetsAt: customers.scanResetsAt,
+        })
+        .from(customers)
+        .where(eq(customers.id, customerId))
+        .for("update")
+        .limit(1);
+      const next = reserveScan(
+        { count: row?.count, resetsAt: row?.resetsAt },
+        now,
+        tzOffset,
+      );
+      if (next.allowed) {
+        await tx
+          .update(customers)
+          .set({ scanDayCount: next.count, scanResetsAt: next.resetsAt })
+          .where(eq(customers.id, customerId));
+      }
+      return next;
+    });
 
-    if (!reserved) {
+    if (!reservation.allowed) {
       res.status(403).json({
         error: "scan_limit_reached",
-        ...buildScanUsage(FREE_DAILY_SCAN_LIMIT, false, now),
+        ...buildScanUsage(reservation.count, false, reservation.resetsAt),
       });
       return;
     }
-    reservedScanCount = reserved.scanDayCount;
   }
 
   // Use GPT vision to identify the item
@@ -205,14 +218,21 @@ router.post("/scan", async (req, res) => {
       return created;
     })
     .catch(async (err) => {
-      if (!isPro) {
-        // Best-effort release of the reserved daily slot (same UTC day only).
+      if (!isPro && reservation) {
+        // Best-effort release of the reserved slot — only while still in the
+        // SAME period (the stored boundary is unchanged), so we never decrement
+        // a fresh period's count.
         await db
           .update(customers)
           .set({
-            scanDayCount: sql`CASE WHEN ${customers.scanDayKey} = ${todayKey} THEN GREATEST(${customers.scanDayCount} - 1, 0) ELSE ${customers.scanDayCount} END`,
+            scanDayCount: sql`GREATEST(${customers.scanDayCount} - 1, 0)`,
           })
-          .where(eq(customers.id, customerId))
+          .where(
+            and(
+              eq(customers.id, customerId),
+              eq(customers.scanResetsAt, reservation.resetsAt),
+            ),
+          )
           .catch(() => {});
       }
       throw err;
@@ -223,7 +243,11 @@ router.post("/scan", async (req, res) => {
     itemName,
     itemNameTranslated,
     initialMessage: initialContent,
-    ...buildScanUsage(reservedScanCount, isPro, now),
+    ...buildScanUsage(
+      reservation?.count ?? 0,
+      isPro,
+      reservation?.resetsAt ?? nextLocalMidnight(now, tzOffset),
+    ),
   });
 });
 

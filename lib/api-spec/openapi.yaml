@@ -610,7 +610,7 @@ components:
           description: Daily free-tier scan allowance.
         scansUsedToday:
           type: integer
-          description: Scans used so far during the current UTC day.
+          description: Scans used so far during the caller's current local day.
         scansRemaining:
           type: integer
           nullable: true
@@ -618,7 +618,9 @@ components:
         scanResetsAt:
           type: string
           format: date-time
-          description: When the daily scan allowance refills (next UTC midnight).
+          description: >-
+            When the daily scan allowance refills (the caller's next local
+            midnight), as an absolute UTC instant.
       required:
         - plan
     ScanRequest:
@@ -659,7 +661,9 @@ components:
           description: Daily free-tier scan allowance.
         scansUsedToday:
           type: integer
-          description: Scans used so far during the current UTC day (including this one).
+          description: >-
+            Scans used so far during the caller's current local day (including
+            this one).
         scansRemaining:
           type: integer
           nullable: true
@@ -667,7 +671,9 @@ components:
         scanResetsAt:
           type: string
           format: date-time
-          description: When the daily scan allowance refills (next UTC midnight).
+          description: >-
+            When the daily scan allowance refills (the caller's next local
+            midnight), as an absolute UTC instant.
       required:
         - conversationId
         - itemName

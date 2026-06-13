@@ -35,11 +35,11 @@ export interface PlanStatus {
   proSince?: string | null;
   /** Daily free-tier scan allowance. */
   scanLimit?: number;
-  /** Scans used so far during the current UTC day. */
+  /** Scans used so far during the caller's current local day. */
   scansUsedToday?: number;
   /** Scans remaining today; null means unlimited (Pro). */
   scansRemaining?: number | null;
-  /** When the daily scan allowance refills (next UTC midnight). */
+  /** When the daily scan allowance refills (the caller's next local midnight), as an absolute UTC instant. */
   scanResetsAt?: string;
 }
 
@@ -64,11 +64,11 @@ export interface ScanResult {
   initialMessage: string;
   /** Daily free-tier scan allowance. */
   scanLimit?: number;
-  /** Scans used so far during the current UTC day (including this one). */
+  /** Scans used so far during the caller's current local day (including this one). */
   scansUsedToday?: number;
   /** Scans remaining today after this one; null means unlimited (Pro). */
   scansRemaining?: number | null;
-  /** When the daily scan allowance refills (next UTC midnight). */
+  /** When the daily scan allowance refills (the caller's next local midnight), as an absolute UTC instant. */
   scanResetsAt?: string;
 }
 
