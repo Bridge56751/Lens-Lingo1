@@ -209,8 +209,9 @@ export default function PaywallScreen() {
   const activeId = selectedId ?? defaultId;
   const selectedPackage = packages.find((p) => p.identifier === activeId) ?? null;
 
-  // Reference packages used to compute each plan's discount vs. the next-shorter
-  // cadence (Annual vs 12× monthly, Monthly vs ~4.3× weekly).
+  // Reference packages used to compute each plan's discount against the weekly
+  // plan annualized (52× weekly) — the most expensive cadence, so the longer
+  // plans show their full savings.
   const weeklyPkg = useMemo(
     () => packages.find((p) => p.packageType === "WEEKLY"),
     [packages],
@@ -219,9 +220,9 @@ export default function PaywallScreen() {
     () => packages.find((p) => p.packageType === "MONTHLY"),
     [packages],
   );
-  // Each plan's percentage saving vs. the next-shorter cadence, compared on an
-  // annualized basis from each package's real `price` (Annual vs 12× monthly,
-  // Monthly vs 52× weekly). We use the raw price ratio rather than the SDK's
+  // Each plan's percentage saving vs. the weekly plan, compared on an
+  // annualized basis from each package's real `price` (both Annual and Monthly
+  // vs 52× weekly). We use the raw price ratio rather than the SDK's
   // normalized pricePerYear/pricePerMonth numbers — those are frequently
   // unpopulated in RevenueCat Browser Mode (Expo Go / web), which is why no
   // percentage was showing. `strike` is the formatted "before" price (a reliable
@@ -233,10 +234,10 @@ export default function PaywallScreen() {
     let priceAnnualized: number | null = null;
     let baselineAnnualized: number | null = null;
     let strike: string | null = null;
-    if (pkg.packageType === "ANNUAL" && monthlyPkg) {
+    if (pkg.packageType === "ANNUAL" && weeklyPkg) {
       priceAnnualized = pkg.product.price;
-      baselineAnnualized = monthlyPkg.product.price * 12;
-      strike = monthlyPkg.product.pricePerYearString ?? null;
+      baselineAnnualized = weeklyPkg.product.price * 52;
+      strike = weeklyPkg.product.pricePerYearString ?? null;
     } else if (pkg.packageType === "MONTHLY" && weeklyPkg) {
       priceAnnualized = pkg.product.price * 12;
       baselineAnnualized = weeklyPkg.product.price * 52;
