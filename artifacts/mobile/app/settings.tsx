@@ -390,6 +390,7 @@ export default function SettingsScreen() {
       <ScrollView
         contentContainerStyle={{ padding: 18, paddingBottom: bottomPadding, gap: 14 }}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         {/* Profile card */}
         <LinearGradient
