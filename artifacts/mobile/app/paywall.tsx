@@ -126,10 +126,15 @@ function packageMeta(
 // length so the UI can advertise it.
 function freeTrial(
   pkg: PurchasesPackage,
-  ineligibleIds: string[] | null,
+  ineligibleIds: string[] | null | undefined,
 ): { count: number; unit: string } | null {
   const intro = pkg.product.introPrice;
   if (!intro || intro.price > 0 || intro.periodNumberOfUnits <= 0) return null;
+  // iOS eligibility not yet resolved (undefined = loading / errored / no
+  // offering): don't advertise a trial we can't confirm the user can redeem,
+  // so an ineligible user never sees a flash of "free trial" before the check
+  // lands. (null = non-iOS, where there's no native gate and the store decides.)
+  if (ineligibleIds === undefined) return null;
   // Suppress the trial for users who already redeemed it (iOS eligibility).
   if (ineligibleIds?.includes(pkg.product.identifier)) return null;
   return { count: intro.periodNumberOfUnits, unit: intro.periodUnit };
@@ -317,6 +322,19 @@ export default function PaywallScreen() {
 
   const selectedTrial = selectedPackage ? freeTrial(selectedPackage, ineligibleTrialProductIds) : null;
 
+  // A single representative trial for the up-front header mention: the first
+  // plan that reports an *eligible* free trial. Reuses the same store-driven,
+  // eligibility-aware helper as the per-plan chips, so it never advertises a
+  // trial the store won't grant (and renders nothing where none is reported,
+  // e.g. the web/test preview or an ineligible iOS user).
+  const headerTrial = useMemo(() => {
+    for (const pkg of packages) {
+      const tr = freeTrial(pkg, ineligibleTrialProductIds);
+      if (tr) return tr;
+    }
+    return null;
+  }, [packages, ineligibleTrialProductIds]);
+
   const ctaLabel = selectedTrial
     ? t("paywall.startTrial")
     : selectedPackage
@@ -450,6 +468,14 @@ export default function PaywallScreen() {
             <Text style={[styles.subtitle, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
               {t("paywall.subtitle")}
             </Text>
+            {headerTrial && (
+              <View style={[styles.headerTrialPill, { backgroundColor: accentSoft }]}>
+                <Ionicons name="gift" size={12} color={accent} />
+                <Text style={[styles.headerTrialText, { color: accent, fontFamily: "Inter_700Bold" }]}>
+                  {trialLabel(t, headerTrial)}
+                </Text>
+              </View>
+            )}
           </View>
           <View style={styles.heroGraphic}>
             <Ionicons
@@ -924,6 +950,17 @@ const styles = StyleSheet.create({
   },
   trialChipText: { fontSize: 10.5, letterSpacing: 0.2 },
   trialNote: { fontSize: 13, textAlign: "center", marginTop: 12, lineHeight: 18 },
+  headerTrialPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
+    gap: 5,
+    marginTop: 10,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  headerTrialText: { fontSize: 11.5, letterSpacing: 0.2 },
 
   ctaWrap: { marginTop: 20 },
   subscribeBtn: {

@@ -191,11 +191,15 @@ function useSubscriptionContext() {
   return {
     customerInfo: customerInfoQuery.data,
     offerings: offeringsQuery.data,
-    // Product ids the current user can NOT redeem a trial/intro offer for (iOS
-    // only; null elsewhere — let the store sheet decide). The paywall hides
-    // trial copy for these so it never promises a trial that won't be granted.
+    // iOS trial/intro-offer eligibility, as a deliberate three-state value the
+    // paywall uses to never promise a trial that won't be granted:
+    //   • string[]  — check resolved; these product ids are NOT redeemable.
+    //   • undefined — iOS, still loading / errored / no offering yet: callers
+    //                 must SUPPRESS trial copy until eligibility is known, so an
+    //                 ineligible user never flashes "free trial" before it lands.
+    //   • null      — non-iOS: no native gate, let the store sheet be the truth.
     ineligibleTrialProductIds:
-      Platform.OS === "ios" ? trialEligibilityQuery.data ?? null : null,
+      Platform.OS === "ios" ? trialEligibilityQuery.data : null,
     isSubscribed,
     isLoading: customerInfoQuery.isLoading || offeringsQuery.isLoading,
     purchase: purchaseMutation.mutateAsync,

@@ -25,8 +25,17 @@ immediately — misleading and an App Review risk.
   `status === INTRO_ELIGIBILITY_STATUS.INTRO_ELIGIBILITY_STATUS_INELIGIBLE`.
 - **iOS only.** Android always returns `UNKNOWN`; web (Browser Mode) has no
   native check — so only run the check on iOS and let the store's purchase sheet
-  be the source of truth elsewhere. Fail-open (show trial while the check is
-  pending/unknown); the store sheet always shows true terms before any charge.
+  be the source of truth elsewhere.
+- **The eligibility signal must be THREE-STATE, fail-CLOSED on iOS.** Model
+  `ineligibleTrialProductIds` as: `string[]` = check resolved (these ids are NOT
+  redeemable), `undefined` = iOS not-yet-known (loading / errored / no offering),
+  `null` = non-iOS (no native gate — show store-reported offers). The shared
+  `freeTrial()` helper returns null on `undefined`, so EVERY trial surface
+  (header mention, per-plan chip, CTA, "then $X" note) suppresses together until
+  eligibility lands. **Why:** conflating `undefined` (loading) with `null`/empty
+  (resolved-eligible) flashes "free trial" to an ineligible iOS user during the
+  brief eligibility-load window — the exact App Review risk the gate exists to
+  prevent. (Earlier code fail-OPEN'd here; that was the bug.)
 - `INTRO_ELIGIBILITY_STATUS` **does export by name** from `react-native-purchases`
   — import and compare the named member; don't use the magic numeric value.
 
