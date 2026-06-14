@@ -674,20 +674,6 @@ export default function SettingsScreen() {
           </Pressable>
         </Modal>
 
-        {/* Daily goal */}
-        <Row
-          icon="checkmark-circle"
-          iconBg="#16A34A"
-          iconColor="#FFFFFF"
-          title={t("home.dailyGoal")}
-          subtitle={t("settings.dailyGoalSub")}
-          right={<Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />}
-          onPress={() => {
-            Haptics.selectionAsync();
-            router.push("/progress");
-          }}
-        />
-
         {/* Difficulty */}
         <Row
           icon="school"
