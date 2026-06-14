@@ -8,7 +8,6 @@ import {
   Platform,
   Modal,
   Pressable,
-  Switch,
   TextInput,
   Alert,
   ActivityIndicator,
@@ -689,56 +688,16 @@ export default function SettingsScreen() {
           }}
         />
 
-        {/* Preferences */}
-        <Section
-          title={t("settings.preferences")}
-          icon="options"
-          iconBg="#F59E0B"
+        {/* Difficulty */}
+        <Row
+          icon="school"
+          iconBg="#8B5CF6"
           iconColor="#FFFFFF"
-        >
-          <Row
-            icon="phone-portrait"
-            iconBg="#F59E0B"
-            iconColor="#FFFFFF"
-            title={t("settings.haptics")}
-            subtitle={t("settings.hapticsSub")}
-            right={
-              <Switch
-                value={prefs.hapticsEnabled}
-                onValueChange={(v) => {
-                  update("hapticsEnabled", v);
-                  if (v) Haptics.selectionAsync();
-                }}
-                trackColor={{ false: colors.muted, true: colors.primary }}
-                thumbColor="#FFFFFF"
-              />
-            }
-          />
-          <Row
-            icon="school"
-            iconBg="#8B5CF6"
-            iconColor="#FFFFFF"
-            title={t("settings.difficulty")}
-            subtitle={t(`difficulty.${prefs.difficulty}` as const)}
-            right={<Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />}
-            onPress={() => setPicker("difficulty")}
-          />
-          <Row
-            icon="notifications"
-            iconBg="#EC4899"
-            iconColor="#FFFFFF"
-            title={t("settings.daily")}
-            subtitle={t("settings.dailySub")}
-            right={
-              <Switch
-                value={prefs.notificationsEnabled}
-                onValueChange={(v) => update("notificationsEnabled", v)}
-                trackColor={{ false: colors.muted, true: colors.primary }}
-                thumbColor="#FFFFFF"
-              />
-            }
-          />
-        </Section>
+          title={t("settings.difficulty")}
+          subtitle={t(`difficulty.${prefs.difficulty}` as const)}
+          right={<Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />}
+          onPress={() => setPicker("difficulty")}
+        />
 
         {/* Offline */}
         <Section
