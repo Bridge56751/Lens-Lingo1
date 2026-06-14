@@ -2,6 +2,7 @@ import { Router } from "express";
 import { eq, sql } from "drizzle-orm";
 import { db, customers, conversations, vocabSelections } from "@workspace/db";
 import { requireAuth, getVerifiedEmail } from "../middleware/customer";
+import { invalidatePlanFreshness } from "../lib/plan";
 
 const router = Router();
 
@@ -151,7 +152,25 @@ router.delete("/account", async (req, res) => {
     const removed = await db
       .delete(customers)
       .where(eq(customers.id, customerId))
-      .returning({ id: customers.id });
+      .returning({
+        id: customers.id,
+        deviceId: customers.deviceId,
+        authUserId: customers.authUserId,
+      });
+
+    // The plan freshness cache is module-level and keyed by the RevenueCat app
+    // user id (the device id for anonymous callers, the Clerk user id when
+    // signed in), so it outlives the row we just deleted. The same device id
+    // re-creates an empty `free` row on the next request; a leftover "fresh"
+    // mark would make /me/plan and requirePro skip RevenueCat and serve that
+    // default `free` until the TTL expires — dropping Pro for a user who is
+    // still paying. Clearing it forces an immediate re-pull so their active
+    // subscription re-attaches.
+    for (const row of removed) {
+      invalidatePlanFreshness(row.deviceId);
+      invalidatePlanFreshness(row.authUserId);
+    }
+
     res.json({ deleted: removed.length > 0 });
   } catch (err) {
     req.log.error({ err }, "Failed to delete account");

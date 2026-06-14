@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const STORAGE_KEY = "@linguascan/device-id/v1";
+export const DEVICE_ID_STORAGE_KEY = "@linguascan/device-id/v1";
 
 let cachedId: string | null = null;
 
@@ -19,7 +19,7 @@ function generateUuid(): string {
 export async function getOrCreateDeviceId(): Promise<string> {
   if (cachedId) return cachedId;
   try {
-    const existing = await AsyncStorage.getItem(STORAGE_KEY);
+    const existing = await AsyncStorage.getItem(DEVICE_ID_STORAGE_KEY);
     if (existing) {
       cachedId = existing;
       return existing;
@@ -30,7 +30,7 @@ export async function getOrCreateDeviceId(): Promise<string> {
   const id = generateUuid();
   cachedId = id;
   try {
-    await AsyncStorage.setItem(STORAGE_KEY, id);
+    await AsyncStorage.setItem(DEVICE_ID_STORAGE_KEY, id);
   } catch {
     // ignore write errors; id stays cached for this session
   }
@@ -43,20 +43,4 @@ export async function getOrCreateDeviceId(): Promise<string> {
  */
 export function getDeviceIdSync(): string | null {
   return cachedId;
-}
-
-/**
- * Discards the current device identity and provisions a brand-new one. Used
- * after account deletion so the live session continues as a fresh, empty
- * anonymous user instead of re-resolving the just-deleted customer row.
- */
-export async function resetDeviceId(): Promise<string> {
-  const id = generateUuid();
-  cachedId = id;
-  try {
-    await AsyncStorage.setItem(STORAGE_KEY, id);
-  } catch {
-    // ignore write errors; id stays cached for this session
-  }
-  return id;
 }

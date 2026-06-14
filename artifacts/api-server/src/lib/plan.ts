@@ -102,6 +102,25 @@ function markPlanFresh(appUserId: string): void {
 }
 
 /**
+ * Drops any cached freshness for the given RevenueCat app user id, forcing the
+ * next plan read for it to re-pull from RevenueCat instead of trusting a stale
+ * window.
+ *
+ * Used after account deletion: the customer row is destroyed and re-created
+ * empty (plan `free`) on the next request for the same id. A freshness entry
+ * left over from before the delete would otherwise make `/me/plan` and
+ * `requirePro` skip RevenueCat and serve that default `free` for up to
+ * `PLAN_CACHE_TTL_MS` — stranding a still-paying user as Free / 403 right after
+ * they delete. Clearing it forces an immediate re-pull so their still-active
+ * subscription re-attaches. No-op for a null/empty id.
+ */
+export function invalidatePlanFreshness(
+  appUserId: string | null | undefined,
+): void {
+  if (appUserId) planFreshUntil.delete(appUserId);
+}
+
+/**
  * Asks RevenueCat (its REST API, the authoritative source) whether the given
  * app user id currently holds the Pro entitlement.
  *

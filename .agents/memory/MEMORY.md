@@ -9,7 +9,7 @@
 - [Vocab bank cache](vocab-bank-cache.md) — Word Bank is a shared per-language-pair cache; adding a difficulty level needs a missing-level top-up or cached pairs never get it.
 - [Conversation seeding rule](conversation-seeding.md) — every conversation-creation path must seed ≥1 message + set target/native lang columns, else send-message route 404s / loses language anchor.
 - [Scan overlay touch](scan-overlay-touch.md) — a later full-width absolute sibling steals a floating control's taps even with a gap; merge into one box-none container; full-bleed frame avoids grey banding.
-- [Account deletion ordering](account-deletion.md) — delete server account row before Clerk user.delete() (token revokes); user.delete() failure must surface; resetDeviceId must also setDeviceId on the API client.
+- [Account deletion](account-deletion.md) — delete server row before Clerk user.delete() (token revokes); anonymous delete KEEPS device id (Pro re-pulls) + must invalidatePlanFreshness or stale 45s cache strands re-created free row.
 - [Optional Clerk auth](optional-clerk-auth.md) — never gate the app tree behind ClerkLoaded; first-sign-in account/link must wait for a token + only close on success or device data is silently dropped.
 - [Expo Router tab list refresh](expo-router-tab-refetch.md) — tabs stay mounted, so list queries don't auto-refetch on tab focus; use useFocusEffect(refetch) after items are created elsewhere.
 - [Expo Router typed routes](expo-router-typed-routes.md) — a newly-added app/*.tsx route fails typecheck until the Expo dev server regenerates route types; restart the mobile workflow before the final typecheck.

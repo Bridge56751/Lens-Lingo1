@@ -27,3 +27,25 @@ still exists. Let it throw to the catch and surface a retry.
 client.** The device id lives in two places: `lib/device.ts` (cache + storage)
 and a module-level header in `@workspace/api-client-react`. Resetting only the
 former leaves generated hooks sending the old id for the rest of the session.
+
+## Deleting must NOT drop Pro (anonymous-only mode)
+
+**Rule — while sign-in is hidden, account deletion KEEPS the device id.** Wipe
+all `@linguascan/*` AsyncStorage keys EXCEPT `DEVICE_ID_STORAGE_KEY`, and do NOT
+reset the API-client device id.
+**Why:** every user is anonymous, so the server pulls Pro from RevenueCat keyed
+by the device id. Keep it and the next request re-creates an empty `free`
+customers row from `x-device-id`, then `/me/plan` reconciles it back to Pro from
+the still-active subscription. Reset it and the paying user is stranded as Free.
+Personal data is still fully deleted (server row + cascades; all other local
+keys). **How to apply:** revisit before re-enabling sign-in — a signed-in delete
+keyed to the Clerk id is unreliable without `restorePurchases()`.
+
+**Rule — invalidate the per-appUserId plan freshness cache on delete.** The
+delete route `.returning({id,deviceId,authUserId})` and calls
+`invalidatePlanFreshness()` for BOTH the device id and auth user id.
+**Why:** `lib/plan.ts` caches a 45s "fresh" window per appUserId; a stale entry
+left from before the delete makes `/me/plan` + `requirePro` skip RevenueCat and
+serve the re-created default `free` row as Free/403 for up to the TTL. Any
+module-level plan/entitlement cache keyed by an id that survives deletion must be
+invalidated in lockstep. (Cache is process-local — revisit for multi-instance.)

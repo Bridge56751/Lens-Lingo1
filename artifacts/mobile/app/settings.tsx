@@ -34,11 +34,11 @@ import {
   openManageSubscriptions,
 } from "@/lib/revenuecat";
 import { LOCALE_NATIVE_NAMES, type Locale } from "@/constants/translations";
-import { useListOpenaiConversations, useDeleteAccount, setDeviceId } from "@workspace/api-client-react";
+import { useListOpenaiConversations, useDeleteAccount } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth, useClerk, useUser } from "@clerk/expo";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { resetDeviceId } from "@/lib/device";
+import { DEVICE_ID_STORAGE_KEY } from "@/lib/device";
 import { computeStreak, computeBestStreak } from "@/lib/streak";
 import { useActivity } from "@/hooks/useActivity";
 import { StreakCards } from "@/components/StreakCards";
@@ -233,11 +233,14 @@ export default function SettingsScreen() {
   const queryClient = useQueryClient();
   const { mutateAsync: deleteAccountMutation } = useDeleteAccount();
 
-  // Permanently removes the account/device data both server-side (cascades all
+  // Permanently removes the account's data both server-side (cascades all
   // conversations, messages, and vocab) and locally (Clerk user, sign-out, every
-  // @linguascan/* AsyncStorage key, cached queries), then re-provisions a fresh
-  // anonymous device id so the session continues as a brand-new empty user.
-  // Apple guideline 5.1.1(v) requires this be available in-app.
+  // @linguascan/* AsyncStorage key EXCEPT the device id, cached queries).
+  // The anonymous device id is intentionally KEPT: the server re-creates an empty
+  // customer row for the same id and re-pulls the still-active App Store /
+  // RevenueCat subscription (keyed by device id), so a paying user keeps Pro
+  // access instead of being stranded as Free. All personal data is still erased;
+  // only the anonymous identifier survives. Apple 5.1.1(v) requires in-app deletion.
   const performDeleteAccount = async () => {
     if (deleting) return;
     setDeleting(true);
@@ -259,18 +262,19 @@ export default function SettingsScreen() {
         }
       }
 
-      // Wipe every local key, then re-provision a fresh anonymous identity and
-      // push it to the API client so subsequent requests use the new device id
-      // (not the just-deleted one) for the rest of this session.
+      // Wipe every local key EXCEPT the device id. Keeping the device id lets the
+      // server re-create an empty customer row for the same id and re-pull the
+      // still-active subscription from RevenueCat (keyed by device id), so a paying
+      // user keeps Pro instead of being stranded as Free after deletion.
       try {
         const keys = await AsyncStorage.getAllKeys();
-        const ours = keys.filter((k) => k.startsWith("@linguascan/"));
+        const ours = keys.filter(
+          (k) => k.startsWith("@linguascan/") && k !== DEVICE_ID_STORAGE_KEY,
+        );
         if (ours.length) await AsyncStorage.multiRemove(ours);
       } catch {
         // ignore — best effort
       }
-      const freshId = await resetDeviceId();
-      setDeviceId(freshId);
       queryClient.clear();
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
