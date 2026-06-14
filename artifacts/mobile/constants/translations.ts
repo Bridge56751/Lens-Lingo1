@@ -184,6 +184,7 @@ export type TKey =
   | "offline.downloaded"
   | "offline.start"
   | "offline.redownload"
+  | "offline.proRequired"
   | "offline.errorTitle"
   | "offline.errorBody"
   | "offline.cancel"
@@ -736,6 +737,7 @@ const en: Record<TKey, string> = {
   "offline.downloaded": "Saved \u2014 {count} clips ready offline",
   "offline.start": "Save my words",
   "offline.redownload": "Update saved words",
+  "offline.proRequired": "Pro required",
   "offline.errorTitle": "Download failed",
   "offline.errorBody": "Something went wrong. Check your connection and try again.",
   "offline.cancel": "Cancel",

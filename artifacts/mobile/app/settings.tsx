@@ -28,6 +28,7 @@ import {
   type Difficulty,
 } from "@/hooks/usePreferences";
 import { useT } from "@/hooks/useT";
+import { usePro } from "@/hooks/usePro";
 import {
   useSubscription,
   REVENUECAT_ENTITLEMENT_IDENTIFIER,
@@ -160,6 +161,7 @@ export default function SettingsScreen() {
   const t = useT();
   const { prefs, update } = usePreferences();
   const { isSubscribed, isLoading: subLoading, restore, isRestoring, customerInfo } = useSubscription();
+  const { isPro, requirePro } = usePro();
   const { data: conversations } = useListOpenaiConversations();
   const { events: activityEvents } = useActivity();
   const { isSignedIn } = useAuth();
@@ -325,6 +327,9 @@ export default function SettingsScreen() {
 
   const startDownload = async () => {
     if (downloading) return;
+    // Saving words offline depends on the Pro-gated word-bank/selection routes,
+    // so a free user can't complete it — route them to the paywall instead.
+    if (!requirePro(undefined, "vocab")) return;
     Haptics.selectionAsync();
     const controller = new AbortController();
     const runId = runIdRef.current + 1;
@@ -373,6 +378,9 @@ export default function SettingsScreen() {
 
   const progressPct =
     progress && progress.total > 0 ? progress.completed / progress.total : 0;
+  // Only show the locked state once we actually know the user is not Pro (avoid
+  // flashing it for a genuinely-Pro user during the first subscription fetch).
+  const showProRequired = !isPro && !subLoading;
 
   const topPadding = Platform.OS === "web" ? 16 : insets.top;
   const bottomPadding = Platform.OS === "web" ? 34 : insets.bottom + 16;
@@ -741,6 +749,17 @@ export default function SettingsScreen() {
                   </TouchableOpacity>
                 </View>
               </>
+            ) : showProRequired ? (
+              <TouchableOpacity
+                style={[styles.offlineBtn, { backgroundColor: colors.primary }]}
+                onPress={() => requirePro(undefined, "vocab")}
+                activeOpacity={0.85}
+              >
+                <Ionicons name="lock-closed" size={16} color="#FFFFFF" />
+                <Text style={[styles.offlineBtnText, { fontFamily: "Inter_600SemiBold" }]}>
+                  {t("offline.proRequired")}
+                </Text>
+              </TouchableOpacity>
             ) : (
               <TouchableOpacity
                 style={[styles.offlineBtn, { backgroundColor: colors.primary }]}
