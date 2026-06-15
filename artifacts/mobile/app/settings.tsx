@@ -13,6 +13,7 @@ import {
   ActivityIndicator,
   LayoutAnimation,
   UIManager,
+  Linking,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
@@ -51,6 +52,8 @@ import {
   type PackState,
 } from "@/lib/offlinePack";
 import { AUTH_UI_ENABLED } from "@/constants/features";
+
+const SUPPORT_EMAIL = "support@lenslingo.ai";
 
 function Row({
   icon,
@@ -775,6 +778,41 @@ export default function SettingsScreen() {
           </View>
         </Section>
 
+        {/* Help & support */}
+        <Section
+          title={t("settings.help")}
+          icon="help-circle"
+          iconBg="#16A34A"
+          iconColor="#FFFFFF"
+        >
+          <Row
+            icon="mail"
+            iconBg="#16A34A"
+            iconColor="#FFFFFF"
+            title={t("settings.emailSupport")}
+            subtitle={SUPPORT_EMAIL}
+            right={<Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />}
+            onPress={() => {
+              Haptics.selectionAsync();
+              Linking.openURL(`mailto:${SUPPORT_EMAIL}`).catch(() =>
+                Alert.alert(t("settings.helpAlertTitle"), t("settings.helpAlertBody")),
+              );
+            }}
+          />
+          <Row
+            icon="sparkles"
+            iconBg={colors.primary}
+            iconColor="#FFFFFF"
+            title={t("home.newHere")}
+            subtitle={t("home.newHereDesc")}
+            right={<Ionicons name="play-circle" size={20} color={colors.primary} />}
+            onPress={() => {
+              Haptics.selectionAsync();
+              router.push("/onboarding");
+            }}
+          />
+        </Section>
+
         {/* About */}
         <Section
           title={t("settings.about")}
@@ -782,16 +820,6 @@ export default function SettingsScreen() {
           iconBg="#64748B"
           iconColor="#FFFFFF"
         >
-          <Row
-            icon="help-circle"
-            iconBg="#16A34A"
-            iconColor="#FFFFFF"
-            title={t("settings.help")}
-            right={<Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />}
-            onPress={() =>
-              Alert.alert(t("settings.helpAlertTitle"), t("settings.helpAlertBody"))
-            }
-          />
           <Row
             icon="information-circle"
             iconBg="#64748B"
