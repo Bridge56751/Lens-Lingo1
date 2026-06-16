@@ -315,8 +315,8 @@ export default function ScanScreen() {
 
   const speakSample = () => {
     if (!scanResult) return;
-    // Hearing the example sentence aloud is Pro; reading it stays free.
-    if (!requirePro()) return;
+    // Listening (both the word and the tutor's example sentence) is always free;
+    // only starting the conversation is gated to the paywall.
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     speakWord(scanResult.initialMessage, selectedLanguage);
   };
