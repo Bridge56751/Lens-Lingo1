@@ -664,9 +664,22 @@ router.post("/openai/conversations/:id/messages", requirePro, async (req: Reques
       .where(eq(customers.id, customerId));
   });
 
-  // Build chat messages for OpenAI (include system + history + new user message)
+  // Build chat messages for OpenAI (include system + history + new user message).
+  //
+  // Context-window strategy: long conversations would eventually exceed the
+  // model's token limit if we sent the entire history. So we trim what we send
+  // to OpenAI (NOT what we persist — the full history is already saved above and
+  // stays untouched in the DB):
+  //   1. Always keep allMessages[0] — the system prompt that anchors the tutor's
+  //      language, difficulty, and persona for the whole conversation.
+  //   2. Keep only the most recent 20 messages of the remaining history.
+  //   3. Append the new user message.
+  const systemMessage = allMessages[0];
+  const recentHistory = allMessages.slice(1).slice(-20);
+  const windowedMessages = [systemMessage, ...recentHistory];
+
   const chatMessages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [
-    ...allMessages.map((m) => ({
+    ...windowedMessages.map((m) => ({
       role: m.role as "system" | "user" | "assistant",
       content: m.content,
     })),

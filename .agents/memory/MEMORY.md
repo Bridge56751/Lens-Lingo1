@@ -28,4 +28,4 @@
 - [Paywall layout](paywall-layout.md) — keyed on feature param: contextual = themed spotlight→plans→grid (first price visible); generic (no spotlight) = feature grid ABOVE plans/price.
 - [Firebase on Expo](firebase-rnfirebase.md) — iOS-only Analytics+Crashlytics; platform-split no-op (web/Expo Go) vs .native lazy-require; RNFirebase's firebase-JS-SDK leftover *_tmp_* dirs crash Metro watcher.
 - [Hide sign-in UI flag](auth-ui-flag.md) — AUTH_UI_ENABLED (default off) ships anonymous-only; keep sign-out unconditional (don't trap sessions) + auth route registered; flip to re-enable.
-- [Device-id secure-store](device-id-secure-store.md) — device-id is the sole anon identity token; SecureStore native / AsyncStorage web; on a store READ failure never persist a new id (you'd orphan/clobber the real one).
+- [Device-id secure-store](device-id-secure-store.md) — sole anon identity token; SecureStore native / AsyncStorage web; on a store READ failure never persist a new id (orphans/clobbers the real one).
