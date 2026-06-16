@@ -3,7 +3,6 @@ const fs = require("fs");
 const path = require("path");
 
 const BUILD_SETTING = "CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES";
-const RNFB_STATIC_FLAG = "$RNFirebaseAsStaticFramework = true";
 
 const INJECTION = `post_install do |installer|
     installer.pods_project.targets.each do |non_modular_target|
@@ -13,20 +12,22 @@ const INJECTION = `post_install do |installer|
     end`;
 
 /**
- * React Native Firebase requires static frameworks on iOS (set via
- * expo-build-properties `ios.useFrameworks: "static"`). Two extra Podfile
- * tweaks are needed for the iOS build to compile:
+ * Safety net for the iOS static-frameworks build (expo-build-properties
+ * `ios.useFrameworks: "static"`).
  *
- * 1. `$RNFirebaseAsStaticFramework = true` — tells the RNFB pods to build as
- *    static frameworks, matching `use_frameworks! :linkage => :static`.
- *    Without it the App/Crashlytics modules fail to compile with
- *    "declaration of 'RCTBridgeModule' must be imported from module ... before
- *    it is required" plus a cascade of implicit-int / parse errors.
- * 2. `CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = YES` — allows the
- *    RNFB framework modules to include non-modular React headers
- *    (-Werror,-Wnon-modular-include-in-framework-module).
+ * The real fix for the RNFirebase build failures lives in app.json:
+ * `ios.forceStaticLinking: ["RNFBApp", "RNFBAnalytics", "RNFBCrashlytics"]`
+ * builds those pods as plain static LIBRARIES (no framework module), which is
+ * what resolves both the "non-modular header inside framework module" error
+ * and the "declaration of 'RCTBridgeModule' must be imported from module
+ * 'RNFBApp.RNFBAppModule' before it is required" error. (Note: RNFirebase's
+ * `$RNFirebaseAsStaticFramework = true` does NOT help — it keeps the pods as
+ * static FRAMEWORKS, i.e. still framework modules, which re-triggers the error.)
  *
- * Both are applied to the generated Podfile during prebuild.
+ * This plugin only adds a defensive `CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = YES`
+ * to every Pods target's post_install so any OTHER framework pod that includes
+ * a non-modular React header doesn't fail the build. Idempotent; fails loudly
+ * if the post_install marker is missing.
  */
 const withNonModularHeaders = (config) => {
   return withDangerousMod(config, [
@@ -38,27 +39,20 @@ const withNonModularHeaders = (config) => {
       );
 
       let contents = fs.readFileSync(podfilePath, "utf8");
-      let changed = false;
 
-      if (!contents.includes(RNFB_STATIC_FLAG)) {
-        contents = `${RNFB_STATIC_FLAG}\n${contents}`;
-        changed = true;
+      if (contents.includes(BUILD_SETTING)) {
+        return config;
       }
 
-      if (!contents.includes(BUILD_SETTING)) {
-        const marker = "post_install do |installer|";
-        if (!contents.includes(marker)) {
-          throw new Error(
-            "[withNonModularHeaders] Could not find 'post_install do |installer|' in the Podfile."
-          );
-        }
-        contents = contents.replace(marker, INJECTION);
-        changed = true;
+      const marker = "post_install do |installer|";
+      if (!contents.includes(marker)) {
+        throw new Error(
+          "[withNonModularHeaders] Could not find 'post_install do |installer|' in the Podfile."
+        );
       }
 
-      if (changed) {
-        fs.writeFileSync(podfilePath, contents);
-      }
+      contents = contents.replace(marker, INJECTION);
+      fs.writeFileSync(podfilePath, contents);
 
       return config;
     },
