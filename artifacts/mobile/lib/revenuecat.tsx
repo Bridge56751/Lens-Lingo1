@@ -6,7 +6,7 @@ import Purchases, {
 } from "react-native-purchases";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import Constants from "expo-constants";
-import { useAuth } from "@clerk/expo";
+import { useOptionalAuth } from "@/lib/auth";
 import { getMyPlan } from "@workspace/api-client-react";
 import { getDeviceIdSync } from "@/lib/device";
 
@@ -222,7 +222,7 @@ const Context = createContext<SubscriptionContextValue | null>(null);
  * so an anonymous purchaser is still keyed to a row the server can find.
  */
 function RevenueCatIdentitySync() {
-  const { isLoaded, userId } = useAuth();
+  const { isLoaded, userId } = useOptionalAuth();
 
   useEffect(() => {
     // Wait for Clerk to resolve so we don't briefly log in as the device id and

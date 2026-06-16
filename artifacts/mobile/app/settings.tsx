@@ -38,7 +38,7 @@ import {
 import { LOCALE_NATIVE_NAMES, type Locale } from "@/constants/translations";
 import { useListOpenaiConversations, useDeleteAccount } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useAuth, useClerk, useUser } from "@clerk/expo";
+import { useOptionalAuth } from "@/lib/auth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { DEVICE_ID_STORAGE_KEY } from "@/lib/device";
 import { computeStreak, computeBestStreak } from "@/lib/streak";
@@ -174,13 +174,7 @@ export default function SettingsScreen() {
   const { isPro, requirePro } = usePro();
   const { data: conversations } = useListOpenaiConversations();
   const { events: activityEvents } = useActivity();
-  const { isSignedIn } = useAuth();
-  const { user } = useUser();
-  const { signOut } = useClerk();
-  const accountEmail =
-    user?.primaryEmailAddress?.emailAddress ??
-    user?.emailAddresses?.[0]?.emailAddress ??
-    null;
+  const { isSignedIn, accountEmail, signOut, deleteUser } = useOptionalAuth();
 
   // Streaks are derived from conversation activity. Best streak is a high-water
   // mark that must never drop even if conversations are deleted, so persist it
@@ -265,8 +259,8 @@ export default function SettingsScreen() {
 
       // Delete the Clerk user itself. A failure here is fatal: we must not report
       // success while the account still exists (Apple 5.1.1(v)).
-      if (isSignedIn && user) {
-        await user.delete();
+      if (isSignedIn) {
+        await deleteUser();
         try {
           await signOut();
         } catch {

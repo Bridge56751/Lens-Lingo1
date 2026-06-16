@@ -8,6 +8,25 @@ description: How optional sign-in (Replit-managed Clerk) coexists with the anony
 Sign-in is **optional**. The anonymous `x-device-id` flow is the default and must
 never be gated behind login.
 
+**Rule:** Clerk must be **runtime-optional** — a missing
+`EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` must NOT mount `<ClerkProvider>` or call any
+Clerk hook.
+- **Why:** the key is only injected by the Expo Go dev script + the Replit web
+  build (`scripts/build.js`), never by EAS. `<ClerkProvider publishableKey="">`
+  throws synchronously, and it is the OUTERMOST provider (outside the
+  `ErrorBoundary`), so an EAS/production build crashes instantly on launch. Auth
+  is optional, so "no key" should just mean anonymous-only.
+- **How to apply:** `lib/auth.tsx` owns Clerk. `CLERK_ENABLED = !!key`;
+  `AuthProvider` mounts `<ClerkProvider>` + a bridge ONLY when enabled, else
+  serves signed-out defaults through `useOptionalAuth()`
+  (`{isLoaded,isSignedIn,userId,getToken,accountEmail,signOut,deleteUser}`, stable
+  via refs). Every app-wide consumer (token sync, RevenueCat identity, settings)
+  reads `useOptionalAuth()` — never Clerk hooks directly. The sign-in screen
+  (`auth.tsx`) wraps a Clerk-hook-using inner in a guard that `<Redirect>`s home
+  when `!CLERK_ENABLED`; its hooks may stay Clerk-direct because they only render
+  under the provider. (Setting the EAS env var fixes the crash too, but the app
+  must not depend on it.)
+
 **Rule:** never wrap the mobile app tree in `<ClerkLoaded>` (or any auth-load gate).
 - **Why:** `<ClerkLoaded>` withholds children until Clerk finishes loading; if Clerk
   is slow/unavailable the whole anonymous app goes blank — that is effectively

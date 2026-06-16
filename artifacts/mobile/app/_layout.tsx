@@ -17,8 +17,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
-import { ClerkProvider, useAuth } from "@clerk/expo";
-import { tokenCache } from "@clerk/expo/token-cache";
+import { AuthProvider, useOptionalAuth } from "@/lib/auth";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { getOrCreateDeviceId } from "@/lib/device";
@@ -32,9 +31,6 @@ import {
   recordError,
   setAnalyticsUser,
 } from "@/lib/analytics";
-
-const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
-const CLERK_PROXY_URL = process.env.EXPO_PUBLIC_CLERK_PROXY_URL || undefined;
 
 // Configure API base URL for Expo (runs outside the web proxy)
 if (process.env.EXPO_PUBLIC_DOMAIN) {
@@ -77,7 +73,7 @@ const asyncStoragePersister = createAsyncStoragePersister({
 // paths. Auth is optional — when signed out getToken returns null and requests
 // fall back to the anonymous device flow.
 function AuthTokenSync() {
-  const { getToken } = useAuth();
+  const { getToken } = useOptionalAuth();
   useEffect(() => {
     // getToken always reads the current session, so registering once is enough;
     // it returns null when signed out (anonymous device flow takes over).
@@ -183,14 +179,7 @@ export default function RootLayout() {
   if ((!fontsLoaded && !fontError) || !deviceReady || !assetsReady) return null;
 
   return (
-    // Auth is optional: render the app immediately and let Clerk hydrate in the
-    // background. We intentionally do NOT gate the tree behind <ClerkLoaded> so
-    // the anonymous device flow is never blocked by Clerk loading/availability.
-    <ClerkProvider
-      publishableKey={CLERK_PUBLISHABLE_KEY ?? ""}
-      tokenCache={tokenCache}
-      {...(CLERK_PROXY_URL ? { proxyUrl: CLERK_PROXY_URL } : {})}
-    >
+    <AuthProvider>
       <AuthTokenSync />
       <SafeAreaProvider>
         <ErrorBoundary
@@ -211,6 +200,6 @@ export default function RootLayout() {
           </PersistQueryClientProvider>
         </ErrorBoundary>
       </SafeAreaProvider>
-    </ClerkProvider>
+    </AuthProvider>
   );
 }

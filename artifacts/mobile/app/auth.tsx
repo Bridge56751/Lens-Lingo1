@@ -11,7 +11,7 @@ import {
   ScrollView,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { router } from "expo-router";
+import { router, Redirect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import * as WebBrowser from "expo-web-browser";
@@ -23,6 +23,7 @@ import { useLinkAccount } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { useT } from "@/hooks/useT";
 import { getDeviceIdSync } from "@/lib/device";
+import { CLERK_ENABLED } from "@/lib/auth";
 
 // Handle any pending OAuth sessions (Apple sign-in via system browser).
 WebBrowser.maybeCompleteAuthSession();
@@ -30,6 +31,16 @@ WebBrowser.maybeCompleteAuthSession();
 type Mode = "signIn" | "signUp";
 
 export default function AuthScreen() {
+  // No Clerk key configured: the sign-in flow can't work, and this screen's
+  // Clerk hooks would throw without a provider, so send the user back to the
+  // app's default anonymous flow instead of mounting it.
+  if (!CLERK_ENABLED) {
+    return <Redirect href="/" />;
+  }
+  return <AuthScreenInner />;
+}
+
+function AuthScreenInner() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const t = useT();
