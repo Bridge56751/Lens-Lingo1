@@ -24,6 +24,15 @@ RNFirebase native modules don't exist in Expo Go or web. To keep the dev env ali
 - `app.json`: `ios.googleServicesFile: "./GoogleService-Info.plist"`, RNFirebase config plugins (`app`/`analytics`/`crashlytics`, each ships `app.plugin.js` → `./plugin/build`), and `expo-build-properties` with `ios.useFrameworks: "static"` (required by RNFirebase iOS).
 - Deps + plugin files live under `artifacts/mobile/node_modules`, NOT root (pnpm monorepo) — check there, not `node_modules/@react-native-firebase`.
 
+## EAS iOS build fails with non-modular-header error (the static-frameworks tax)
+`useFrameworks: "static"` is necessary for RNFirebase but NOT sufficient: the EAS cloud build still fails fastlane/Xcode with `include of non-modular header inside framework module 'RNFBApp...' [-Werror,-Wnon-modular-include-in-framework-module]` (RNFB pods include React-Core headers that Xcode treats as non-modular, and the warning is promoted to an error).
+**Fix:** a local Expo config plugin (`artifacts/mobile/plugins/withNonModularHeaders.js`, registered last in `app.json` plugins) that `withDangerousMod(["ios"])`-patches the generated Podfile's `post_install do |installer|` block to set `CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = 'YES'` on every Pods target. Idempotent (skips if the setting already present); fails loudly if the marker is missing.
+**Why:** `expo-build-properties` has no knob for this Xcode build setting, so the Podfile must be patched directly; the patch only runs during cloud prebuild (no checked-in `ios/`).
+**How to apply:** if a future SDK/RNFirebase bump regresses with the same error, confirm the setting actually lands on the RNFBApp target in the Xcode logs — if not, move the injection to AFTER `react_native_post_install` in the post_install block.
+
+## EAS slug must match the EAS project, not a guess
+EAS build aborts pre-upload with `Slug for project identified by "extra.eas.projectId" (<X>) does not match the "slug" field (<Y>)`. The slug is tied to the EAS project that `extra.eas.projectId` resolves to. For this app the EAS/Firebase project is `lens-lingo` (hyphen), so `app.json` `slug` must be `lens-lingo` (NOT `lenslingo`). The URL `scheme` (`lenslingo`) and `ios.bundleIdentifier` (`com.lenslingo.mobile`) are independent — don't touch them to fix a slug mismatch.
+
 ## Reporting caveats
 - The real prerequisite for Analytics data is enabling **Google Analytics on the Firebase project** (creates the GA property + data stream) — NOT any plist flag.
 - **`IS_ANALYTICS_ENABLED` (and the other `IS_*_ENABLED` keys) in the iOS `GoogleService-Info.plist` are LEGACY and ignored by the modern Firebase iOS SDK.** Verified empirically: after enabling GA on the project, re-downloading the plist left `IS_ANALYTICS_ENABLED=false` and the file byte-identical. Do NOT chase flipping that flag or keep re-downloading the plist — it never changes and doesn't gate anything on iOS.

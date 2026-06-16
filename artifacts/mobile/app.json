@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Lens Lingo",
-    "slug": "lenslingo",
+    "slug": "lens-lingo",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -69,7 +69,8 @@
             "useFrameworks": "static"
           }
         }
-      ]
+      ],
+      "./plugins/withNonModularHeaders"
     ],
     "experiments": {
       "typedRoutes": true,
