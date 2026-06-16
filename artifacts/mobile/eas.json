@@ -6,18 +6,29 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_REVENUECAT_TEST_API_KEY": "test_JUauyYpBkNCCZEQoOsoknqIGPkd",
+        "EXPO_PUBLIC_REVENUECAT_IOS_API_KEY": "appl_keeMQALfNFfsqAaEamIXdNlrDYX",
+        "EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY": "goog_FHRzVHSHiYSdHEdwTgEqJcgEnck"
+      }
     },
     "preview": {
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_DOMAIN": "lenslingo.app"
+        "EXPO_PUBLIC_DOMAIN": "lenslingo.app",
+        "EXPO_PUBLIC_REVENUECAT_TEST_API_KEY": "test_JUauyYpBkNCCZEQoOsoknqIGPkd",
+        "EXPO_PUBLIC_REVENUECAT_IOS_API_KEY": "appl_keeMQALfNFfsqAaEamIXdNlrDYX",
+        "EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY": "goog_FHRzVHSHiYSdHEdwTgEqJcgEnck"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_DOMAIN": "lenslingo.app"
+        "EXPO_PUBLIC_DOMAIN": "lenslingo.app",
+        "EXPO_PUBLIC_REVENUECAT_TEST_API_KEY": "test_JUauyYpBkNCCZEQoOsoknqIGPkd",
+        "EXPO_PUBLIC_REVENUECAT_IOS_API_KEY": "appl_keeMQALfNFfsqAaEamIXdNlrDYX",
+        "EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY": "goog_FHRzVHSHiYSdHEdwTgEqJcgEnck"
       }
     }
   },

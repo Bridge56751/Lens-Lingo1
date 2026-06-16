@@ -19,27 +19,30 @@ const REVENUECAT_ANDROID_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_AP
 export const REVENUECAT_ENTITLEMENT_IDENTIFIER = "pro_access";
 
 function getRevenueCatApiKey() {
-  if (!REVENUECAT_TEST_API_KEY || !REVENUECAT_IOS_API_KEY || !REVENUECAT_ANDROID_API_KEY) {
-    throw new Error("RevenueCat Public API Keys not found");
-  }
-
   if (!REVENUECAT_ENTITLEMENT_IDENTIFIER) {
     throw new Error("RevenueCat Entitlement Identifier not provided");
   }
 
+  // Select the key for the current platform/runtime and require ONLY that key.
+  // Requiring all three keys meant a single missing key (e.g. the Android key
+  // absent from an EAS iOS build) disabled RevenueCat on every platform, which
+  // silently emptied the paywall. Now an iOS build needs only the iOS key, etc.
+  let apiKey: string | undefined;
   if (__DEV__ || Platform.OS === "web" || Constants.executionEnvironment === "storeClient") {
-    return REVENUECAT_TEST_API_KEY;
+    apiKey = REVENUECAT_TEST_API_KEY;
+  } else if (Platform.OS === "ios") {
+    apiKey = REVENUECAT_IOS_API_KEY;
+  } else if (Platform.OS === "android") {
+    apiKey = REVENUECAT_ANDROID_API_KEY;
+  } else {
+    apiKey = REVENUECAT_TEST_API_KEY;
   }
 
-  if (Platform.OS === "ios") {
-    return REVENUECAT_IOS_API_KEY;
+  if (!apiKey) {
+    throw new Error("RevenueCat Public API Key not found");
   }
 
-  if (Platform.OS === "android") {
-    return REVENUECAT_ANDROID_API_KEY;
-  }
-
-  return REVENUECAT_TEST_API_KEY;
+  return apiKey;
 }
 
 export function initializeRevenueCat() {
