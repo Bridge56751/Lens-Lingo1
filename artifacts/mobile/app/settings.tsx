@@ -52,8 +52,14 @@ import {
   type PackState,
 } from "@/lib/offlinePack";
 import { AUTH_UI_ENABLED } from "@/constants/features";
+import { PRIVACY_URL, TERMS_URL } from "@/constants/legal";
 
 const SUPPORT_EMAIL = "support@lenslingo.ai";
+
+const openLink = (url: string) => {
+  Haptics.selectionAsync();
+  Linking.openURL(url).catch(() => {});
+};
 
 function Row({
   icon,
@@ -811,6 +817,23 @@ export default function SettingsScreen() {
               router.push("/onboarding");
             }}
           />
+          <Row
+            icon="shield-checkmark"
+            iconBg="#0EA5E9"
+            iconColor="#FFFFFF"
+            title={t("paywall.privacy")}
+            subtitle="lenslingo.ai/privacy"
+            right={<Ionicons name="open-outline" size={18} color={colors.mutedForeground} />}
+            onPress={() => openLink(PRIVACY_URL)}
+          />
+          <Row
+            icon="document-text"
+            iconBg="#64748B"
+            iconColor="#FFFFFF"
+            title={t("paywall.tos")}
+            right={<Ionicons name="open-outline" size={18} color={colors.mutedForeground} />}
+            onPress={() => openLink(TERMS_URL)}
+          />
         </Section>
 
         {/* About */}
@@ -826,6 +849,23 @@ export default function SettingsScreen() {
             iconColor="#FFFFFF"
             title={t("settings.version")}
             subtitle="1.0.0"
+          />
+          <Row
+            icon="shield-checkmark"
+            iconBg="#0EA5E9"
+            iconColor="#FFFFFF"
+            title={t("paywall.privacy")}
+            subtitle="lenslingo.ai/privacy"
+            right={<Ionicons name="open-outline" size={18} color={colors.mutedForeground} />}
+            onPress={() => openLink(PRIVACY_URL)}
+          />
+          <Row
+            icon="document-text"
+            iconBg="#64748B"
+            iconColor="#FFFFFF"
+            title={t("paywall.tos")}
+            right={<Ionicons name="open-outline" size={18} color={colors.mutedForeground} />}
+            onPress={() => openLink(TERMS_URL)}
           />
         </Section>
 

@@ -21,12 +21,9 @@ import { useColors } from "@/hooks/useColors";
 import { useT } from "@/hooks/useT";
 import type { TKey } from "@/constants/translations";
 import { useSubscription, REVENUECAT_ENTITLEMENT_IDENTIFIER } from "@/lib/revenuecat";
+import { PRIVACY_URL, TERMS_URL } from "@/constants/legal";
 
 type ResultKind = "success" | "restored" | "nothing" | "error" | null;
-
-// TODO: point these at your own hosted Terms / Privacy pages.
-const TERMS_URL = "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/";
-const PRIVACY_URL = "https://www.apple.com/legal/privacy/";
 
 // The four highlighted premium features (2x2 grid). Icons + accent colors are
 // fixed per feature; titles/descriptions come from translations.
