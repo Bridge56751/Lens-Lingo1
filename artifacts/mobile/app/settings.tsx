@@ -817,23 +817,6 @@ export default function SettingsScreen() {
               router.push("/onboarding");
             }}
           />
-          <Row
-            icon="shield-checkmark"
-            iconBg="#0EA5E9"
-            iconColor="#FFFFFF"
-            title={t("paywall.privacy")}
-            subtitle="lenslingo.ai/privacy"
-            right={<Ionicons name="open-outline" size={18} color={colors.mutedForeground} />}
-            onPress={() => openLink(PRIVACY_URL)}
-          />
-          <Row
-            icon="document-text"
-            iconBg="#64748B"
-            iconColor="#FFFFFF"
-            title={t("paywall.tos")}
-            right={<Ionicons name="open-outline" size={18} color={colors.mutedForeground} />}
-            onPress={() => openLink(TERMS_URL)}
-          />
         </Section>
 
         {/* About */}
