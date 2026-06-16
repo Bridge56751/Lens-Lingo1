@@ -1,6 +1,6 @@
 import { useCallback } from "react";
-import { router } from "expo-router";
 import { useSubscription } from "@/lib/revenuecat";
+import { goToPaywall } from "@/lib/proRequired";
 
 // Central helper for the free/Pro boundary. `requirePro(action)` runs the action
 // when the user has Pro and otherwise routes them to the paywall, returning a
@@ -22,11 +22,9 @@ export function usePro() {
       if (isLoading) {
         return false;
       }
-      if (feature) {
-        router.push({ pathname: "/paywall", params: { feature } });
-      } else {
-        router.push("/paywall");
-      }
+      // Centralized navigation — guards against stacking a paywall on top of an
+      // already-open one and debounces simultaneous triggers.
+      goToPaywall(feature);
       return false;
     },
     [isSubscribed, isLoading],

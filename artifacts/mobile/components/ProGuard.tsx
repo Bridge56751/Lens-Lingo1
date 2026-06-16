@@ -14,6 +14,7 @@ import * as Haptics from "expo-haptics";
 import { useColors } from "@/hooks/useColors";
 import { useT } from "@/hooks/useT";
 import { useSubscription } from "@/lib/revenuecat";
+import { goToPaywall } from "@/lib/proRequired";
 
 // Defense-in-depth mount guard for Pro-only screens. Entry points already route
 // free users to the paywall; this ensures the screen content itself never
@@ -60,7 +61,7 @@ export function ProGuard({ children }: { children: React.ReactNode }) {
         style={[styles.cta, { backgroundColor: colors.primary }]}
         onPress={() => {
           Haptics.selectionAsync();
-          router.push("/paywall");
+          goToPaywall();
         }}
         activeOpacity={0.9}
       >

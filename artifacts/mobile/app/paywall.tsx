@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -12,7 +12,7 @@ import {
   Linking,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { router, useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams, useFocusEffect } from "expo-router";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
@@ -21,6 +21,7 @@ import { useColors } from "@/hooks/useColors";
 import { useT } from "@/hooks/useT";
 import type { TKey } from "@/constants/translations";
 import { useSubscription, REVENUECAT_ENTITLEMENT_IDENTIFIER } from "@/lib/revenuecat";
+import { setPaywallVisible } from "@/lib/proRequired";
 import { PRIVACY_URL, TERMS_URL } from "@/constants/legal";
 
 type ResultKind = "success" | "restored" | "nothing" | "error" | null;
@@ -191,6 +192,15 @@ export default function PaywallScreen() {
     isPurchasing,
     isRestoring,
   } = useSubscription();
+
+  // Mark the paywall as the focused route while it's showing so the global Pro
+  // handlers (goToPaywall) never push a SECOND paywall on top of this one.
+  useFocusEffect(
+    useCallback(() => {
+      setPaywallVisible(true);
+      return () => setPaywallVisible(false);
+    }, []),
+  );
 
   // Always list plans shortest → longest (Weekly, Monthly, Annual), regardless
   // of the order the offering happens to return them in.

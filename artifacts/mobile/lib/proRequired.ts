@@ -25,24 +25,59 @@ export function isProRequiredApiError(err: unknown): boolean {
   );
 }
 
+// True while the paywall screen is the focused route. The paywall registers this
+// (useFocusEffect in paywall.tsx) so we never push a SECOND paywall on top of an
+// open one — the user reported the paywall "pulling up even when already on a
+// paywall", which was an unguarded re-navigation while it was already showing.
+let paywallVisible = false;
+
+export function setPaywallVisible(visible: boolean): void {
+  paywallVisible = visible;
+}
+
 let lastPaywallNav = 0;
 
 /**
- * Navigate to the paywall, debounced so several simultaneous 403s (e.g. parallel
- * queries firing on a Pro screen) don't stack multiple paywall modals.
+ * The single entry point for opening the paywall. It is:
+ *  - re-entrancy guarded: no-op while the paywall is already the focused route
+ *    (prevents stacking a second modal on top of the first), and
+ *  - debounced: several near-simultaneous triggers (e.g. parallel Pro mutations
+ *    failing at once) collapse into one navigation.
+ *
+ * `feature` themes the paywall around the locked feature that was tapped.
  */
-export function goToPaywallForProRequired(): void {
+export function goToPaywall(feature?: string): void {
+  if (paywallVisible) return;
   const now = Date.now();
   if (now - lastPaywallNav < 1500) return;
   lastPaywallNav = now;
-  router.push("/paywall");
+  if (feature) {
+    router.push({ pathname: "/paywall", params: { feature } });
+  } else {
+    router.push("/paywall");
+  }
 }
 
 /**
- * React Query global `onError` handler: route to the paywall when a query or
- * mutation failed because the server requires Pro. All other errors are ignored
- * so existing per-call error handling is unaffected.
+ * Back-compat entry for the manual (non-React-Query) fetch paths — voice
+ * transcribe / streaming chat — which detect a raw `403 pro_required` Response.
+ */
+export function goToPaywallForProRequired(): void {
+  goToPaywall();
+}
+
+/**
+ * Global React Query `onError` handler for the MUTATION cache only: route a
+ * free user to the paywall when a Pro-only mutation (start conversation, send
+ * message, transcribe, translate, grade) is rejected with `403 pro_required`.
+ *
+ * This is intentionally NOT wired to the query cache. Every Pro-gated GET runs
+ * exclusively inside a `ProGuard`-protected screen, so it never fires for a free
+ * user through normal navigation. A query 403 that still reaches the client is
+ * therefore a transient client/server plan mismatch or a background refetch
+ * (focus / reconnect / staleness) — routing those to the paywall is what made it
+ * pop up "for no reason". Mutations, by contrast, are always user-initiated.
  */
 export function handleProRequiredError(err: unknown): void {
-  if (isProRequiredApiError(err)) goToPaywallForProRequired();
+  if (isProRequiredApiError(err)) goToPaywall();
 }

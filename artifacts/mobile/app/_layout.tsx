@@ -5,7 +5,7 @@ import {
   Inter_700Bold,
   useFonts,
 } from "@expo-google-fonts/inter";
-import { QueryClient, QueryCache, MutationCache } from "@tanstack/react-query";
+import { QueryClient, MutationCache } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -54,11 +54,14 @@ SplashScreen.preventAutoHideAsync();
 // still refetches fresh data whenever it is online.
 const OFFLINE_MAX_AGE = 1000 * 60 * 60 * 24 * 30; // 30 days
 
-// A global error hook routes any 403 `pro_required` (the server-side Pro guard)
-// to the paywall, so calling a paid route as a free user lands on the upgrade
-// screen instead of a silent failure. Non-Pro errors pass through untouched.
+// A global MUTATION error hook routes a 403 `pro_required` (the server-side Pro
+// guard) to the paywall, so a free user invoking a paid action lands on the
+// upgrade screen instead of a silent failure. Non-Pro errors pass through
+// untouched. Deliberately scoped to mutations only — Pro-gated GET queries run
+// solely inside ProGuard screens, so a query 403 means a transient plan
+// mismatch or a background refetch, and routing those popped the paywall "for
+// no reason" (see lib/proRequired.ts).
 const queryClient = new QueryClient({
-  queryCache: new QueryCache({ onError: handleProRequiredError }),
   mutationCache: new MutationCache({ onError: handleProRequiredError }),
   defaultOptions: { queries: { gcTime: OFFLINE_MAX_AGE } },
 });
