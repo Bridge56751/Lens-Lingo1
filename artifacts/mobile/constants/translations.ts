@@ -118,6 +118,7 @@ export type TKey =
   | "settings.help"
   | "settings.emailSupport"
   | "settings.version"
+  | "settings.website"
   | "settings.account"
   | "settings.signIn"
   | "settings.signInSub"
@@ -665,6 +666,7 @@ const en: Record<TKey, string> = {
   "settings.languages": "LANGUAGES",
   "settings.preferences": "PREFERENCES",
   "settings.about": "ABOUT",
+  "settings.website": "Website",
   "settings.haptics": "Haptic feedback",
   "settings.hapticsSub": "Vibrate on actions",
   "settings.daily": "Daily reminder",

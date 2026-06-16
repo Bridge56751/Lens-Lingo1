@@ -55,6 +55,7 @@ import { AUTH_UI_ENABLED } from "@/constants/features";
 import { PRIVACY_URL, TERMS_URL } from "@/constants/legal";
 
 const SUPPORT_EMAIL = "support@lenslingo.ai";
+const WEBSITE_URL = "https://lenslingo.ai";
 
 const openLink = (url: string) => {
   Haptics.selectionAsync();
@@ -832,6 +833,15 @@ export default function SettingsScreen() {
             iconColor="#FFFFFF"
             title={t("settings.version")}
             subtitle="1.0.0"
+          />
+          <Row
+            icon="globe-outline"
+            iconBg="#0EA5E9"
+            iconColor="#FFFFFF"
+            title={t("settings.website")}
+            subtitle="lenslingo.ai"
+            right={<Ionicons name="open-outline" size={18} color={colors.mutedForeground} />}
+            onPress={() => openLink(WEBSITE_URL)}
           />
           <Row
             icon="shield-checkmark"
