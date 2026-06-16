@@ -1,0 +1,48 @@
+
+✔ Incremented buildNumber from 2 to 3.
+
+
+✔ Using remote iOS credentials (Expo server)
+
+If you provide your Apple account credentials we will be able to generate all necessary build credentials and fully validate them.
+This is optional, but without Apple account access you will need to provide all the missing values manually and we can only run minimal validation on them.
+✔ Do you want to log in to your Apple account? … yes
+
+› Log in to your Apple Developer account to continue
+✔ Apple ID: … brogan@auto-keep.com
+› Restoring session /Users/bridgerogan/.app-store/auth/brogan@auto-keep.com/cookie
+› Team Integrated Sales Solutions LLC (MK5J5GQ94D)
+› Provider Integrated Sales Solutions LLC (128078328)
+✔ Logged in Local session
+✔ Bundle identifier registered com.lenslingo.mobile
+✔ Synced capabilities: No updates
+✔ Synced capability identifiers: No updates
+✔ Fetched Apple distribution certificates
+✔ Fetched Apple provisioning profiles
+
+Project Credentials Configuration
+
+Project                   @brogan56/lens-lingo
+Bundle Identifier         com.lenslingo.mobile
+                          
+App Store Configuration   
+                          
+Distribution Certificate  
+Serial Number             2589DCAD2564CAF15238038B0DF9AC09
+Expiration Date           Sun, 24 Jan 2027 22:27:41 PST
+Apple Team                MK5J5GQ94D (Integrated Sales Solutions LLC (Company/Organization))
+Updated                   4 months ago
+                          
+Provisioning Profile      
+Developer Portal ID       776J5Q789Y
+Status                    active
+Expiration                Sun, 24 Jan 2027 22:27:41 PST
+Apple Team                MK5J5GQ94D (Integrated Sales Solutions LLC (Company/Organization))
+Updated                   21 minutes ago
+                          
+All credentials are ready to build @brogan56/lens-lingo (com.lenslingo.mobile)
+
+
+Compressing project files and uploading to EAS Build. Learn more: https://expo.fyi/eas-build-archive
+✔ Compressed project files 3s (112 MB)
+✔ Uploaded to EAS 5s
