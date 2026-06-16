@@ -40,6 +40,13 @@ router.post("/scan", async (req, res) => {
     return;
   }
 
+  // Reject oversized payloads early: the client compresses images before upload,
+  // so a base64 string this large indicates an uncompressed/abusive request.
+  if (imageBase64.length > 2_000_000) {
+    res.status(413).json({ error: "Image too large — please try again" });
+    return;
+  }
+
   // Languages get interpolated into high-priority prompts here and are persisted
   // on the conversation (later reused as a grading fallback), so validate them
   // against the allowlist at the entry point to keep stored values prompt-safe.

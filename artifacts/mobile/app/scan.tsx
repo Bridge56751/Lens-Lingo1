@@ -15,6 +15,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
+import * as ImageManipulator from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import * as Haptics from "expo-haptics";
 import { CameraView, useCameraPermissions } from "expo-camera";
@@ -40,6 +41,44 @@ import { useT } from "@/hooks/useT";
 import { usePro } from "@/hooks/usePro";
 import { getDeviceIdSync } from "@/lib/device";
 import { speakWord, stopSpeaking, prefetchSpeech } from "@/lib/speech";
+
+const MAX_IMAGE_DIMENSION = 1024;
+
+// Compress a captured/picked photo before uploading: downscale the longest edge
+// to MAX_IMAGE_DIMENSION (only when the source is larger, to avoid upscaling)
+// and re-encode as JPEG at quality 0.7, then base64-encode the result. This
+// keeps the payload small (target < ~300KB) so scans upload quickly and stay
+// well under the server's size cap. Returns null if manipulation fails.
+async function compressForUpload(
+  uri: string,
+  width?: number,
+  height?: number,
+): Promise<string | null> {
+  const actions: ImageManipulator.Action[] = [];
+  if (width && height) {
+    if (Math.max(width, height) > MAX_IMAGE_DIMENSION) {
+      actions.push(
+        width >= height
+          ? { resize: { width: MAX_IMAGE_DIMENSION } }
+          : { resize: { height: MAX_IMAGE_DIMENSION } },
+      );
+    }
+  } else {
+    // Source dimensions unknown — cap the width as a safe default.
+    actions.push({ resize: { width: MAX_IMAGE_DIMENSION } });
+  }
+
+  try {
+    const result = await ImageManipulator.manipulateAsync(uri, actions, {
+      compress: 0.7,
+      format: ImageManipulator.SaveFormat.JPEG,
+      base64: true,
+    });
+    return result.base64 ?? null;
+  } catch {
+    return null;
+  }
+}
 
 export default function ScanScreen() {
   const t = useT();
@@ -89,44 +128,64 @@ export default function ScanScreen() {
   }));
 
   const handleCapture = async () => {
-    if (!cameraRef.current || isScanning) return;
+    if (!cameraRef.current || isScanning || isPreparingRef.current) return;
+    isPreparingRef.current = true;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     try {
       const photo = await cameraRef.current.takePictureAsync({
         quality: 0.7,
-        base64: true,
         skipProcessing: true,
       });
-      if (!photo?.base64) return;
+      if (!photo?.uri) return;
       setScannedImage(photo.uri);
       setScanResult(null);
-      await scanItem(photo.base64);
+      // Compress before encoding so long uploads / oversized payloads are avoided.
+      const compressed = await compressForUpload(photo.uri, photo.width, photo.height);
+      if (!compressed) {
+        Alert.alert(t("scan.captureFailedTitle"), t("scan.captureFailedBody"));
+        return;
+      }
+      await scanItem(compressed);
     } catch (err) {
       Alert.alert(t("scan.captureFailedTitle"), t("scan.captureFailedBody"));
+    } finally {
+      isPreparingRef.current = false;
     }
   };
 
   const handleGallery = async () => {
-    if (isScanningRef.current) return;
+    if (isScanningRef.current || isPreparingRef.current) return;
+    isPreparingRef.current = true;
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ["images"],
         quality: 0.7,
-        base64: true,
         allowsEditing: true,
         aspect: [4, 3],
       });
-      if (!result.canceled && result.assets[0]?.base64) {
-        setScannedImage(result.assets[0].uri);
+      const asset = result.assets?.[0];
+      if (!result.canceled && asset?.uri) {
+        setScannedImage(asset.uri);
         setScanResult(null);
-        await scanItem(result.assets[0].base64);
+        // Compress before encoding so long uploads / oversized payloads are avoided.
+        const compressed = await compressForUpload(asset.uri, asset.width, asset.height);
+        if (!compressed) {
+          Alert.alert(t("scan.scanFailedTitle"), t("scan.scanFailedBody"));
+          return;
+        }
+        await scanItem(compressed);
       }
     } catch (err) {
       Alert.alert(t("scan.scanFailedTitle"), t("scan.scanFailedBody"));
+    } finally {
+      isPreparingRef.current = false;
     }
   };
 
   const isScanningRef = useRef(false);
+  // Guards the async pre-upload window (capture/pick + compression) so rapid
+  // repeated taps can't kick off duplicate scans before scanItem takes its lock.
+  const isPreparingRef = useRef(false);
 
   const scanItem = async (imageBase64: string) => {
     if (isScanningRef.current) return;
