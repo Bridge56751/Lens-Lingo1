@@ -981,7 +981,7 @@ const en: Record<TKey, string> = {
   "paywall.subscribe": "Subscribe",
   "paywall.restore": "Restore purchases",
   "paywall.terms":
-    "Subscriptions renew automatically until cancelled. Manage or cancel anytime in your store account settings.",
+    "Payment will be charged to your Apple Account at confirmation of purchase. Your subscription automatically renews unless it is cancelled at least 24 hours before the end of the current period. Your account will be charged for renewal within 24 hours prior to the end of the current period. You can manage or cancel your subscription anytime in your App Store account settings. Any unused portion of a free trial is forfeited when you purchase a subscription.",
   "paywall.successTitle": "You're Pro!",
   "paywall.successBody": "Everything is unlocked. Enjoy your learning!",
   "paywall.restoredTitle": "Purchases restored",
