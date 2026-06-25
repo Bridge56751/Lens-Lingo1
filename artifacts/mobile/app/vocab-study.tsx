@@ -140,6 +140,9 @@ function VocabStudyScreenInner() {
   const currentWordRef = useRef<string | undefined>(undefined);
   // Scroll the "Now you try" input above the keyboard when it focuses.
   const scrollRef = useRef<ScrollView>(null);
+  // Y offset of the "Your turn" block within the scroll content, captured on
+  // layout so focusing the input scrolls it into view (not past it).
+  const yourTurnY = useRef(0);
 
   const exampleMutation = useGetVocabExample();
   const checkMutation = useCheckVocabSentence();
@@ -538,7 +541,12 @@ function VocabStudyScreenInner() {
         </View>
 
         {/* Your turn */}
-        <View style={[styles.block, { backgroundColor: colors.card }]}>
+        <View
+          style={[styles.block, { backgroundColor: colors.card }]}
+          onLayout={(e) => {
+            yourTurnY.current = e.nativeEvent.layout.y;
+          }}
+        >
           <Text style={[styles.blockLabel, { color: colors.mutedForeground, fontFamily: "Inter_600SemiBold" }]}>
             {t("vocab.yourTurn")}
           </Text>
@@ -567,7 +575,17 @@ function VocabStudyScreenInner() {
             multiline
             inputAccessoryViewID={Platform.OS === "ios" ? INPUT_ACCESSORY_ID : undefined}
             onFocus={() => {
-              setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 250);
+              // Bring the input (top of the "Your turn" block) just under the
+              // header and above the keyboard. scrollToEnd overshot to the
+              // buttons below the input, hiding where the user types.
+              setTimeout(
+                () =>
+                  scrollRef.current?.scrollTo({
+                    y: Math.max(yourTurnY.current - 12, 0),
+                    animated: true,
+                  }),
+                250,
+              );
             }}
           />
           <TouchableOpacity
