@@ -389,6 +389,15 @@ router.post("/openai/conversations/chat", requirePro, async (req, res) => {
   }
   const customerId = req.customerId;
 
+  // Cancel the (slow) opening-message generation and skip persistence entirely
+  // if the caller disconnects mid-flight — e.g. the user tapped "just chat" and
+  // then switched tabs before it was ready. Without this, an abandoned tap still
+  // creates an orphan conversation in History and burns an AI call.
+  const ac = new AbortController();
+  res.on("close", () => {
+    if (!res.writableEnded) ac.abort();
+  });
+
   const systemPrompt = freeChatTutorSystemPrompt({
     nativeLanguage,
     targetLanguage,
@@ -399,17 +408,34 @@ router.post("/openai/conversations/chat", requirePro, async (req, res) => {
   // Generate the opening tutor message (kept outside the DB transaction below).
   let initialContent = `Let's practice ${targetLanguage} together!`;
   try {
-    const initialResponse = await openai.chat.completions.create({
-      model: "gpt-4o",
-      max_completion_tokens: 300,
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: triggerMessage },
-      ],
-    });
+    const initialResponse = await openai.chat.completions.create(
+      {
+        model: "gpt-4o",
+        max_completion_tokens: 300,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: triggerMessage },
+        ],
+      },
+      { signal: ac.signal },
+    );
     initialContent = initialResponse.choices[0]?.message?.content ?? initialContent;
   } catch (err) {
+    // The caller navigated away and we cancelled the request — drop everything
+    // instead of persisting a conversation the user will never see.
+    if (ac.signal.aborted) {
+      req.log.info("Free-chat creation cancelled by caller; nothing persisted");
+      return;
+    }
     req.log.error({ err }, "Free-chat initial message generation failed");
+  }
+
+  // Late cancel: the AI finished but the caller left before we wrote anything.
+  // (If they leave after the transaction commits — the rare fast path — the
+  // chat is kept; that residual window is acceptable.)
+  if (ac.signal.aborted) {
+    req.log.info("Free-chat creation cancelled by caller; nothing persisted");
+    return;
   }
 
   // Seed the conversation with a system message + opening assistant turn so the

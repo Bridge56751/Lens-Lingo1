@@ -17,7 +17,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import {
   useListOpenaiConversations,
-  useStartOpenaiChat,
+  startOpenaiChat,
   useGetMyPlan,
 } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
@@ -284,6 +284,8 @@ export default function HomeScreen() {
   // finishes creating after the user has tabbed away isn't pushed on top of
   // wherever they went (which stacks screens unexpectedly).
   const isHomeFocused = React.useRef(true);
+  // In-flight "just chat" creation, so we can cancel it if the user leaves.
+  const chatAbortRef = React.useRef<AbortController | null>(null);
   useFocusEffect(
     useCallback(() => {
       isHomeFocused.current = true;
@@ -291,6 +293,9 @@ export default function HomeScreen() {
       refetchPlan();
       return () => {
         isHomeFocused.current = false;
+        // Cancel a still-loading "just chat" so the server discards it instead
+        // of saving a conversation the user navigated away from.
+        chatAbortRef.current?.abort();
       };
     }, [refetch, refetchPlan]),
   );
@@ -324,33 +329,53 @@ export default function HomeScreen() {
     router.push("/scan");
   };
 
-  const startChat = useStartOpenaiChat();
+  const [chatStarting, setChatStarting] = useState(false);
   const goFreeChat = () => {
-    if (startChat.isPending) return;
+    if (chatStarting) return;
     // Tutor chat is Pro-only — route free users to the paywall.
     if (!requirePro(undefined, "chat")) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    startChat.mutate(
+
+    // Each tap gets its own cancel handle. If the user leaves the home tab while
+    // the opening message is still being written, we abort the request and the
+    // server discards the half-made chat so it never clutters History.
+    const controller = new AbortController();
+    chatAbortRef.current = controller;
+    setChatStarting(true);
+
+    startOpenaiChat(
       {
-        data: {
-          targetLanguage: prefs.targetLanguage,
-          nativeLanguage: prefs.nativeLanguage,
-        },
+        targetLanguage: prefs.targetLanguage,
+        nativeLanguage: prefs.nativeLanguage,
       },
-      {
-        onSuccess: (res) => {
-          // The chat creates asynchronously. If the user tapped away to another
-          // tab while it was loading, don't push the conversation on top of
-          // where they now are — that stacks screens. The chat is saved and
-          // reachable from History whenever they want it.
-          if (!isHomeFocused.current) return;
-          router.push(`/conversation/${res.conversationId}`);
-        },
-        onError: () => {
-          Alert.alert(t("home.chatErrorTitle"), t("home.chatErrorBody"));
-        },
-      },
-    );
+      { signal: controller.signal },
+    )
+      .then((res) => {
+        // Aborted (user left) or no longer on home — don't navigate. An aborted
+        // request also means the server dropped the chat, so there's nothing to
+        // open.
+        if (controller.signal.aborted || !isHomeFocused.current) return;
+        router.push(`/conversation/${res.conversationId}`);
+      })
+      .catch((err: unknown) => {
+        // Cancelling on tab-away is intentional — stay silent.
+        if (
+          controller.signal.aborted ||
+          (err as { name?: string })?.name === "AbortError"
+        ) {
+          return;
+        }
+        Alert.alert(t("home.chatErrorTitle"), t("home.chatErrorBody"));
+      })
+      .finally(() => {
+        // Only the latest tap owns the shared state/ref. Guards against two
+        // taps firing in the same frame (state update is async) leaving a
+        // newer, still-pending request orphaned.
+        if (chatAbortRef.current === controller) {
+          chatAbortRef.current = null;
+          setChatStarting(false);
+        }
+      });
   };
 
   return (
@@ -506,7 +531,7 @@ export default function HomeScreen() {
               ctaFg="#C2410C"
               watermark="AI"
               onPress={goFreeChat}
-              loading={startChat.isPending}
+              loading={chatStarting}
               locked={!isPro && !planLoading}
             />
           </View>
