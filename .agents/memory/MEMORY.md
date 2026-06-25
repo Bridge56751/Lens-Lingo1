@@ -30,5 +30,5 @@
 - [Firebase on Expo](firebase-rnfirebase.md) — iOS-only Analytics+Crashlytics; platform-split no-op (web/Expo Go) vs .native lazy-require; RNFirebase's firebase-JS-SDK leftover *_tmp_* dirs crash Metro watcher.
 - [Hide sign-in UI flag](auth-ui-flag.md) — AUTH_UI_ENABLED (default off) ships anonymous-only; keep sign-out unconditional (don't trap sessions) + auth route registered; flip to re-enable.
 - [Device-id secure-store](device-id-secure-store.md) — sole anon identity token; SecureStore native / AsyncStorage web; on a store READ failure never persist a new id (orphans/clobbers the real one).
-- [Cancel abandoned create-on-load](cancel-abandoned-create.md) — per-tap client abort (call generated fn, not the hook) + server res-close→abort→bail before DB write; a logs-and-continue catch leaves orphans.
+- [Cancel/hide abandoned chats](cancel-abandoned-create.md) — per-tap client abort + server res-close→abort→bail before DB write; PLUS list filter hides unused quick chats from History (keep iff not-placeholder-title OR has user msg; scans always kept).
 - [EAS build env vars](eas-build-env.md) — EAS cloud builds don't see the workspace env; EXPO_PUBLIC_* the app needs at build time must be in eas.json per profile (RC public keys safe to commit).

@@ -35,3 +35,28 @@ the trap.
 client-abort + server res-close-abort + bail-before-write pattern. Accepted
 residual: if the DB tx already committed before the abort lands, the record is
 kept (tiny window).
+
+## Robust complement: hide unused quick chats from History (timing-independent)
+
+The abort only catches a chat abandoned *while still loading*. Once the opening
+message lands the chat opens and is saved — so "open it, read it, leave without
+typing" still created a History entry. Per product decision, a **free/quick chat
+is "real" only once the user sends their first message**; a **scanned chat is
+always kept** (the scan itself is content).
+
+Implemented as a filter on the conversations LIST endpoint
+(`GET /openai/conversations`), NOT by deferring creation: keep a row unless it is
+an unused placeholder quick chat — `or(hasUserMessage, not(isPlaceholderChat))`
+where `isPlaceholderChat` is `title LIKE 'Quick Chat%' OR 'Free Chat%'`
+(`PLACEHOLDER_TITLE_PREFIXES`) and `hasUserMessage` is a correlated
+`exists(select … from messages where conversation_id = conversations.id and
+role = 'user')`. Scans use a different title (`<item> • <lang>`) so they're never
+hidden; an engaged quick chat is auto-renamed only AFTER a user turn, so the
+placeholder-title check reliably identifies still-unused quick chats.
+
+**Why filter rather than defer creation:** the conversation screen loads by id
+and the send-message route 404s on an empty conversation, so the row must exist
+the moment "just chat" opens. Filtering is also timing-independent (no abort race).
+Both Home and History read the same list hook, so one server-side filter fixes
+both; both refetch on focus, so a chat appears immediately after the first send.
+Residual: unused quick-chat rows still accumulate in the DB (hidden, harmless).

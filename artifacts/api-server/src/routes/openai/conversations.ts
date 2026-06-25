@@ -1,5 +1,5 @@
 import { Router, type Request } from "express";
-import { and, eq, desc, like, or, sql } from "drizzle-orm";
+import { and, eq, desc, like, or, not, exists, sql } from "drizzle-orm";
 import { db } from "@workspace/db";
 import { conversations, customers, messages } from "@workspace/db";
 import { openai, toFile } from "@workspace/integrations-openai-ai-server";
@@ -325,10 +325,37 @@ router.get("/openai/conversations", async (req, res) => {
     res.json([]);
     return;
   }
+  // A quick chat is "real" only once the user actually types in it. Hide quick
+  // chats that were opened but never used (placeholder title + no user-authored
+  // message) so they don't clutter History. Scanned chats keep a different title
+  // (`<item> • <lang>`), so they're always kept — the scan itself is worth saving.
+  const isPlaceholderChat = or(
+    ...PLACEHOLDER_TITLE_PREFIXES.map((prefix) =>
+      like(conversations.title, `${prefix}%`),
+    ),
+  );
+  const hasUserMessage = exists(
+    db
+      .select({ id: messages.id })
+      .from(messages)
+      .where(
+        and(
+          eq(messages.conversationId, conversations.id),
+          eq(messages.role, "user"),
+        ),
+      ),
+  );
+
   const all = await db
     .select()
     .from(conversations)
-    .where(eq(conversations.customerId, req.customerId))
+    .where(
+      and(
+        eq(conversations.customerId, req.customerId),
+        // Keep unless it's an unused placeholder quick chat.
+        or(hasUserMessage, isPlaceholderChat ? not(isPlaceholderChat) : undefined),
+      ),
+    )
     // Most-recently-opened first; chats never reopened fall back to createdAt.
     .orderBy(
       sql`coalesce(${conversations.lastOpenedAt}, ${conversations.createdAt}) desc`,
