@@ -28,7 +28,6 @@ import {
   useGetVocabExample,
   useCheckVocabSentence,
   type VocabSelection,
-  type VocabExample,
   type VocabCheck,
 } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
@@ -44,7 +43,11 @@ import {
   EmptyTranscriptError,
   ProRequiredError,
 } from "@/lib/audio";
-import { getOfflineExample, setOfflineExample } from "@/lib/offlineExamples";
+import {
+  getOfflineExample,
+  setOfflineExample,
+  type OfflineExample,
+} from "@/lib/offlineExamples";
 import { recordPractice, markVoiceChat } from "@/lib/activity";
 import { MODULE_ACCENTS } from "@/constants/colors";
 
@@ -103,7 +106,7 @@ function VocabStudyScreenInner() {
   const card = deck[pos];
 
   // Per-card UI state.
-  const [example, setExample] = useState<VocabExample | null>(null);
+  const [example, setExample] = useState<OfflineExample | null>(null);
   const wordRoman = useRomanizations(
     card ? [card.word] : [],
     target,
@@ -113,6 +116,10 @@ function VocabStudyScreenInner() {
     example ? [example.sentence] : [],
     target,
     showRoman,
+    // A downloaded example carries its own romanization so the aid works offline.
+    example?.romanization
+      ? { [example.sentence]: example.romanization }
+      : undefined,
   );
   const [sentence, setSentence] = useState("");
   const [feedback, setFeedback] = useState<VocabCheck | null>(null);
@@ -128,7 +135,7 @@ function VocabStudyScreenInner() {
   const [isTranscribing, setIsTranscribing] = useState(false);
 
   // Cache generated examples by word so navigating back doesn't refetch.
-  const exampleCache = useRef<Map<string, VocabExample>>(new Map());
+  const exampleCache = useRef<Map<string, OfflineExample>>(new Map());
   // Tracks the word currently on screen so stale async results don't leak onto the wrong card.
   const currentWordRef = useRef<string | undefined>(undefined);
   // Scroll the "Now you try" input above the keyboard when it focuses.

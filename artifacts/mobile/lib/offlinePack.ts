@@ -12,6 +12,7 @@ import { ALPHABETS } from "@/constants/alphabets";
 import { letterSpoken, exampleSpoken } from "@/lib/alphabetSpeech";
 import { cacheAudioClips } from "@/lib/speech";
 import { getOfflineExample, setOfflineExample } from "@/lib/offlineExamples";
+import { romanizeBatch, isNonLatinLanguage } from "@/lib/romanize";
 
 export type OfflinePhase = "content" | "examples" | "audio" | "done";
 export type OfflineProgress = { phase: OfflinePhase; completed: number; total: number };
@@ -112,14 +113,30 @@ export async function downloadOfflinePack(opts: {
     if (aborted()) return;
     try {
       let example = await getOfflineExample(target, native, sel.word);
+      let dirty = false;
       if (!example) {
         example = await getVocabExample({
           word: sel.word,
           targetLanguage: target,
           nativeLanguage: native,
         });
-        await setOfflineExample(target, native, sel.word, example);
+        dirty = true;
       }
+      // Pre-compute the sentence's romanization so the reading aid works offline
+      // (non-Latin only). Best-effort: a failure just means it falls back to the
+      // on-demand request when online.
+      if (example?.sentence && isNonLatinLanguage(target) && !example.romanization) {
+        try {
+          const [roman] = await romanizeBatch([example.sentence], target);
+          if (roman && roman !== example.sentence) {
+            example = { ...example, romanization: roman };
+            dirty = true;
+          }
+        } catch {
+          // best-effort: offline study still works, just without the reading aid
+        }
+      }
+      if (example && dirty) await setOfflineExample(target, native, sel.word, example);
       if (example?.sentence) clips.push({ text: example.sentence, language: target });
     } catch {
       // best-effort: a missing example just won't be available offline

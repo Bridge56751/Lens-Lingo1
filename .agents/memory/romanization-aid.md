@@ -24,3 +24,24 @@ romanizations back even when the toggle is off.
 **How to apply:** gate the read on the active/enabled flag (return `undefined`
 when inactive), and gate the render on the live toggle — never on "we have a
 value" alone.
+
+## Romanization also ships offline (bundled, not on-demand-only)
+The 6 non-Latin languages' phrase/word romanizations are pre-generated into each
+`assets/offline/content/<Lang>.json` as a `romanizations` map keyed by the EXACT
+target text (native-independent), via the same scheme/contract as the server.
+`useRomanizations(texts, lang, enabled, extra?)` resolves `extra` then the
+bundled map FIRST (no network) and only fetches the still-missing texts (query
+`enabled` only when `missing.length > 0`) — so bundled Sentences/Word Bank work
+fully offline and the on-demand path is unchanged for dynamic text. Dynamic
+example sentences aren't bundled, so the Download flow persists each saved word's
+example romanization (`OfflineExample.romanization` in `offlineExamples.ts`) and
+`vocab-study` passes it as `extra`.
+**Why:** offline the non-Latin scripts had no reading aid at all.
+
+**Quality bottleneck is the shared prompt, not the offline cache.** The romanize
+model occasionally TRANSLATES a cognate instead of transliterating it (e.g. RU
+`перцепция` → "perception" instead of "pertseptsiya"; Hindi IAST diacritics are
+inconsistent). This is identical online and offline because both use the server's
+`romanizeSystemPrompt` (`conversations.ts`). Fix it at the prompt (forbid
+translation, transliterate sound-by-sound) + regenerate the bundled JSON — never
+hand-curate one bundled entry, which silently diverges offline from the live API.

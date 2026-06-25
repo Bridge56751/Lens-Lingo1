@@ -4,7 +4,7 @@
  * offline on first launch (no "Download" tap).
  *
  * Outputs (under artifacts/mobile/):
- *   - assets/offline/content/<Language>.json  { sentences, words }
+ *   - assets/offline/content/<Language>.json  { sentences, words, romanizations? }
  *   - assets/offline/audio/<fileKey>.mp3      one MP3 per spoken clip
  *   - lib/offlineAssets.generated.ts          require()-map consumed at runtime
  *
@@ -134,7 +134,13 @@ function extractJson(content: string): Record<string, unknown> {
 
 type SentenceEntry = { category: Category; phrase: string; translation: string };
 type WordEntry = { word: string; translation: string; level: Level };
-type LanguageContent = { sentences: SentenceEntry[]; words: WordEntry[] };
+type LanguageContent = {
+  sentences: SentenceEntry[];
+  words: WordEntry[];
+  // Latin-alphabet reading aid for non-Latin languages only, keyed by the exact
+  // target-language phrase/word text. Absent for Latin-script languages.
+  romanizations?: Record<string, string>;
+};
 
 async function withRetry<T>(label: string, fn: () => Promise<T>): Promise<T> {
   let attempt = 0;
@@ -262,6 +268,124 @@ Respond with ONLY valid JSON in exactly this shape:
 }
 
 // ---------------------------------------------------------------------------
+// Romanization — mirrors artifacts/api-server/src/routes/openai/conversations.ts
+// (ROMANIZATION_SCHEME + romanizeSystemPrompt + the batch contract) and
+// src/lib/languages.ts (NON_LATIN_LANGUAGES) so a bundled reading aid matches
+// the on-demand server output. Generated for non-Latin target languages only
+// and stored in the content JSON keyed by the exact phrase/word text.
+// ---------------------------------------------------------------------------
+const NON_LATIN_LANGUAGES = new Set<string>([
+  "Japanese",
+  "Chinese",
+  "Korean",
+  "Arabic",
+  "Russian",
+  "Hindi",
+]);
+
+function isNonLatin(language: string): boolean {
+  return NON_LATIN_LANGUAGES.has(language.trim());
+}
+
+const ROMANIZATION_SCHEME: Record<string, string> = {
+  Japanese: "Hepburn romaji",
+  Chinese: "Hanyu Pinyin with tone marks",
+  Korean: "the Revised Romanization of Korean",
+  Russian: "the BGN/PCGN romanization",
+  Arabic: "a standard Arabic transliteration including short vowels",
+  Hindi: "IAST transliteration",
+};
+
+function romanizeSystemPrompt(language: string): string {
+  const scheme =
+    ROMANIZATION_SCHEME[language] ?? "its standard Latin-alphabet romanization";
+  return (
+    `You are a romanization engine for ${language}. Convert the user's ${language} text into ` +
+    `${scheme}. Respond with ONLY the romanization written in the Latin alphabet — no ` +
+    `translation, no ${language} script, no quotes, no notes, no explanations. Preserve the ` +
+    `original word order.`
+  );
+}
+
+// One batch romanization call: a JSON array of strings in, {"items":[...]} out,
+// aligned by index (mirrors the server's batch romanize path).
+async function chatRomanize(system: string, user: string): Promise<string> {
+  return deadline(
+    (async () => {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 90_000);
+      try {
+        const completion = await openai.chat.completions.create(
+          {
+            model: "gpt-4o-mini",
+            temperature: 0,
+            response_format: { type: "json_object" },
+            messages: [
+              { role: "system", content: system },
+              { role: "user", content: user },
+            ],
+          },
+          { signal: controller.signal, maxRetries: 0 },
+        );
+        return completion.choices[0]?.message?.content?.trim() ?? "";
+      } finally {
+        clearTimeout(timer);
+      }
+    })(),
+    100_000,
+    "romanize",
+  );
+}
+
+// The exact target-language strings that need a reading aid: every sentence
+// phrase + every vocab word, deduped.
+function romanizableTexts(content: LanguageContent): string[] {
+  const set = new Set<string>();
+  for (const s of content.sentences) {
+    const phrase = s.phrase.trim();
+    if (phrase) set.add(phrase);
+  }
+  for (const w of content.words) {
+    const word = w.word.trim();
+    if (word) set.add(word);
+  }
+  return [...set];
+}
+
+// Romanize a list of strings in index-aligned chunks. Falls back to the original
+// string for any entry the model fails to align (same policy as the server).
+async function generateRomanizations(
+  target: string,
+  texts: string[],
+): Promise<Record<string, string>> {
+  const out: Record<string, string> = {};
+  const CHUNK = 50;
+  const system =
+    romanizeSystemPrompt(target) +
+    ` You are given a JSON array of ${target} strings. Respond with a JSON object ` +
+    `{"items": [...]} whose "items" array holds the romanization of each input string, ` +
+    `in the same order and with the same number of elements.`;
+  for (let i = 0; i < texts.length; i += CHUNK) {
+    const chunk = texts.slice(i, i + CHUNK);
+    const content = await withRetry(`romanize:${target}:${i}`, () =>
+      chatRomanize(system, JSON.stringify(chunk)),
+    );
+    let items: unknown[] = [];
+    try {
+      const parsed = JSON.parse(content) as { items?: unknown };
+      if (Array.isArray(parsed.items)) items = parsed.items;
+    } catch {
+      items = [];
+    }
+    chunk.forEach((text, idx) => {
+      const r = items[idx];
+      out[text] = typeof r === "string" && r.trim() ? r.trim() : text;
+    });
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------------------
 // TTS — mirrors artifacts/api-server/src/routes/openai/tts.ts (voice + model +
 // pronunciation instructions) so a bundled clip is identical to a live one.
 // ---------------------------------------------------------------------------
@@ -345,19 +469,40 @@ function contentPath(lang: Language): string {
   return join(CONTENT_DIR, `${lang}.json`);
 }
 
-function loadOrGenerateContent(lang: Language, force: boolean): Promise<LanguageContent> {
+async function loadOrGenerateContent(lang: Language, force: boolean): Promise<LanguageContent> {
   const path = contentPath(lang);
+  let content: LanguageContent;
+  let changed = false;
   if (!force && existsSync(path)) {
-    return Promise.resolve(JSON.parse(readFileSync(path, "utf8")) as LanguageContent);
-  }
-  return (async () => {
+    content = JSON.parse(readFileSync(path, "utf8")) as LanguageContent;
+  } else {
     console.log(`[${lang}] generating content (sentences + vocab)…`);
     const [sentences, words] = await Promise.all([generateSentences(lang), generateVocab(lang)]);
-    const content: LanguageContent = { sentences, words };
-    writeFileAtomic(path, JSON.stringify(content, null, 2));
+    content = { sentences, words };
+    changed = true;
     console.log(`[${lang}] content: ${sentences.length} phrases, ${words.length} words`);
-    return content;
-  })();
+  }
+
+  // Romanization reading aid (non-Latin targets only). Idempotent: only the
+  // phrases/words still missing an entry are romanized, so a run interrupted by
+  // a timeout tops up the rest on re-run. Stored in the content JSON keyed by
+  // the exact text so the runtime can resolve it fully offline.
+  if (isNonLatin(lang)) {
+    const texts = romanizableTexts(content);
+    const existing = content.romanizations ?? {};
+    const need = force ? texts : texts.filter((t) => existing[t] === undefined);
+    if (need.length > 0) {
+      console.log(`[${lang}] romanizing ${need.length} items…`);
+      const fresh = await generateRomanizations(lang, need);
+      content.romanizations = force ? fresh : { ...existing, ...fresh };
+      changed = true;
+    } else if (!content.romanizations) {
+      content.romanizations = existing;
+    }
+  }
+
+  if (changed) writeFileAtomic(path, JSON.stringify(content, null, 2));
+  return content;
 }
 
 async function generateAudioForLanguage(lang: Language, content: LanguageContent, force: boolean): Promise<void> {
@@ -424,6 +569,7 @@ function buildManifest(): void {
 export type BundledLanguageContent = {
   sentences: { category: string; phrase: string; translation: string }[];
   words: { word: string; translation: string; level: string }[];
+  romanizations?: Record<string, string>;
 };
 
 export const BUNDLED_CONTENT: Record<string, BundledLanguageContent> = {

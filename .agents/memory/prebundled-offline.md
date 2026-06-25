@@ -36,6 +36,14 @@ and `WORDS_PER_LEVEL` (12). Every bundled `content/<Lang>.json` must be exactly 
 sentences / 48 words. Re-truncating content then rebuilding the manifest drops the
 now-orphaned extra mp3s from the bundle automatically.
 
+## Non-Latin reading aids are bundled too
+Each non-Latin `content/<Lang>.json` also carries a `romanizations` map (keyed by
+exact phrase/word text) so the Latin reading aid works offline; the generator's
+romanization pass is idempotent (tops up only missing entries) and Latin
+languages get none. See `romanization-aid.md`. Regenerate the same way (foreground,
+per-language); a normal re-run only adds missing romanizations (use `--force` to
+redo content+audio+romanizations).
+
 ## Screens must render bundled data even when refetch fails
 **Why:** React Query keeps `data` (from `initialData`) while a background refetch
 errors; gating the error UI on `isError` alone hides bundled content offline.

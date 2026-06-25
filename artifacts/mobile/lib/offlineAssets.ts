@@ -84,3 +84,15 @@ export function getBundledVocabBank(
   if (!content) return undefined;
   return { words: content.words };
 }
+
+/**
+ * The pre-bundled romanization (reading-aid) map for a target language, or
+ * undefined when none ships. Only non-Latin languages have one; it's keyed by
+ * the exact phrase/word text and is native-independent, so any bundled screen
+ * can resolve a Latin-alphabet reading aid fully offline.
+ */
+export function getBundledRomanizations(
+  target: string,
+): Record<string, string> | undefined {
+  return BUNDLED_CONTENT[target]?.romanizations;
+}

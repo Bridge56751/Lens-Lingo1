@@ -1,6 +1,12 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { VocabExample } from "@workspace/api-client-react";
 
+// A downloaded example, optionally carrying a pre-computed Latin-alphabet
+// romanization of its sentence so the reading aid works offline (non-Latin
+// languages only). `romanization` is absent for examples fetched live online —
+// those fall back to the on-demand romanize request.
+export type OfflineExample = VocabExample & { romanization?: string };
+
 // Vocab examples are produced by a mutation (not a cached query), so React Query
 // persistence doesn't cover them. We persist them ourselves, keyed by language
 // pair + word, so downloaded examples are available for offline study.
@@ -15,10 +21,10 @@ export async function getOfflineExample(
   target: string,
   native: string,
   word: string,
-): Promise<VocabExample | null> {
+): Promise<OfflineExample | null> {
   try {
     const raw = await AsyncStorage.getItem(storageKey(target, native, word));
-    return raw ? (JSON.parse(raw) as VocabExample) : null;
+    return raw ? (JSON.parse(raw) as OfflineExample) : null;
   } catch {
     return null;
   }
@@ -29,7 +35,7 @@ export async function setOfflineExample(
   target: string,
   native: string,
   word: string,
-  example: VocabExample,
+  example: OfflineExample,
 ): Promise<void> {
   try {
     await AsyncStorage.setItem(storageKey(target, native, word), JSON.stringify(example));

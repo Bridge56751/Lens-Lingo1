@@ -10,6 +10,7 @@
 export type BundledLanguageContent = {
   sentences: { category: string; phrase: string; translation: string }[];
   words: { word: string; translation: string; level: string }[];
+  romanizations?: Record<string, string>;
 };
 
 export const BUNDLED_CONTENT: Record<string, BundledLanguageContent> = {
