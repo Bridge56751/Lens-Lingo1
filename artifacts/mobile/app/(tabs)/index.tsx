@@ -280,10 +280,18 @@ export default function HomeScreen() {
 
   // Tab screens stay mounted in Expo Router, so refetch on focus to keep the
   // chat count and scan allowance fresh after they change on another screen.
+  // The ref also tracks whether Home is still the active tab, so a chat that
+  // finishes creating after the user has tabbed away isn't pushed on top of
+  // wherever they went (which stacks screens unexpectedly).
+  const isHomeFocused = React.useRef(true);
   useFocusEffect(
     useCallback(() => {
+      isHomeFocused.current = true;
       refetch();
       refetchPlan();
+      return () => {
+        isHomeFocused.current = false;
+      };
     }, [refetch, refetchPlan]),
   );
 
@@ -331,6 +339,11 @@ export default function HomeScreen() {
       },
       {
         onSuccess: (res) => {
+          // The chat creates asynchronously. If the user tapped away to another
+          // tab while it was loading, don't push the conversation on top of
+          // where they now are — that stacks screens. The chat is saved and
+          // reachable from History whenever they want it.
+          if (!isHomeFocused.current) return;
           router.push(`/conversation/${res.conversationId}`);
         },
         onError: () => {
