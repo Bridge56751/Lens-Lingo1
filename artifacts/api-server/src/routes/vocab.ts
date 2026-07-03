@@ -4,6 +4,11 @@ import { db } from "@workspace/db";
 import { vocabBank, vocabSelections } from "@workspace/db";
 import { openai } from "@workspace/integrations-openai-ai-server";
 import { accuracyRules } from "../lib/languages";
+import {
+  isOpenAiBudgetExceeded,
+  reserveOpenAiBudget,
+  sendOpenAiBudgetExceeded,
+} from "../lib/openaiBudget";
 import { requirePro } from "../middleware/customer";
 
 const router = Router();
@@ -74,6 +79,7 @@ For each entry give the word written in ${targetLanguage} and its accurate trans
 Respond with ONLY valid JSON in exactly this shape:
 {"beginner":[{"word":"...","translation":"..."}],"intermediate":[{"word":"...","translation":"..."}],"advanced":[{"word":"...","translation":"..."}],"expert":[{"word":"...","translation":"..."}]}`;
 
+  await reserveOpenAiBudget("vocab_bank");
   const response = await openai.chat.completions.create({
     model: "gpt-4o",
     max_completion_tokens: 1500,
@@ -159,6 +165,10 @@ router.get("/vocab/bank", async (req, res) => {
         )
         .orderBy(asc(vocabBank.id));
     } catch (err) {
+      if (isOpenAiBudgetExceeded(err)) {
+        sendOpenAiBudgetExceeded(res);
+        return;
+      }
       req.log.error({ err }, "Vocab bank generation failed");
       res.status(502).json({ error: "Could not build the word bank" });
       return;
@@ -344,6 +354,7 @@ router.post("/vocab/search", async (req, res) => {
   }
 
   try {
+    await reserveOpenAiBudget("vocab_search");
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       max_completion_tokens: 600,
@@ -383,6 +394,10 @@ For each entry give the word written in ${targetLanguage} (in ${targetLanguage}'
       .slice(0, 8);
     res.json({ results });
   } catch (err) {
+    if (isOpenAiBudgetExceeded(err)) {
+      sendOpenAiBudgetExceeded(res);
+      return;
+    }
     req.log.error({ err }, "Vocab search failed");
     res.status(502).json({ error: "Could not search words" });
   }
@@ -402,6 +417,7 @@ router.post("/vocab/example", async (req, res) => {
   }
 
   try {
+    await reserveOpenAiBudget("vocab_example");
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       max_completion_tokens: 200,
@@ -423,6 +439,10 @@ router.post("/vocab/example", async (req, res) => {
     }
     res.json({ sentence, translation });
   } catch (err) {
+    if (isOpenAiBudgetExceeded(err)) {
+      sendOpenAiBudgetExceeded(res);
+      return;
+    }
     req.log.error({ err }, "Vocab example generation failed");
     res.status(502).json({ error: "Could not generate an example" });
   }
@@ -452,6 +472,7 @@ router.post("/vocab/check", async (req, res) => {
   }
 
   try {
+    await reserveOpenAiBudget("vocab_check");
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       max_completion_tokens: 400,
@@ -477,6 +498,10 @@ router.post("/vocab/check", async (req, res) => {
       correction: sanitize(parsed.correction, 300),
     });
   } catch (err) {
+    if (isOpenAiBudgetExceeded(err)) {
+      sendOpenAiBudgetExceeded(res);
+      return;
+    }
     req.log.error({ err }, "Vocab sentence check failed");
     res.status(502).json({ error: "Could not check the sentence" });
   }

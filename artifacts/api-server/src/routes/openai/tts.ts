@@ -1,5 +1,10 @@
 import { Router } from "express";
 import { openai } from "@workspace/integrations-openai-ai-server";
+import {
+  isOpenAiBudgetExceeded,
+  reserveOpenAiBudget,
+  sendOpenAiBudgetExceeded,
+} from "../../lib/openaiBudget";
 
 const router = Router();
 
@@ -101,6 +106,7 @@ function synthesize(
 
   const job = (async (): Promise<Buffer> => {
     try {
+      await reserveOpenAiBudget("tts");
       const speech = await openai.audio.speech.create({
         model: "gpt-4o-mini-tts",
         voice,
@@ -154,6 +160,10 @@ router.post("/openai/tts", async (req, res) => {
     const buffer = await synthesize(chosenVoice, input, cacheKey, instructions);
     sendAudio(res, buffer, "miss");
   } catch (err) {
+    if (isOpenAiBudgetExceeded(err)) {
+      sendOpenAiBudgetExceeded(res);
+      return;
+    }
     req.log.error({ err }, "TTS failed");
     res.status(502).json({ error: "TTS failed" });
   }

@@ -43,6 +43,7 @@ const h = vi.hoisted(() => ({
   // "chatCount,scanCount" (lifetime). Lets us assert which writes happened.
   setKeys: [] as string[],
   openaiCreate: vi.fn(),
+  budgetExceeded: false,
   activeEntitlementsMock: vi.fn<
     () => Promise<{ data?: { items?: unknown[] }; error?: unknown; response?: { status: number } }>
   >(),
@@ -62,6 +63,25 @@ vi.mock("../lib/revenueCatClient", () => ({
 
 vi.mock("@workspace/integrations-openai-ai-server", () => ({
   openai: { chat: { completions: { create: h.openaiCreate } } },
+}));
+
+vi.mock("../lib/openaiBudget", () => ({
+  reserveOpenAiBudget: vi.fn(async () => {
+    if (h.budgetExceeded) {
+      const err = new Error("budget exceeded") as Error & { code: string };
+      err.code = "openai_budget_exceeded";
+      throw err;
+    }
+  }),
+  isOpenAiBudgetExceeded: vi.fn(
+    (err: unknown) =>
+      typeof err === "object" &&
+      err !== null &&
+      (err as { code?: string }).code === "openai_budget_exceeded",
+  ),
+  sendOpenAiBudgetExceeded: vi.fn((res: express.Response) => {
+    res.status(503).json({ error: "openai_budget_exceeded" });
+  }),
 }));
 
 // Minimal drizzle stand-in. `update().set().where()` is a thenable used by the
@@ -171,6 +191,7 @@ beforeEach(() => {
   h.txThrows = false;
   h.txCalls = 0;
   h.setKeys = [];
+  h.budgetExceeded = false;
   h.openaiCreate.mockReset();
   h.openaiCreate.mockResolvedValue({
     choices: [
@@ -196,12 +217,12 @@ beforeEach(() => {
   });
 });
 
-async function postScan(): Promise<{ status: number; body: any }> {
+async function postScan(imageBase64 = "/9j/"): Promise<{ status: number; body: any }> {
   const res = await fetch(`${baseUrl}/api/scan`, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({
-      imageBase64: "dGVzdA==",
+      imageBase64,
       targetLanguage: "Spanish",
       nativeLanguage: "English",
     }),
@@ -260,5 +281,26 @@ describe("POST /api/scan free-tier daily limit", () => {
     // Reserve happened, then the release (single scanDayCount SET) compensated.
     expect(h.setKeys).toContain("scanDayCount,scanResetsAt");
     expect(h.setKeys).toContain("scanDayCount");
+  });
+
+  it("rejects malformed image payloads before reservation or AI work", async () => {
+    const { status, body } = await postScan("not-base64");
+
+    expect(status).toBe(400);
+    expect(body.error).toBe("invalid_media");
+    expect(h.setKeys).not.toContain("scanDayCount,scanResetsAt");
+    expect(h.openaiCreate).not.toHaveBeenCalled();
+  });
+
+  it("releases the reserved slot when the OpenAI budget cap is reached", async () => {
+    h.storedScan = { count: 4, resetsAt: FUTURE };
+    h.budgetExceeded = true;
+    const { status, body } = await postScan();
+
+    expect(status).toBe(503);
+    expect(body.error).toBe("openai_budget_exceeded");
+    expect(h.setKeys).toContain("scanDayCount,scanResetsAt");
+    expect(h.setKeys).toContain("scanDayCount");
+    expect(h.openaiCreate).not.toHaveBeenCalled();
   });
 });

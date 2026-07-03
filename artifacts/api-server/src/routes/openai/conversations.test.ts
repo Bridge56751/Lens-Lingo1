@@ -48,6 +48,12 @@ vi.mock("@workspace/integrations-openai-ai-server", () => ({
   toFile: vi.fn(),
 }));
 
+vi.mock("../../lib/openaiBudget", () => ({
+  reserveOpenAiBudget: vi.fn(async () => {}),
+  isOpenAiBudgetExceeded: vi.fn(() => false),
+  sendOpenAiBudgetExceeded: vi.fn(),
+}));
+
 // Minimal drizzle stand-in. We tag the conversations/messages tables with
 // sentinel objects so insert() can tell them apart and count each.
 vi.mock("@workspace/db", () => {

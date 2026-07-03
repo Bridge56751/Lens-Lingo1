@@ -15,6 +15,15 @@ A language learning mobile app that lets users scan real-world objects with thei
   - Paste the pooler URI with the literal `[YOUR-PASSWORD]` placeholder left in place; provide the password separately as `SUPABASE_DB_PASSWORD`. `lib/db/src/connection.ts` URL-encodes and substitutes it for both the runtime pool and drizzle migrations.
 - Required env: `AI_INTEGRATIONS_OPENAI_BASE_URL`, `AI_INTEGRATIONS_OPENAI_API_KEY` — auto-provisioned by Replit AI Integrations
 - Auth (optional sign-in) env — Replit-managed Clerk: server uses `CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `CLERK_PROXY_URL`; mobile dev/build inject `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` and `EXPO_PUBLIC_CLERK_PROXY_URL`
+- Abuse-control env (all optional — sensible defaults apply; see `artifacts/api-server/src/lib/{rateLimit,openaiBudget,cors}.ts`):
+  - `OPENAI_MONTHLY_BUDGET_USD` — global monthly OpenAI spend ceiling checked before every AI call (default `100`). When the estimated month total would exceed it, AI endpoints return `503 {"error":"openai_budget_exceeded"}`. **Set this deliberately in production** from real invoice numbers with headroom.
+  - `TRUST_PROXY_HOPS` — Express `trust proxy` hop count so `req.ip` is the real client behind Replit's edge (default `1`). If rate limiting ever appears to lump all users together, this is the knob to check.
+  - `RATE_LIMIT_GLOBAL_PER_MINUTE` / `RATE_LIMIT_GLOBAL_PER_DAY` — per-IP caps on all `/api` routes (defaults `120` / `2000`)
+  - `RATE_LIMIT_PUBLIC_AI_PER_MINUTE` / `RATE_LIMIT_PUBLIC_AI_PER_DAY` — stricter per-IP caps on the unauthenticated AI routes `/openai/tts`, `/openai/romanize`, `/sentences/bank` (defaults `20` / `200`)
+  - `RATE_LIMIT_SCAN_PER_MINUTE` / `RATE_LIMIT_SCAN_PER_DAY` — per-IP caps on `POST /scan` (defaults `5` / `50`); bounds free-scan abuse via device-id rotation
+  - `RATE_LIMIT_PRO_AI_PER_MINUTE` / `RATE_LIMIT_PRO_AI_PER_DAY` — per-customer (fallback per-IP) caps on Pro AI routes (defaults `60` / `1000`)
+  - `RATE_LIMIT_HASH_SALT` — salt for hashing IP/customer identifiers in the `api_rate_limits` table (has a built-in default; set a unique value in production)
+  - `ALLOWED_ORIGINS` — comma-separated CORS allowlist override. Default allowlist: `lenslingo.ai`, `www.lenslingo.ai`, `lenslingo.replit.app` (+ localhost origins outside production). Browser requests from other origins get `403 origin_not_allowed`; native app requests (no `Origin` header) are unaffected.
 
 ## Stack
 

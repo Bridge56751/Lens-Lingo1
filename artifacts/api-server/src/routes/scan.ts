@@ -8,6 +8,16 @@ import {
   normalizeDifficulty,
 } from "../lib/difficulty";
 import { SUPPORTED_LANGUAGES } from "../lib/languages";
+import {
+  MediaValidationError,
+  mediaErrorStatus,
+  validateImageBase64,
+} from "../lib/mediaValidation";
+import {
+  isOpenAiBudgetExceeded,
+  reserveOpenAiBudget,
+  sendOpenAiBudgetExceeded,
+} from "../lib/openaiBudget";
 import { scanTutorSystemPrompt } from "../lib/prompts";
 import { customerHasPro } from "../lib/plan";
 import {
@@ -19,12 +29,32 @@ import {
 } from "../lib/scanLimit";
 
 const router = Router();
+const MAX_SCAN_IMAGE_BYTES = 1_500_000;
 
 // Item labels come from the vision model (untrusted) and get interpolated into a
 // high-priority system prompt. Collapse whitespace/newlines and cap length so a
 // malicious or odd image caption can't smuggle instruction-like text into it.
 function sanitizeLabel(value: string | undefined | null): string {
   return (value ?? "").replace(/\s+/g, " ").trim().slice(0, 100);
+}
+
+async function releaseScanReservation(
+  customerId: number,
+  reservation: ScanReservation | null,
+): Promise<void> {
+  if (!reservation) return;
+  await db
+    .update(customers)
+    .set({
+      scanDayCount: sql`GREATEST(${customers.scanDayCount} - 1, 0)`,
+    })
+    .where(
+      and(
+        eq(customers.id, customerId),
+        eq(customers.scanResetsAt, reservation.resetsAt),
+      ),
+    )
+    .catch(() => {});
 }
 
 router.post("/scan", async (req, res) => {
@@ -40,11 +70,21 @@ router.post("/scan", async (req, res) => {
     return;
   }
 
-  // Reject oversized payloads early: the client compresses images before upload,
-  // so a base64 string this large indicates an uncompressed/abusive request.
   if (imageBase64.length > 2_000_000) {
-    res.status(413).json({ error: "Image too large — please try again" });
+    res.status(413).json({ error: "payload_too_large" });
     return;
+  }
+
+  let imageDataUrl: string;
+  try {
+    const image = validateImageBase64(imageBase64, MAX_SCAN_IMAGE_BYTES);
+    imageDataUrl = `data:${image.mimeType};base64,${image.buffer.toString("base64")}`;
+  } catch (err) {
+    if (err instanceof MediaValidationError) {
+      res.status(mediaErrorStatus(err)).json({ error: err.code });
+      return;
+    }
+    throw err;
   }
 
   // Languages get interpolated into high-priority prompts here and are persisted
@@ -117,6 +157,17 @@ router.post("/scan", async (req, res) => {
     }
   }
 
+  try {
+    await reserveOpenAiBudget("scan");
+  } catch (err) {
+    if (isOpenAiBudgetExceeded(err)) {
+      if (!isPro) await releaseScanReservation(customerId, reservation);
+      sendOpenAiBudgetExceeded(res);
+      return;
+    }
+    throw err;
+  }
+
   // Use GPT vision to identify the item
   let itemName = "Unknown Item";
   let itemNameTranslated = "Unknown";
@@ -132,7 +183,7 @@ router.post("/scan", async (req, res) => {
           content: [
             {
               type: "image_url",
-              image_url: { url: `data:image/jpeg;base64,${imageBase64}` },
+              image_url: { url: imageDataUrl },
             },
             {
               type: "text",
@@ -175,6 +226,7 @@ router.post("/scan", async (req, res) => {
   // Generate initial AI greeting (kept outside the DB transaction below)
   let initialContent = `Let's learn about "${itemName}" in ${targetLanguage}!`;
   try {
+    await reserveOpenAiBudget("scan");
     const initialResponse = await openai.chat.completions.create({
       model: "gpt-4o",
       max_completion_tokens: 300,
@@ -186,7 +238,11 @@ router.post("/scan", async (req, res) => {
     initialContent =
       initialResponse.choices[0]?.message?.content ?? initialContent;
   } catch (err) {
-    req.log.error({ err }, "Initial message generation failed");
+    if (isOpenAiBudgetExceeded(err)) {
+      req.log.info("Scan starter message skipped because OpenAI budget is exhausted");
+    } else {
+      req.log.error({ err }, "Initial message generation failed");
+    }
   }
 
   // Persist the conversation, its seed messages, and the lifetime usage counters
@@ -229,18 +285,7 @@ router.post("/scan", async (req, res) => {
         // Best-effort release of the reserved slot — only while still in the
         // SAME period (the stored boundary is unchanged), so we never decrement
         // a fresh period's count.
-        await db
-          .update(customers)
-          .set({
-            scanDayCount: sql`GREATEST(${customers.scanDayCount} - 1, 0)`,
-          })
-          .where(
-            and(
-              eq(customers.id, customerId),
-              eq(customers.scanResetsAt, reservation.resetsAt),
-            ),
-          )
-          .catch(() => {});
+        await releaseScanReservation(customerId, reservation);
       }
       throw err;
     });

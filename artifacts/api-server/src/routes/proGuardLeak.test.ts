@@ -80,6 +80,7 @@ vi.mock("@workspace/db", () => {
   };
   return {
     db,
+    pool: {},
     customers: { id: "customers.id", plan: "customers.plan", proSince: "customers.proSince" },
     vocabBank: {},
     vocabSelections: {},

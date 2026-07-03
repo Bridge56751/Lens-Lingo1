@@ -4,6 +4,11 @@ import { db } from "@workspace/db";
 import { sentenceBank } from "@workspace/db";
 import { openai } from "@workspace/integrations-openai-ai-server";
 import { accuracyRules } from "../lib/languages";
+import {
+  isOpenAiBudgetExceeded,
+  reserveOpenAiBudget,
+  sendOpenAiBudgetExceeded,
+} from "../lib/openaiBudget";
 
 const router = Router();
 
@@ -83,6 +88,7 @@ For each entry give the phrase written in ${targetLanguage} and its accurate tra
 Respond with ONLY valid JSON in exactly this shape (one key per category):
 {"greetings":[{"phrase":"...","translation":"..."}],"basics":[...],"directions":[...],"dining":[...],"shopping":[...],"emergency":[...]}`;
 
+  await reserveOpenAiBudget("sentence_bank");
   const response = await openai.chat.completions.create({
     model: "gpt-4o",
     max_completion_tokens: 1800,
@@ -177,6 +183,10 @@ router.get("/sentences/bank", async (req, res) => {
         )
         .orderBy(asc(sentenceBank.id));
     } catch (err) {
+      if (isOpenAiBudgetExceeded(err)) {
+        sendOpenAiBudgetExceeded(res);
+        return;
+      }
       req.log.error({ err }, "Sentence bank generation failed");
       res.status(502).json({ error: "Could not build the phrase book" });
       return;

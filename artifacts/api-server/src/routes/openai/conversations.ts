@@ -17,9 +17,39 @@ import {
   freeChatTutorSystemPrompt,
   tutorTurnReminder,
 } from "../../lib/prompts";
+import {
+  MediaValidationError,
+  mediaErrorStatus,
+  validateAudioBase64,
+} from "../../lib/mediaValidation";
+import {
+  isOpenAiBudgetExceeded,
+  reserveOpenAiBudget,
+  sendOpenAiBudgetExceeded,
+} from "../../lib/openaiBudget";
 import { requirePro } from "../../middleware/customer";
 
 const router = Router();
+// Decoded-byte cap for transcription uploads. Slightly above the mobile client's
+// 7,000,000-char base64 pre-check (≈5.25 MB decoded) so nothing the client
+// allows is rejected here; still far under Whisper's 25 MB provider limit.
+const MAX_TRANSCRIBE_AUDIO_BYTES = 5_250_000;
+// Single-text romanize serves whole tutor chat messages, so it matches the
+// translate cap. Batch items are vocab/sentence-list entries and stay short.
+const MAX_ROMANIZE_SINGLE_CHARS = 2_000;
+const MAX_ROMANIZE_BATCH_ITEM_CHARS = 500;
+const MAX_ROMANIZE_BATCH_TOTAL_CHARS = 6_000;
+const MAX_CHAT_MESSAGE_CHARS = 2_000;
+// Per-message cap applied to HISTORY turns when building the model context.
+// New user input is already capped at MAX_CHAT_MESSAGE_CHARS and new assistant
+// turns at 1000 output tokens, but rows persisted before those caps existed
+// can be arbitrarily long — 20 uncapped legacy turns could blow past the
+// model's context window (hard request failure) and inflate cost. Applies only
+// to what is SENT to OpenAI; stored messages are never truncated.
+const MAX_HISTORY_MESSAGE_CHARS = 4_000;
+const MAX_GRADE_TRANSCRIPT_CHARS = 8_000;
+const MAX_GRADE_TRANSCRIPT_TURNS = 24;
+const MAX_AUTO_TITLE_LINE_CHARS = 500;
 
 // Default title prefix used for quick (non-scan) chats at creation time. Once a
 // few turns exist we replace it with a topic derived from the conversation.
@@ -54,10 +84,14 @@ async function autoTitleFreeChat(opts: {
     const convo = opts.transcript
       .filter((m) => m.role !== "system")
       .slice(-8)
-      .map((m) => `${m.role === "user" ? "Learner" : "Tutor"}: ${m.content}`)
+      .map(
+        (m) =>
+          `${m.role === "user" ? "Learner" : "Tutor"}: ${m.content.slice(0, MAX_AUTO_TITLE_LINE_CHARS)}`,
+      )
       .join("\n");
     if (!convo.trim()) return;
 
+    await reserveOpenAiBudget("auto_title");
     const resp = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       max_completion_tokens: 20,
@@ -106,9 +140,8 @@ async function autoTitleFreeChat(opts: {
 
 // POST /openai/transcribe - transcribe spoken audio to text (Whisper)
 router.post("/openai/transcribe", requirePro, async (req, res) => {
-  const { audioBase64, mimeType, language } = req.body as {
+  const { audioBase64, language } = req.body as {
     audioBase64?: string;
-    mimeType?: string;
     language?: string;
   };
 
@@ -117,25 +150,11 @@ router.post("/openai/transcribe", requirePro, async (req, res) => {
     return;
   }
 
-  if (audioBase64.length > 7_000_000) {
-    res.status(413).json({ error: "Audio is too long" });
-    return;
-  }
-
-  const extByMime: Record<string, string> = {
-    "audio/m4a": "m4a",
-    "audio/mp4": "m4a",
-    "audio/x-m4a": "m4a",
-    "audio/webm": "webm",
-    "audio/wav": "wav",
-    "audio/mpeg": "mp3",
-  };
-  const ext = extByMime[mimeType ?? ""] ?? "m4a";
-
   try {
-    const buffer = Buffer.from(audioBase64, "base64");
-    const file = await toFile(buffer, `audio.${ext}`, {
-      type: mimeType ?? "audio/m4a",
+    const audio = validateAudioBase64(audioBase64, MAX_TRANSCRIBE_AUDIO_BYTES);
+    await reserveOpenAiBudget("transcribe");
+    const file = await toFile(audio.buffer, `audio.${audio.extension}`, {
+      type: audio.mimeType,
     });
 
     const transcription = await openai.audio.transcriptions.create({
@@ -146,6 +165,14 @@ router.post("/openai/transcribe", requirePro, async (req, res) => {
 
     res.json({ text: transcription.text });
   } catch (err) {
+    if (err instanceof MediaValidationError) {
+      res.status(mediaErrorStatus(err)).json({ error: err.code });
+      return;
+    }
+    if (isOpenAiBudgetExceeded(err)) {
+      sendOpenAiBudgetExceeded(res);
+      return;
+    }
     req.log.error({ err }, "Transcription failed");
     res.status(502).json({ error: "Transcription failed" });
   }
@@ -168,6 +195,7 @@ router.post("/openai/translate", requirePro, async (req, res) => {
   const targetLanguage = safeLanguage(to) ?? "English";
 
   try {
+    await reserveOpenAiBudget("translate");
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       temperature: 0,
@@ -190,6 +218,10 @@ router.post("/openai/translate", requirePro, async (req, res) => {
     }
     res.json({ translation });
   } catch (err) {
+    if (isOpenAiBudgetExceeded(err)) {
+      sendOpenAiBudgetExceeded(res);
+      return;
+    }
     req.log.error({ err }, "Translation failed");
     res.status(502).json({ error: "Translation failed" });
   }
@@ -246,7 +278,7 @@ router.post("/openai/romanize", async (req, res) => {
     res.status(413).json({ error: "Too many items" });
     return;
   }
-  if (single.length > 2000) {
+  if (single.length > MAX_ROMANIZE_SINGLE_CHARS) {
     res.status(413).json({ error: "Text is too long" });
     return;
   }
@@ -254,6 +286,15 @@ router.post("/openai/romanize", async (req, res) => {
   const texts = isBatch
     ? batchRaw.map((t) => (typeof t === "string" ? t.trim() : "")).slice(0, 60)
     : [single];
+  if (
+    isBatch &&
+    (texts.some((text) => text.length > MAX_ROMANIZE_BATCH_ITEM_CHARS) ||
+      texts.reduce((sum, text) => sum + text.length, 0) >
+        MAX_ROMANIZE_BATCH_TOTAL_CHARS)
+  ) {
+    res.status(413).json({ error: "payload_too_large" });
+    return;
+  }
 
   // Latin-script languages need no romanization: echo the input back unchanged.
   if (!isNonLatin(language)) {
@@ -264,6 +305,7 @@ router.post("/openai/romanize", async (req, res) => {
 
   try {
     if (!isBatch) {
+      await reserveOpenAiBudget("romanize");
       const completion = await openai.chat.completions.create({
         model: "gpt-4o-mini",
         temperature: 0,
@@ -283,6 +325,7 @@ router.post("/openai/romanize", async (req, res) => {
 
     // Batch: request a JSON object with the romanizations in input order so one
     // call covers a whole word/sentence list.
+    await reserveOpenAiBudget("romanize");
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       temperature: 0,
@@ -314,6 +357,10 @@ router.post("/openai/romanize", async (req, res) => {
     });
     res.json({ romanizations });
   } catch (err) {
+    if (isOpenAiBudgetExceeded(err)) {
+      sendOpenAiBudgetExceeded(res);
+      return;
+    }
     req.log.error({ err }, "Romanization failed");
     res.status(502).json({ error: "Romanization failed" });
   }
@@ -435,6 +482,7 @@ router.post("/openai/conversations/chat", requirePro, async (req, res) => {
   // Generate the opening tutor message (kept outside the DB transaction below).
   let initialContent = `Let's practice ${targetLanguage} together!`;
   try {
+    await reserveOpenAiBudget("chat_start");
     const initialResponse = await openai.chat.completions.create(
       {
         model: "gpt-4o",
@@ -452,6 +500,10 @@ router.post("/openai/conversations/chat", requirePro, async (req, res) => {
     // instead of persisting a conversation the user will never see.
     if (ac.signal.aborted) {
       req.log.info("Free-chat creation cancelled by caller; nothing persisted");
+      return;
+    }
+    if (isOpenAiBudgetExceeded(err)) {
+      sendOpenAiBudgetExceeded(res);
       return;
     }
     req.log.error({ err }, "Free-chat initial message generation failed");
@@ -663,8 +715,13 @@ router.post("/openai/conversations/:id/messages", requirePro, async (req: Reques
     targetLanguage?: string;
     difficulty?: string;
   };
-  if (!content) {
+  const input = typeof content === "string" ? content.trim() : "";
+  if (!input) {
     res.status(400).json({ error: "content is required" });
+    return;
+  }
+  if (input.length > MAX_CHAT_MESSAGE_CHARS) {
+    res.status(413).json({ error: "payload_too_large" });
     return;
   }
 
@@ -700,6 +757,16 @@ router.post("/openai/conversations/:id/messages", requirePro, async (req: Reques
     return;
   }
 
+  try {
+    await reserveOpenAiBudget("chat_message");
+  } catch (err) {
+    if (isOpenAiBudgetExceeded(err)) {
+      sendOpenAiBudgetExceeded(res);
+      return;
+    }
+    throw err;
+  }
+
   // Save the user message and bump the usage counter together so the persisted
   // message and the count stay consistent on partial failure.
   const customerId = req.customerId;
@@ -707,7 +774,7 @@ router.post("/openai/conversations/:id/messages", requirePro, async (req: Reques
     await tx.insert(messages).values({
       conversationId: id,
       role: "user",
-      content,
+      content: input,
     });
 
     // Track usage: one message sent by the customer.
@@ -729,14 +796,20 @@ router.post("/openai/conversations/:id/messages", requirePro, async (req: Reques
   //   3. Append the new user message.
   const systemMessage = allMessages[0];
   const recentHistory = allMessages.slice(1).slice(-20);
-  const windowedMessages = [systemMessage, ...recentHistory];
 
+  // The anchoring system prompt (index 0) is server-authored and bounded, so it
+  // is forwarded whole; every other history turn is capped (legacy rows predate
+  // the input caps).
   const chatMessages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [
-    ...windowedMessages.map((m) => ({
+    {
+      role: systemMessage.role as "system" | "user" | "assistant",
+      content: systemMessage.content,
+    },
+    ...recentHistory.map((m) => ({
       role: m.role as "system" | "user" | "assistant",
-      content: m.content,
+      content: m.content.slice(0, MAX_HISTORY_MESSAGE_CHARS),
     })),
-    { role: "user", content },
+    { role: "user", content: input },
   ];
 
   // A conversation's language is intrinsic: it is set at creation (scan/free
@@ -790,7 +863,7 @@ router.post("/openai/conversations/:id/messages", requirePro, async (req: Reques
   try {
     const stream = await openai.chat.completions.create({
       model: "gpt-4o",
-      max_completion_tokens: 8192,
+      max_completion_tokens: 1000,
       messages: chatMessages,
       stream: true,
     });
@@ -830,7 +903,7 @@ router.post("/openai/conversations/:id/messages", requirePro, async (req: Reques
       targetLanguage: targetLanguage || safeLanguage(owned.targetLanguage) || "",
       transcript: [
         ...allMessages.map((m) => ({ role: m.role, content: m.content })),
-        { role: "user", content },
+        { role: "user", content: input },
         { role: "assistant", content: fullResponse },
       ],
       log: req.log,
@@ -914,8 +987,10 @@ router.post("/openai/conversations/:id/grade", requirePro, async (req: Request<{
   // Only the learner's own turns are evaluated; tutor/system turns are context.
   const transcript = allMessages
     .filter((m) => m.role !== "system")
+    .slice(-MAX_GRADE_TRANSCRIPT_TURNS)
     .map((m) => `${m.role === "user" ? "Learner" : "Tutor"}: ${m.content}`)
-    .join("\n");
+    .join("\n")
+    .slice(-MAX_GRADE_TRANSCRIPT_CHARS);
 
   const gradingPrompt = `You are a strict but encouraging ${targetLanguage} language examiner. A ${nativeLanguage}-speaking learner at the ${difficulty} level just finished a conversation with an AI tutor. Evaluate ONLY the learner's own messages (the lines starting with "Learner:") for their ${targetLanguage} ability: grammar, vocabulary, spelling, and how much they actually attempted in ${targetLanguage} (versus falling back to ${nativeLanguage}). Grade relative to what is expected at the ${difficulty} level.
 
@@ -935,6 +1010,7 @@ ${transcript}`;
   let feedback: GradeFeedback | null = null;
   let score = 0;
   try {
+    await reserveOpenAiBudget("grade");
     const completion = await openai.chat.completions.create({
       model: "gpt-4o",
       max_completion_tokens: 900,
@@ -973,6 +1049,10 @@ ${transcript}`;
       suggestions: toStringArray(parsed.suggestions),
     };
   } catch (err) {
+    if (isOpenAiBudgetExceeded(err)) {
+      sendOpenAiBudgetExceeded(res);
+      return;
+    }
     req.log.error({ err }, "Conversation grading failed");
     res.status(502).json({ error: "Grading failed. Please try again." });
     return;
