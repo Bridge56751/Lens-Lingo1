@@ -1,0 +1,149 @@
+1.2 Part 2 — How to deploy (detailed)
+The deploy is: set env vars → commit & push → deploy on Replit → verify. Total hands-on time ≈ 20–
+30 minutes. Nothing here requires downtime and no manual database SQL is needed (the new tables create
+themselves at boot).
+1.2.1 Step 0 — Pre-flight checks (2 min)
+On the Replit workspace (or locally):
+pnpm --filter @workspace/api-server run typecheck # must pass
+pnpm --filter @workspace/api-server run test # 129 tests must pass
+pnpm --filter @workspace/api-server run build # must produce dist/
+All three currently pass on this change set.
+1.2.2 Step 1 — Set production environment variables (5 min)
+In the Replit workspace: Tools → Secrets (these flow into the deployment; re-deploy after changing them).
+Two are strongly recommended to set explicitly; the rest have sensible defaults you can tune later.
+Set these two now:
+3
+Secret Recommended value Why
+OPENAI_MONTHLY_BUDGET_USD 3–4× your highest recent monthly
+OpenAI invoice (e.g. if you spend
+~$15/mo, set 50)
+This is your hard monthly ceiling.
+If unset it defaults to 100 —
+deliberately pick a number so the
+cap is a decision, not an accident.
+When it’s hit, every AI feature
+returns a graceful 503 until you
+raise it or the month rolls over.
+Budget consumption is tracked by
+reservation estimates (see
+“Monitoring” below), which slightly
+over-count, so leave headroom.
+RATE_LIMIT_HASH_SALT any long random string,
+e.g. output of openssl rand
+-hex 24
+Salts the hashed IPs in the
+rate-limit table. There is a built-in
+default, but a unique production
+value means the hashes are
+worthless to anyone who ever
+sees a DB dump.
+Optional knobs (defaults shown — skip now, tune later if needed):
+Secret Default Notes
+TRUST_PROXY_HOPS 1 Only change if IP detection proves
+wrong (Step 4-e).
+RATE_LIMIT_GLOBAL_PER_MINUTE
+/ _PER_DAY
+120 / 2000 Per-IP, all /api routes.
+RATE_LIMIT_PUBLIC_AI_PER_MINUTE
+/ _PER_DAY
+20 / 200 Per-IP,
+tts/romanize/sentences-bank.
+RATE_LIMIT_SCAN_PER_MINUTE /
+_PER_DAY
+5 / 50 Per-IP, POST /scan.
+RATE_LIMIT_PRO_AI_PER_MINUTE
+/ _PER_DAY
+60 / 1000 Per-customer, Pro AI routes.
+ALLOWED_ORIGINS prod:
+https://lenslingo.ai,https://www.lenslingo.ai,https://lenslingo.replit.app
+Comma-separated override. If
+you use a Replit dev-preview
+web build served from a
+*.replit.dev origin, add that
+origin here in the dev
+workspace, otherwise its browser
+requests get 403.
+Á Shared-network caveat: the per-IP daily caps (esp. scan 50/day) apply to everyone behind one IP. A school/office NAT could legitimately hit them. If support tickets appear, raise
+RATE_LIMIT_SCAN_PER_DAY / the public-AI tier — they’re env vars, no redeploy of code needed
+(just a deployment restart).
+1.2.3 Step 2 — Database permissions check (2 min — probably already fine)
+At startup the server runs CREATE TABLE IF NOT EXISTS for the three new tables over the normal Supabase
+session-pooler connection. The postgres.<ref> role you already use owns the schema, so this should just
+work. If startup ever fails with a permissions error, run this once in the Supabase SQL Editor and restart:
+-- Only needed if startup logs show "permission denied to create table"
+GRANT CREATE ON SCHEMA public TO your_connection_role;
+4
+Nothing else to do here — no ALTER TABLEs for this change set. (The older manual columns from replit.md
+— vocab_selections.mastered, customers.scan_day_count, customers.scan_day_key — should already exist on prod from previous deploys; the scan route depends on them, and this deploy doesn’t change
+that.)
+1.2.4 Step 3 — Commit, push, deploy (5 min)
+git add -A
+git status # sanity-check the file list (see "Files in this change" below)
+git commit -m "Security remediation: rate limiting, OpenAI budget cap, CORS allowlist, helmet,
+↪ media validation (P0-1, P0-2, P1-1, P1-2, P2-1)"
+git push origin main
+Then in Replit: Deploy (the existing GCE deployment; build config unchanged). Watch the deploy logs for the
+first boot — you want to see, in order:
+1. (no output) — table DDL ran silently (or purged expired rate-limit rows on later boots)
+2. Server listening with the port
+If instead you see Failed to start server, the most likely causes are a DB connectivity problem or the
+permissions case in Step 2 — the server now intentionally refuses to start if it can’t guarantee its abuse-control
+tables, because running without them would mean running with no cost protection.
+1.2.5 Step 4 — Post-deploy verification (10 min)
+Run these from any terminal. BASE=https://lenslingo.replit.app (or your prod URL).
+a. Health + security headers (P1-2):
+curl -sS -D - -o /dev/null $BASE/api/healthz | grep -iE
+↪ "HTTP/|x-powered-by|content-security-policy|x-content-type-options|referrer-policy"
+# EXPECT: HTTP 200; NO x-powered-by line; CSP + nosniff + referrer-policy present
+b. CORS lockdown (P1-1):
+curl -sS -D - -o /dev/null -H "Origin: https://attacker.example.com" \
+-X OPTIONS -H "Access-Control-Request-Method: POST" \
+-H "Access-Control-Request-Headers: content-type,x-device-id" \
+$BASE/api/openai/translate | grep -i "access-control-allow"
+# EXPECT: NO access-control-allow-origin header (previously: *)
+curl -sS -o /dev/null -w "%{http_code}\n" -H "Origin: https://attacker.example.com" \
+-H "Content-Type: application/json" -X POST $BASE/api/openai/romanize \
+-d '{"text":"hola","language":"Spanish"}'
+# EXPECT: 403
+c. Rate limiting (P0-1) — Á this consumes your own public-AI budget for the day from your IP; that’s the point:
+for i in $(seq 1 25); do
+curl -sS -o /dev/null -w "%{http_code} " -H "Content-Type: application/json" \
+-X POST $BASE/api/openai/romanize -d '{"text":"hi","language":"Spanish"}'
+done; echo
+# EXPECT: some 200s then 429s by ~request 21 (public-AI tier: 20/min).
+# A 429 response carries Retry-After + {"error":"rate_limit_exceeded"}.
+d. Media validation (P2-1):
+curl -sS -w "\n%{http_code}\n" -H "Content-Type: application/json" \
+-H "x-device-id: deploy-verify-$(date +%s)" -X POST $BASE/api/scan \
+-d '{"imageBase64":"not-base64","targetLanguage":"Spanish","nativeLanguage":"English"}'
+# EXPECT: 400 {"error":"invalid_media"} --- and NO conversation created, NO scan consumed
+5
+# (previously: 201 + an "Unknown Item" conversation + a burned scan + 2 paid AI calls)
+curl -sS -X DELETE -H "x-device-id: <same-id-as-above>" $BASE/api/account # cleanup the empty
+↪ synthetic row
+e. Real client IPs (trust proxy) — important: In the deployment logs, find any request log line and check
+the remote address is a plausible public client IP (yours), not an internal/edge one. Cross-check with the rate
+limiter: if test (c) 429’d at the right count, per-IP keying works. If it never 429s or 429s for everyone at once,
+adjust TRUST_PROXY_HOPS (try 2) and redeploy.
+f. App smoke test: Open the iOS app → scan an object → chat a turn → tap-to-hear (TTS) → open the
+phrasebook. Everything should behave exactly as before (all limits are far above normal human usage).
+1.2.6 Step 5 — Monitoring after launch (ongoing, ~1 min/week)
+Budget + usage live in two tables you can watch in the Supabase Table Editor:
+-- This month's estimated spend + call count vs your cap
+SELECT * FROM provider_budget_months ORDER BY year_month DESC;
+-- Where the money goes, by feature/model this month
+SELECT call_kind, model, count(*) AS calls, sum(estimated_cost_usd) AS est_usd
+FROM provider_usage
+WHERE year_month = to_char(now(), 'YYYY-MM')
+GROUP BY 1, 2 ORDER BY est_usd DESC;
+Two things to know:
+1. Estimates over-count slightly. The ledger records fixed per-call estimates at reservation time (including calls that later fail). Reconcile against the real OpenAI invoice after the first month and adjust OPENAI_MONTHLY_BUDGET_USD — the numbers in lib/openaiBudget.ts (ESTIMATES) can also be tuned
+to match reality.
+2. What users see at the cap: every AI feature returns the graceful 503 until the month rolls over or you
+raise the env var (raising it takes effect on redeploy/restart — no code change). Consider checking
+provider_budget_months weekly for the first month; the review’s suggested ~80% alert email is a
+good future addition (Layer 4 in ARCHITECTURE_RECOMMENDATIONS.md §1).
+1.2.7 Rollback
+Everything is additive and backward-compatible. If anything misbehaves: redeploy the previous commit — the
+old server ignores the three new tables entirely (they can be dropped later or left; they’re small and purged). No
+schema or data migration to unwin
