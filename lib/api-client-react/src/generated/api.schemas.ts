@@ -235,6 +235,26 @@ export interface VocabCheck {
   correction: string;
 }
 
+export interface VocabPronounceInput {
+  /** Base64-encoded audio of the learner saying the word */
+  audioBase64: string;
+  /** The expected word in the target language */
+  word: string;
+  targetLanguage: string;
+  nativeLanguage: string;
+}
+
+export interface VocabPronounce {
+  /** True when the pronunciation was recognizably the word */
+  correct: boolean;
+  /** Pronunciation score from 0 to 100 */
+  score: number;
+  /** What the transcriber heard the learner say */
+  heard: string;
+  /** Short coaching tip in the native language */
+  feedback: string;
+}
+
 export interface SentencePhrase {
   /** Situation grouping, e.g. greetings | basics | directions */
   category: string;

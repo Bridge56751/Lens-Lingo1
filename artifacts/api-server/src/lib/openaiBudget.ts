@@ -14,6 +14,8 @@ export type OpenAiCallKind =
   | "tts"
   | "vocab_bank"
   | "vocab_check"
+  | "vocab_pronounce"
+  | "vocab_pronounce_grade"
   | "vocab_example"
   | "vocab_search";
 
@@ -35,6 +37,8 @@ const ESTIMATES: Record<OpenAiCallKind, BudgetEstimate> = {
   tts: { model: "gpt-4o-mini-tts", estimatedCostUsd: 0.02 },
   vocab_bank: { model: "gpt-4o", estimatedCostUsd: 0.03 },
   vocab_check: { model: "gpt-4o", estimatedCostUsd: 0.02 },
+  vocab_pronounce: { model: "whisper-1", estimatedCostUsd: 0.01 },
+  vocab_pronounce_grade: { model: "gpt-4o-mini", estimatedCostUsd: 0.001 },
   vocab_example: { model: "gpt-4o", estimatedCostUsd: 0.01 },
   vocab_search: { model: "gpt-4o", estimatedCostUsd: 0.02 },
 };

@@ -209,6 +209,26 @@ export const CheckVocabSentenceResponse = zod.object({
 
 
 /**
+ * Accepts a short audio clip of the learner saying the word aloud, transcribes it, and grades how close the pronunciation was to the expected word. Returns a verdict, a 0-100 score, what was heard, and a short coaching tip in the learner's native language.
+
+ * @summary Grade the learner's spoken pronunciation of a word
+ */
+export const PronounceVocabWordBody = zod.object({
+  "audioBase64": zod.string().describe('Base64-encoded audio of the learner saying the word'),
+  "word": zod.string().describe('The expected word in the target language'),
+  "targetLanguage": zod.string(),
+  "nativeLanguage": zod.string()
+})
+
+export const PronounceVocabWordResponse = zod.object({
+  "correct": zod.boolean().describe('True when the pronunciation was recognizably the word'),
+  "score": zod.number().describe('Pronunciation score from 0 to 100'),
+  "heard": zod.string().describe('What the transcriber heard the learner say'),
+  "feedback": zod.string().describe('Short coaching tip in the native language')
+})
+
+
+/**
  * @summary Search for words by a term and translate them for study
  */
 export const SearchVocabBody = zod.object({

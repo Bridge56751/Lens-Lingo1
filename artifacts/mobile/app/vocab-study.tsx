@@ -27,8 +27,10 @@ import {
   useListVocabSelections,
   useGetVocabExample,
   useCheckVocabSentence,
+  usePronounceVocabWord,
   type VocabSelection,
   type VocabCheck,
+  type VocabPronounce,
 } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { usePreferences } from "@/hooks/usePreferences";
@@ -38,11 +40,13 @@ import { useT } from "@/hooks/useT";
 import { ProGuard } from "@/components/ProGuard";
 import { speakWord, prefetchSpeech, stopSpeaking } from "@/lib/speech";
 import {
+  readAudio,
   transcribeAudio,
   AudioTooLongError,
   EmptyTranscriptError,
   ProRequiredError,
 } from "@/lib/audio";
+import { playEffect } from "@/lib/sounds";
 import {
   getOfflineExample,
   setOfflineExample,
@@ -134,6 +138,25 @@ function VocabStudyScreenInner() {
   }, []);
   const [isTranscribing, setIsTranscribing] = useState(false);
 
+  // "Say it" pronunciation practice on the word card. Shares the single
+  // audioRecorder with the sentence mic, so each flow guards against the other.
+  const [sayItRecording, setSayItRecordingState] = useState(false);
+  const setSayItRecording = React.useCallback(
+    (value: boolean) => {
+      // Reuse the shared ref so the unmount teardown stops whichever flow is live.
+      isRecordingRef.current = value;
+      setSayItRecordingState(value);
+    },
+    [],
+  );
+  const [sayItResult, setSayItResult] = useState<VocabPronounce | null>(null);
+  // Held from the moment the learner taps "stop" until grading fully finishes.
+  // Covers the window where recording has been flagged off but the native
+  // recorder is still stopping / the file is still being read — without it the
+  // recorder could be re-entered mid-stop (mutation.isPending is still false).
+  const [sayItBusy, setSayItBusy] = useState(false);
+  const pronounceMutation = usePronounceVocabWord();
+
   // Cache generated examples by word so navigating back doesn't refetch.
   const exampleCache = useRef<Map<string, OfflineExample>>(new Map());
   // Tracks the word currently on screen so stale async results don't leak onto the wrong card.
@@ -157,6 +180,8 @@ function VocabStudyScreenInner() {
     currentWordRef.current = card?.word;
     setSentence("");
     setFeedback(null);
+    setSayItResult(null);
+    pronounceMutation.reset();
     if (!card) {
       setExample(null);
       return;
@@ -273,6 +298,7 @@ function VocabStudyScreenInner() {
 
   const startRecording = async () => {
     if (isRecording || isTranscribing || checkMutation.isPending) return;
+    if (sayItRecording || sayItBusy) return;
     try {
       const perm = await requestRecordingPermissionsAsync();
       if (!perm.granted) {
@@ -323,6 +349,72 @@ function VocabStudyScreenInner() {
     } finally {
       await setAudioModeAsync({ allowsRecording: false }).catch(() => {});
       setIsTranscribing(false);
+    }
+  };
+
+  const startSayIt = async () => {
+    if (sayItRecording || sayItBusy || isRecording || isTranscribing) return;
+    try {
+      const perm = await requestRecordingPermissionsAsync();
+      if (!perm.granted) {
+        Alert.alert(t("conv.micDeniedTitle"), t("conv.micDeniedBody"));
+        return;
+      }
+      stopSpeaking();
+      await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
+      await audioRecorder.prepareToRecordAsync();
+      audioRecorder.record();
+      setSayItResult(null);
+      pronounceMutation.reset();
+      setSayItRecording(true);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    } catch {
+      setSayItRecording(false);
+      Alert.alert(t("conv.micErrorTitle"), t("conv.micErrorBody"));
+    }
+  };
+
+  const stopSayItAndGrade = async () => {
+    if (!sayItRecording || sayItBusy || !card) return;
+    const wordAtRequest = card.word;
+    setSayItBusy(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    try {
+      await audioRecorder.stop();
+      // Only now is the native recorder fully stopped and safe to re-enter.
+      setSayItRecording(false);
+      const uri = audioRecorder.uri;
+      if (!uri) throw new Error("No recording uri");
+      const { base64 } = await readAudio(uri);
+
+      const result = await pronounceMutation.mutateAsync({
+        data: {
+          audioBase64: base64,
+          word: wordAtRequest,
+          targetLanguage: target,
+          nativeLanguage: native,
+        },
+      });
+      // Ignore a grade that arrives after the user moved to another card.
+      if (currentWordRef.current !== wordAtRequest) return;
+      void recordPractice();
+      void markVoiceChat();
+      setSayItResult(result);
+      if (!result.heard) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      } else if (result.correct) {
+        playEffect("ding");
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } else {
+        playEffect("miss");
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      }
+    } catch {
+      // surfaced via pronounceMutation.isError in the UI
+    } finally {
+      setSayItRecording(false);
+      await setAudioModeAsync({ allowsRecording: false }).catch(() => {});
+      setSayItBusy(false);
     }
   };
 
@@ -472,6 +564,106 @@ function VocabStudyScreenInner() {
               {t("vocab.tapHear")}
             </Text>
           </TouchableOpacity>
+          {/* Say it: record the learner saying the word, then grade it */}
+          <TouchableOpacity
+            style={[
+              styles.sayItBtn,
+              sayItRecording
+                ? { backgroundColor: "#FEE2E2", borderColor: "#FCA5A5" }
+                : { backgroundColor: colors.background, borderColor: colors.border },
+            ]}
+            onPress={sayItRecording ? stopSayItAndGrade : startSayIt}
+            activeOpacity={0.85}
+            disabled={(sayItBusy && !sayItRecording) || isRecording || isTranscribing}
+          >
+            {sayItBusy && !sayItRecording ? (
+              <>
+                <ActivityIndicator size="small" color={accent.color} />
+                <Text style={[styles.micBtnText, { color: colors.mutedForeground, fontFamily: "Inter_500Medium" }]}>
+                  {t("vocab.sayItGrading")}
+                </Text>
+              </>
+            ) : sayItRecording ? (
+              <>
+                <View style={styles.recDot} />
+                <Text style={[styles.micBtnText, { color: "#DC2626", fontFamily: "Inter_600SemiBold" }]}>
+                  {t("vocab.sayItListening")}
+                </Text>
+              </>
+            ) : (
+              <>
+                <Ionicons name="mic" size={18} color={accent.color} />
+                <Text style={[styles.micBtnText, { color: accent.color, fontFamily: "Inter_600SemiBold" }]}>
+                  {t("vocab.sayIt")}
+                </Text>
+              </>
+            )}
+          </TouchableOpacity>
+
+          {pronounceMutation.isError && !sayItResult && (
+            <Text style={[styles.errorText, { color: "#DC2626", fontFamily: "Inter_500Medium" }]}>
+              {t("vocab.actionError")}
+            </Text>
+          )}
+
+          {sayItResult && !sayItResult.heard ? (
+            <View style={[styles.sayItResult, { backgroundColor: "#FEF3C7" }]}>
+              <View style={styles.feedbackHead}>
+                <Ionicons name="mic-off" size={18} color="#D97706" />
+                <Text style={[styles.feedbackText, { flex: 1, color: colors.foreground, fontFamily: "Inter_400Regular" }]}>
+                  {t("vocab.sayItNoSpeech")}
+                </Text>
+              </View>
+            </View>
+          ) : sayItResult ? (
+            <View
+              style={[
+                styles.sayItResult,
+                { backgroundColor: sayItResult.correct ? "#DCFCE7" : "#FEF3C7" },
+              ]}
+            >
+              <View style={styles.feedbackHead}>
+                <Ionicons
+                  name={sayItResult.correct ? "checkmark-circle" : "ear"}
+                  size={18}
+                  color={sayItResult.correct ? "#16A34A" : "#D97706"}
+                />
+                <Text
+                  style={[
+                    styles.feedbackTitle,
+                    {
+                      flex: 1,
+                      color: sayItResult.correct ? "#16A34A" : "#D97706",
+                      fontFamily: "Inter_700Bold",
+                    },
+                  ]}
+                >
+                  {sayItResult.correct ? t("vocab.sayItGreat") : t("vocab.sayItClose")}
+                </Text>
+                <View
+                  style={[
+                    styles.scoreBadge,
+                    { backgroundColor: sayItResult.correct ? "#16A34A" : "#D97706" },
+                  ]}
+                >
+                  <Text style={[styles.scoreBadgeText, { fontFamily: "Inter_700Bold" }]}>
+                    {sayItResult.score}
+                  </Text>
+                </View>
+              </View>
+              {sayItResult.feedback ? (
+                <Text style={[styles.feedbackText, { color: colors.foreground, fontFamily: "Inter_400Regular" }]}>
+                  {sayItResult.feedback}
+                </Text>
+              ) : null}
+              {!sayItResult.correct && sayItResult.heard ? (
+                <Text style={[styles.heardText, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                  {t("vocab.sayItHeard", { heard: sayItResult.heard })}
+                </Text>
+              ) : null}
+            </View>
+          ) : null}
+
           <RomanizeToggle
             language={target}
             active={showRoman}
@@ -695,10 +887,16 @@ function VocabStudyScreenInner() {
         </View>
 
         <TouchableOpacity
-          style={[styles.nextBtn, { backgroundColor: accent.soft, opacity: isRecording || isTranscribing ? 0.5 : 1 }]}
+          style={[
+            styles.nextBtn,
+            {
+              backgroundColor: accent.soft,
+              opacity: isRecording || isTranscribing || sayItRecording || sayItBusy ? 0.5 : 1,
+            },
+          ]}
           onPress={next}
           activeOpacity={0.85}
-          disabled={isRecording || isTranscribing}
+          disabled={isRecording || isTranscribing || sayItRecording || sayItBusy}
         >
           <Text style={[styles.nextBtnText, { color: accent.color, fontFamily: "Inter_600SemiBold" }]}>
             {t("vocab.next")}
@@ -806,6 +1004,28 @@ const styles = StyleSheet.create({
   },
   micBtnText: { fontSize: 14 },
   recDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: "#DC2626" },
+
+  sayItBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    borderWidth: 1,
+    alignSelf: "stretch",
+  },
+  sayItResult: { alignSelf: "stretch", borderRadius: 14, padding: 12, gap: 8 },
+  scoreBadge: {
+    minWidth: 34,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  scoreBadgeText: { color: "#FFFFFF", fontSize: 13 },
+  heardText: { fontSize: 13, fontStyle: "italic" },
 
   scriptHint: { flexDirection: "row", alignItems: "flex-start", gap: 6, marginTop: -2 },
   scriptHintText: { flex: 1, fontSize: 12, lineHeight: 17 },

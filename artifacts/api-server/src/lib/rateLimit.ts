@@ -89,7 +89,8 @@ function proAiRules(req: Request): RateRule[] {
     routeMatches(path, method, /^\/vocab\/bank$/, ["GET"]) ||
     routeMatches(path, method, /^\/vocab\/search$/, ["POST"]) ||
     routeMatches(path, method, /^\/vocab\/example$/, ["POST"]) ||
-    routeMatches(path, method, /^\/vocab\/check$/, ["POST"]);
+    routeMatches(path, method, /^\/vocab\/check$/, ["POST"]) ||
+    routeMatches(path, method, /^\/vocab\/pronounce$/, ["POST"]);
   if (!isProAi) return [];
   return [
     {

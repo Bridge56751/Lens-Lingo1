@@ -2,8 +2,13 @@ import { Router } from "express";
 import { and, asc, eq, inArray } from "drizzle-orm";
 import { db } from "@workspace/db";
 import { vocabBank, vocabSelections } from "@workspace/db";
-import { openai } from "@workspace/integrations-openai-ai-server";
+import { openai, toFile } from "@workspace/integrations-openai-ai-server";
 import { accuracyRules } from "../lib/languages";
+import {
+  MediaValidationError,
+  mediaErrorStatus,
+  validateAudioBase64,
+} from "../lib/mediaValidation";
 import {
   isOpenAiBudgetExceeded,
   reserveOpenAiBudget,
@@ -504,6 +509,123 @@ router.post("/vocab/check", async (req, res) => {
     }
     req.log.error({ err }, "Vocab sentence check failed");
     res.status(502).json({ error: "Could not check the sentence" });
+  }
+});
+
+// Whisper wants ISO-639-1 codes; language names come validated from the
+// SUPPORTED_LANGUAGES allowlist above.
+const WHISPER_LANG: Record<string, string> = {
+  English: "en",
+  Spanish: "es",
+  French: "fr",
+  German: "de",
+  Italian: "it",
+  Portuguese: "pt",
+  Japanese: "ja",
+  Chinese: "zh",
+  Korean: "ko",
+  Arabic: "ar",
+  Russian: "ru",
+  Hindi: "hi",
+  Dutch: "nl",
+};
+
+// Matches the transcribe endpoint's cap (~30s of HIGH_QUALITY audio).
+const MAX_PRONOUNCE_AUDIO_BYTES = 5_250_000;
+
+// POST /vocab/pronounce - grade the learner's spoken pronunciation of a word
+router.post("/vocab/pronounce", async (req, res) => {
+  const {
+    audioBase64,
+    word: rawWord,
+    targetLanguage: rawTarget,
+    nativeLanguage: rawNative,
+  } = req.body as {
+    audioBase64?: string;
+    word?: string;
+    targetLanguage?: string;
+    nativeLanguage?: string;
+  };
+
+  const targetLanguage = validLanguage(rawTarget);
+  const nativeLanguage = validLanguage(rawNative);
+  const word = sanitize(rawWord, 60);
+  if (!audioBase64 || !word || !targetLanguage || !nativeLanguage) {
+    res.status(400).json({
+      error: "audioBase64, word, targetLanguage and nativeLanguage are required",
+    });
+    return;
+  }
+
+  try {
+    const audio = validateAudioBase64(audioBase64, MAX_PRONOUNCE_AUDIO_BYTES);
+    await reserveOpenAiBudget("vocab_pronounce");
+    const file = await toFile(audio.buffer, `audio.${audio.extension}`, {
+      type: audio.mimeType,
+    });
+
+    // Transcribe WITHOUT priming the prompt with the expected word — priming
+    // biases Whisper toward "hearing" the word even when the pronunciation was
+    // off, which defeats the grading. The language hint is enough context.
+    const transcription = await openai.audio.transcriptions.create({
+      file,
+      model: "whisper-1",
+      language: WHISPER_LANG[targetLanguage],
+    });
+    const heard = sanitize(transcription.text, 200);
+
+    if (!heard) {
+      res.json({
+        correct: false,
+        score: 0,
+        heard: "",
+        feedback: "",
+      });
+      return;
+    }
+
+    await reserveOpenAiBudget("vocab_pronounce_grade");
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      max_completion_tokens: 300,
+      temperature: 0,
+      messages: [
+        {
+          role: "system",
+          content: `You grade a language learner's pronunciation attempt. The learner (a native ${nativeLanguage} speaker) tried to say the ${targetLanguage} word "${word}" out loud. A speech recognizer heard: "${heard}".
+Judge how close what was heard is to the expected word:
+- If the transcript is the expected word (ignoring case, punctuation, or the recognizer adding minor filler), the pronunciation was recognizable — set "correct" to true and score 85-100.
+- If the transcript is a near-miss (a similar-sounding word, a partial match, or a plausible mishearing of a decent attempt), set "correct" to false and score 40-75, and explain what likely went wrong.
+- If the transcript is a completely different word or unrelated speech, set "correct" to false and score 0-35.
+Write "feedback" in ${nativeLanguage}: ONE short, encouraging sentence. When not correct, include a concrete tip for saying "${word}" (which sound to fix, roughly how the word should sound). Never mention the speech recognizer or transcripts — speak as if you heard them directly.
+Respond with ONLY valid JSON: {"correct": true or false, "score": 0-100, "feedback": "one sentence in ${nativeLanguage}"}`,
+        },
+        { role: "user", content: `Expected: "${word}" — Heard: "${heard}"` },
+      ],
+    });
+    const content = response.choices[0]?.message?.content ?? "{}";
+    const match = content.match(/\{[\s\S]*\}/);
+    const parsed = match
+      ? (JSON.parse(match[0]) as { correct?: unknown; score?: unknown; feedback?: unknown })
+      : {};
+    const rawScore = typeof parsed.score === "number" ? Math.round(parsed.score) : 0;
+    res.json({
+      correct: parsed.correct === true,
+      score: Math.max(0, Math.min(100, rawScore)),
+      heard,
+      feedback: sanitize(parsed.feedback, 300),
+    });
+  } catch (err) {
+    if (err instanceof MediaValidationError) {
+      res.status(mediaErrorStatus(err)).json({ error: err.code });
+      return;
+    }
+    if (isOpenAiBudgetExceeded(err)) {
+      sendOpenAiBudgetExceeded(res);
+      return;
+    }
+    req.log.error({ err }, "Vocab pronunciation grading failed");
+    res.status(502).json({ error: "Could not grade the pronunciation" });
   }
 });
 

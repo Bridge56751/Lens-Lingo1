@@ -308,6 +308,53 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiError"
+  /vocab/pronounce:
+    post:
+      operationId: pronounceVocabWord
+      tags: [vocab]
+      summary: Grade the learner's spoken pronunciation of a word
+      description: >
+        Accepts a short audio clip of the learner saying the word aloud,
+        transcribes it, and grades how close the pronunciation was to the
+        expected word. Returns a verdict, a 0-100 score, what was heard, and
+        a short coaching tip in the learner's native language.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VocabPronounceInput"
+      responses:
+        "200":
+          description: Pronunciation grade
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VocabPronounce"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "413":
+          description: Audio clip too large
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "502":
+          description: Transcription or grading failed upstream
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "503":
+          description: AI budget exhausted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
   /vocab/search:
     post:
       operationId: searchVocab
@@ -1022,6 +1069,44 @@ components:
         - correct
         - feedback
         - correction
+    VocabPronounceInput:
+      type: object
+      properties:
+        audioBase64:
+          type: string
+          description: Base64-encoded audio of the learner saying the word
+        word:
+          type: string
+          description: The expected word in the target language
+        targetLanguage:
+          type: string
+        nativeLanguage:
+          type: string
+      required:
+        - audioBase64
+        - word
+        - targetLanguage
+        - nativeLanguage
+    VocabPronounce:
+      type: object
+      properties:
+        correct:
+          type: boolean
+          description: True when the pronunciation was recognizably the word
+        score:
+          type: integer
+          description: Pronunciation score from 0 to 100
+        heard:
+          type: string
+          description: What the transcriber heard the learner say
+        feedback:
+          type: string
+          description: Short coaching tip in the native language
+      required:
+        - correct
+        - score
+        - heard
+        - feedback
     SentencePhrase:
       type: object
       properties:

@@ -356,6 +356,13 @@ export type TKey =
   | "vocab.studyEmptySub"
   | "vocab.openBank"
   | "vocab.tapHear"
+  | "vocab.sayIt"
+  | "vocab.sayItListening"
+  | "vocab.sayItGrading"
+  | "vocab.sayItHeard"
+  | "vocab.sayItGreat"
+  | "vocab.sayItClose"
+  | "vocab.sayItNoSpeech"
   | "vocab.example"
   | "vocab.showExample"
   | "vocab.loadingExample"
@@ -532,6 +539,13 @@ const en: Record<TKey, string> = {
   "vocab.studyEmptySub": "Pick some {lang} words from the Word Bank to start studying.",
   "vocab.openBank": "Open Word Bank",
   "vocab.tapHear": "Tap to hear",
+  "vocab.sayIt": "Say it",
+  "vocab.sayItListening": "Listening — tap when done",
+  "vocab.sayItGrading": "Checking your pronunciation…",
+  "vocab.sayItHeard": "We heard: {heard}",
+  "vocab.sayItGreat": "Sounded great!",
+  "vocab.sayItClose": "Almost there",
+  "vocab.sayItNoSpeech": "We couldn't hear the word — try again closer to the mic.",
   "vocab.example": "Example",
   "vocab.showExample": "Show an example sentence",
   "vocab.loadingExample": "Writing an example…",

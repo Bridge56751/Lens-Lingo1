@@ -50,6 +50,8 @@ import type {
   VocabCheckInput,
   VocabExample,
   VocabExampleInput,
+  VocabPronounce,
+  VocabPronounceInput,
   VocabSearchInput,
   VocabSearchResults,
   VocabSelection,
@@ -1110,6 +1112,79 @@ export const useCheckVocabSentence = <TError = ErrorType<ApiError>,
         TContext
       > => {
       return useMutation(getCheckVocabSentenceMutationOptions(options));
+    }
+
+export const getPronounceVocabWordUrl = () => {
+
+
+
+
+  return `/api/vocab/pronounce`
+}
+
+/**
+ * Accepts a short audio clip of the learner saying the word aloud, transcribes it, and grades how close the pronunciation was to the expected word. Returns a verdict, a 0-100 score, what was heard, and a short coaching tip in the learner's native language.
+
+ * @summary Grade the learner's spoken pronunciation of a word
+ */
+export const pronounceVocabWord = async (vocabPronounceInput: VocabPronounceInput, options?: RequestInit): Promise<VocabPronounce> => {
+
+  return customFetch<VocabPronounce>(getPronounceVocabWordUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      vocabPronounceInput,)
+  }
+);}
+
+
+
+
+export const getPronounceVocabWordMutationOptions = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof pronounceVocabWord>>, TError,{data: BodyType<VocabPronounceInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof pronounceVocabWord>>, TError,{data: BodyType<VocabPronounceInput>}, TContext> => {
+
+const mutationKey = ['pronounceVocabWord'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof pronounceVocabWord>>, {data: BodyType<VocabPronounceInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  pronounceVocabWord(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PronounceVocabWordMutationResult = NonNullable<Awaited<ReturnType<typeof pronounceVocabWord>>>
+    export type PronounceVocabWordMutationBody = BodyType<VocabPronounceInput>
+    export type PronounceVocabWordMutationError = ErrorType<ApiError>
+
+    /**
+ * @summary Grade the learner's spoken pronunciation of a word
+ */
+export const usePronounceVocabWord = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof pronounceVocabWord>>, TError,{data: BodyType<VocabPronounceInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof pronounceVocabWord>>,
+        TError,
+        {data: BodyType<VocabPronounceInput>},
+        TContext
+      > => {
+      return useMutation(getPronounceVocabWordMutationOptions(options));
     }
 
 export const getSearchVocabUrl = () => {
