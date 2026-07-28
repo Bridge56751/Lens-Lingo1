@@ -605,9 +605,16 @@ Respond with ONLY valid JSON: {"correct": true or false, "score": 0-100, "feedba
     });
     const content = response.choices[0]?.message?.content ?? "{}";
     const match = content.match(/\{[\s\S]*\}/);
-    const parsed = match
-      ? (JSON.parse(match[0]) as { correct?: unknown; score?: unknown; feedback?: unknown })
-      : {};
+    // Malformed model output (broken JSON syntax) must not fail the request —
+    // fall back to the same safe defaults as "no JSON at all".
+    let parsed: { correct?: unknown; score?: unknown; feedback?: unknown } = {};
+    if (match) {
+      try {
+        parsed = JSON.parse(match[0]) as typeof parsed;
+      } catch {
+        parsed = {};
+      }
+    }
     const rawScore = typeof parsed.score === "number" ? Math.round(parsed.score) : 0;
     res.json({
       correct: parsed.correct === true,
