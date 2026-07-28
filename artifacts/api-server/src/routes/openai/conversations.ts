@@ -159,7 +159,7 @@ router.post("/openai/transcribe", requirePro, async (req, res) => {
 
     const transcription = await openai.audio.transcriptions.create({
       file,
-      model: "whisper-1",
+      model: "gpt-4o-mini-transcribe",
       ...(language ? { language } : {}),
     });
 

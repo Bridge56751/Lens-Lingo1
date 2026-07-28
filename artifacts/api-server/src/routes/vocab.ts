@@ -569,7 +569,7 @@ router.post("/vocab/pronounce", async (req, res) => {
     // off, which defeats the grading. The language hint is enough context.
     const transcription = await openai.audio.transcriptions.create({
       file,
-      model: "whisper-1",
+      model: "gpt-4o-mini-transcribe",
       language: WHISPER_LANG[targetLanguage],
     });
     const heard = sanitize(transcription.text, 200);
