@@ -13,3 +13,5 @@ description: The live production domain isn't in the coded CORS allowlist; enabl
 **How to apply:** if the web version breaks after a security/CORS deploy, set `ALLOWED_ORIGINS` (production scope) to a superset that includes `https://lenslingo.app,https://www.lenslingo.app` plus the existing `.ai`/`.replit.app` defaults. The env var *replaces* the whole default set, so you must list every origin you want allowed.
 
 **Why:** as of 2026-07-04 the user chose to skip this (treating the app as iOS-only), so prod may still be running on the default allowlist that omits `lenslingo.app`.
+
+**Update 2026-08-19:** fixed in code — `PROD_ORIGINS` now includes `lenslingo.app` + `www.lenslingo.app`, and in non-production any `https://*.replit.dev` origin is allowed (the workspace preview origin changes per workspace and had broken dev-web preflights with 403s). Live once the next publish goes out.

@@ -4,6 +4,8 @@ import type { CorsOptions } from "cors";
 const PROD_ORIGINS = [
   "https://lenslingo.ai",
   "https://www.lenslingo.ai",
+  "https://lenslingo.app",
+  "https://www.lenslingo.app",
   "https://lenslingo.replit.app",
 ];
 
@@ -25,7 +27,18 @@ function allowedOrigins(): Set<string> {
 }
 
 export function isAllowedOrigin(origin: string | undefined): boolean {
-  return !origin || allowedOrigins().has(origin);
+  if (!origin || allowedOrigins().has(origin)) return true;
+  // In development, the app is previewed from the workspace's *.replit.dev
+  // domain (which changes per workspace), so allow those origins there.
+  if (process.env.NODE_ENV !== "production") {
+    try {
+      const { protocol, hostname } = new URL(origin);
+      if (protocol === "https:" && hostname.endsWith(".replit.dev")) return true;
+    } catch {
+      return false;
+    }
+  }
+  return false;
 }
 
 export function corsOptions(): CorsOptions {
