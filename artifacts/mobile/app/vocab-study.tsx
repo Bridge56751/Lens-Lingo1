@@ -171,6 +171,9 @@ function VocabStudyScreenInner() {
   const sayItHeardSpeechRef = useRef(false);
   const sayItSilenceSinceRef = useRef<number | null>(null);
 
+  // "Your turn" input mode: speaking is the default; typing is opt-in.
+  const [inputMode, setInputMode] = useState<"speak" | "type">("speak");
+
   // Flashcard flip: front = word + pronunciation, back = sentence practice.
   const [side, setSide] = useState<"front" | "back">("front");
   const flipAnim = useRef(new Animated.Value(0)).current;
@@ -208,6 +211,7 @@ function VocabStudyScreenInner() {
     setFeedback(null);
     setSayItResult(null);
     setSide("front");
+    setInputMode("speak");
     flipEpochRef.current++; // invalidate any in-flight flip callbacks
     flipAnim.stopAnimation();
     flipAnim.setValue(0);
@@ -883,6 +887,57 @@ function VocabStudyScreenInner() {
               </Text>
             </View>
           )}
+          {inputMode === "speak" && !sentence.trim() ? (
+            <>
+              {/* Speak-first: one big mic button; typing is the opt-in path. */}
+              <TouchableOpacity
+                style={[
+                  styles.speakMainBtn,
+                  isRecording
+                    ? { backgroundColor: "#FEE2E2", borderColor: "#FCA5A5" }
+                    : { backgroundColor: accent.color, borderColor: accent.color },
+                ]}
+                onPress={isRecording ? stopAndTranscribe : startRecording}
+                activeOpacity={0.85}
+                disabled={isTranscribing || checkMutation.isPending}
+              >
+                {isTranscribing ? (
+                  <>
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                    <Text style={[styles.micBtnText, { color: "#FFFFFF", fontFamily: "Inter_500Medium" }]}>
+                      {t("vocab.transcribing")}
+                    </Text>
+                  </>
+                ) : isRecording ? (
+                  <>
+                    <View style={styles.recDot} />
+                    <Text style={[styles.micBtnText, { color: "#DC2626", fontFamily: "Inter_600SemiBold" }]}>
+                      {t("vocab.recording")}
+                    </Text>
+                  </>
+                ) : (
+                  <>
+                    <Ionicons name="mic" size={20} color="#FFFFFF" />
+                    <Text style={[styles.micBtnText, { color: "#FFFFFF", fontFamily: "Inter_600SemiBold" }]}>
+                      {t("vocab.speak")}
+                    </Text>
+                  </>
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.typeInsteadLink}
+                onPress={() => setInputMode("type")}
+                activeOpacity={0.7}
+                disabled={isRecording || isTranscribing}
+              >
+                <Ionicons name="create-outline" size={15} color={colors.mutedForeground} />
+                <Text style={[styles.typeInsteadText, { color: colors.mutedForeground, fontFamily: "Inter_500Medium" }]}>
+                  {t("vocab.typeInstead")}
+                </Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <>
           <TextInput
             style={[
               styles.input,
@@ -969,6 +1024,8 @@ function VocabStudyScreenInner() {
             </Text>
           </TouchableOpacity>
           </View>
+            </>
+          )}
 
           {checkMutation.isError && !feedback && (
             <Text style={[styles.errorText, { color: "#DC2626", fontFamily: "Inter_500Medium" }]}>
@@ -1115,6 +1172,24 @@ const styles = StyleSheet.create({
   },
   actionRow: { flexDirection: "row", gap: 10 },
   actionRowItem: { flex: 1 },
+  speakMainBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    borderWidth: 1.5,
+    borderRadius: 14,
+    paddingVertical: 15,
+    alignSelf: "stretch",
+  },
+  typeInsteadLink: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 5,
+    paddingVertical: 4,
+  },
+  typeInsteadText: { fontSize: 13 },
   divider: { height: StyleSheet.hairlineWidth, alignSelf: "stretch" },
   flipBtn: {
     flexDirection: "row",

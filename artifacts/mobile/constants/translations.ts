@@ -369,6 +369,7 @@ export type TKey =
   | "vocab.showExample"
   | "vocab.loadingExample"
   | "vocab.yourTurn"
+  | "vocab.typeInstead"
   | "vocab.inputPlaceholder"
   | "vocab.check"
   | "vocab.checking"
@@ -554,6 +555,7 @@ const en: Record<TKey, string> = {
   "vocab.showExample": "Show an example sentence",
   "vocab.loadingExample": "Writing an example…",
   "vocab.yourTurn": "Now you try — write a sentence using this word",
+  "vocab.typeInstead": "Type it instead",
   "vocab.inputPlaceholder": "Type a sentence with “{word}”…",
   "vocab.check": "Check my sentence",
   "vocab.checking": "Checking…",
