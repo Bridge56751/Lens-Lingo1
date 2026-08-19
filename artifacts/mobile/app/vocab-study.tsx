@@ -670,19 +670,25 @@ function VocabStudyScreenInner() {
           <Text style={[styles.translation, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
             {card.translation}
           </Text>
-          <TouchableOpacity onPress={() => hear(card.word)} activeOpacity={0.7} style={styles.replayLink}>
-            <Ionicons name="refresh" size={14} color={accent.color} />
-            <Text style={[styles.replayText, { color: accent.color, fontFamily: "Inter_500Medium" }]}>
+          <TouchableOpacity
+            onPress={() => hear(card.word)}
+            activeOpacity={0.8}
+            style={[styles.replayPill, { backgroundColor: accent.soft }]}
+          >
+            <Ionicons name="volume-medium" size={15} color={accent.color} />
+            <Text style={[styles.replayText, { color: accent.color, fontFamily: "Inter_600SemiBold" }]}>
               {t("vocab.tapHear")}
             </Text>
           </TouchableOpacity>
-          {/* Say it: record the learner saying the word, then grade it */}
+          {/* Say it: record the learner saying the word, then grade it.
+              Filled accent = the primary action on the card, so it reads
+              clearly against the soft "hear" pill and the outlined flip. */}
           <TouchableOpacity
             style={[
               styles.sayItBtn,
               sayItRecording
                 ? { backgroundColor: "#FEE2E2", borderColor: "#FCA5A5" }
-                : { backgroundColor: colors.background, borderColor: colors.border },
+                : { backgroundColor: accent.color, borderColor: accent.color },
             ]}
             onPress={sayItRecording ? stopSayItAndGrade : startSayIt}
             activeOpacity={0.85}
@@ -690,8 +696,8 @@ function VocabStudyScreenInner() {
           >
             {sayItBusy && !sayItRecording ? (
               <>
-                <ActivityIndicator size="small" color={accent.color} />
-                <Text style={[styles.micBtnText, { color: colors.mutedForeground, fontFamily: "Inter_500Medium" }]}>
+                <ActivityIndicator size="small" color="#FFFFFF" />
+                <Text style={[styles.micBtnText, { color: "#FFFFFF", fontFamily: "Inter_500Medium" }]}>
                   {t("vocab.sayItGrading")}
                 </Text>
               </>
@@ -704,8 +710,8 @@ function VocabStudyScreenInner() {
               </>
             ) : (
               <>
-                <Ionicons name="mic" size={18} color={accent.color} />
-                <Text style={[styles.micBtnText, { color: accent.color, fontFamily: "Inter_600SemiBold" }]}>
+                <Ionicons name="mic" size={18} color="#FFFFFF" />
+                <Text style={[styles.micBtnText, { color: "#FFFFFF", fontFamily: "Inter_600SemiBold" }]}>
                   {t("vocab.sayIt")}
                 </Text>
               </>
@@ -1122,7 +1128,14 @@ const styles = StyleSheet.create({
   speaker: { width: 88, height: 88, borderRadius: 44, alignItems: "center", justifyContent: "center" },
   word: { fontSize: 30, textAlign: "center", textTransform: "capitalize" },
   translation: { fontSize: 15, textAlign: "center" },
-  replayLink: { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 2 },
+  replayPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 999,
+  },
   replayText: { fontSize: 13 },
 
   block: { borderRadius: 18, padding: 16, marginBottom: 14, gap: 10 },
