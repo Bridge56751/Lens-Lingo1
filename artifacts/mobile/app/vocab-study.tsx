@@ -90,23 +90,49 @@ function VocabStudyScreenInner() {
   const target = prefs.targetLanguage;
   const native = prefs.nativeLanguage;
 
-  const { ids } = useLocalSearchParams<{ ids?: string | string[] }>();
+  const { ids, mode } = useLocalSearchParams<{ ids?: string | string[]; mode?: string }>();
   const idsParam = Array.isArray(ids) ? ids.join(",") : ids;
+  const isReview = mode === "review";
+
+  // Cap default (non-explicit) sessions to keep them bite-sized.
+  const SESSION_SIZE = 10;
 
   const { data: selections, isLoading } = useListVocabSelections({ targetLanguage: target });
+
+  // Incrementing this triggers useMemo to recompute and re-shuffle the deck.
+  // restart() and "Keep studying" bump it so each run deals a fresh order.
+  const [sessionVersion, setSessionVersion] = useState(0);
+
   const deck = useMemo(() => {
     const all = (selections ?? []) as VocabSelection[];
-    // The default deck is the active learning list — mastered words are a "done"
-    // archive and only ever studied when their ids are passed explicitly (Review).
-    const learning = all.filter((s) => !s.mastered);
-    if (!idsParam) return learning;
-    const idSet = new Set(
-      idsParam.split(",").map((s) => parseInt(s, 10)).filter((n) => !Number.isNaN(n)),
-    );
-    if (idSet.size === 0) return learning;
-    const subset = all.filter((s) => idSet.has(s.id));
-    return subset.length > 0 ? subset : learning;
-  }, [selections, idsParam]);
+
+    if (idsParam) {
+      // Hand-picked selection (explicit ids): respect exactly what the learner
+      // chose — no shuffle or cap so they study precisely those words.
+      const idSet = new Set(
+        idsParam.split(",").map((s) => parseInt(s, 10)).filter((n) => !Number.isNaN(n)),
+      );
+      if (idSet.size > 0) {
+        const subset = all.filter((s) => idSet.has(s.id));
+        if (subset.length > 0) return subset;
+      }
+    }
+
+    // Bulk-auto path (no explicit ids): pick the right bucket, Fisher-Yates
+    // shuffle, then cap to SESSION_SIZE so each session is fresh and achievable.
+    const source = isReview
+      ? all.filter((s) => s.mastered)        // Review All → mastered words
+      : all.filter((s) => !s.mastered);      // Study All  → learning words
+    const shuffled = [...source];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j]!, shuffled[i]!];
+    }
+    return shuffled.slice(0, SESSION_SIZE);
+    // sessionVersion is intentionally a dep: restart/keep-studying increment it
+    // to force a re-shuffle even when selections hasn't changed.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selections, idsParam, isReview, sessionVersion]);
 
   const [pos, setPos] = useState(0);
   const [showRoman, setShowRoman] = useState(false);
@@ -170,6 +196,15 @@ function VocabStudyScreenInner() {
   const sayItStartedAtRef = useRef(0);
   const sayItHeardSpeechRef = useRef(false);
   const sayItSilenceSinceRef = useRef<number | null>(null);
+
+  // Session-level stats accumulated across all cards; reset on restart.
+  const [sessionSayIt, setSessionSayIt] = useState({ correct: 0, total: 0 });
+  const [sessionSentence, setSessionSentence] = useState({ correct: 0, total: 0 });
+
+  // Whether a "study more" run is available: only when no explicit ids were
+  // given AND the full unmastered list is larger than the session cap.
+  const hasMoreToStudy = !idsParam &&
+    ((selections ?? []) as VocabSelection[]).filter((s) => !s.mastered).length > SESSION_SIZE;
 
   // "Your turn" input mode: speaking is the default; typing is opt-in.
   const [inputMode, setInputMode] = useState<"speak" | "type">("speak");
@@ -321,6 +356,10 @@ function VocabStudyScreenInner() {
       if (currentWordRef.current !== wordAtRequest) return;
       void recordPractice();
       setFeedback(result);
+      setSessionSentence((prev) => ({
+        correct: prev.correct + (result.correct ? 1 : 0),
+        total: prev.total + 1,
+      }));
       Haptics.notificationAsync(
         result.correct
           ? Haptics.NotificationFeedbackType.Success
@@ -438,6 +477,13 @@ function VocabStudyScreenInner() {
       void recordPractice();
       void markVoiceChat();
       setSayItResult(result);
+      // Accumulate session stats (only count attempts where we heard something).
+      if (result.heard) {
+        setSessionSayIt((prev) => ({
+          correct: prev.correct + (result.correct ? 1 : 0),
+          total: prev.total + 1,
+        }));
+      }
       if (!result.heard) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
       } else if (result.correct) {
@@ -538,6 +584,9 @@ function VocabStudyScreenInner() {
 
   const restart = () => {
     Haptics.selectionAsync();
+    setSessionVersion((v) => v + 1); // triggers a fresh Fisher-Yates shuffle
+    setSessionSayIt({ correct: 0, total: 0 });
+    setSessionSentence({ correct: 0, total: 0 });
     setPos(0);
   };
 
@@ -547,7 +596,7 @@ function VocabStudyScreenInner() {
         <Ionicons name="chevron-back" size={26} color={colors.foreground} />
       </TouchableOpacity>
       <Text style={[styles.headerTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-        {t("vocab.myWords")}
+        {isReview ? t("vocab.reviewTitle") : t("vocab.myWords")}
       </Text>
       <View style={{ width: 40 }} />
     </View>
@@ -580,7 +629,7 @@ function VocabStudyScreenInner() {
           </Text>
           <TouchableOpacity
             style={[styles.primaryBtn, { backgroundColor: accent.color }]}
-            onPress={() => router.replace("/vocab-bank")}
+            onPress={() => router.replace({ pathname: "/vocabulary", params: { tab: "bank" } })}
             activeOpacity={0.85}
           >
             <Ionicons name="book" size={18} color="#FFFFFF" />
@@ -594,20 +643,45 @@ function VocabStudyScreenInner() {
   }
 
   if (!card) {
-    // Finished going through every picked word.
+    // Session recap — show stats and quick actions.
+    const sessionCount = deck.length;
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         {Header}
-        <View style={styles.center}>
+        <ScrollView contentContainerStyle={styles.recapScroll} showsVerticalScrollIndicator={false}>
           <View style={[styles.bigIcon, { backgroundColor: "#DCFCE7" }]}>
-            <Ionicons name="checkmark-circle" size={36} color="#22C55E" />
+            <Ionicons name="checkmark-circle" size={40} color="#22C55E" />
           </View>
           <Text style={[styles.bigTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
-            {t("vocab.done")}
+            {t("vocab.sessionDone")}
           </Text>
           <Text style={[styles.bigSub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-            {t("vocab.doneSub")}
+            {t("vocab.sessionDoneSub", { count: sessionCount })}
           </Text>
+
+          {/* Stats pills — only shown when the learner actually attempted */}
+          {(sessionSayIt.total > 0 || sessionSentence.total > 0) && (
+            <View style={styles.statsRow}>
+              {sessionSayIt.total > 0 && (
+                <View style={[styles.statPill, { backgroundColor: accent.soft }]}>
+                  <Ionicons name="mic" size={15} color={accent.color} />
+                  <Text style={[styles.statText, { color: accent.color, fontFamily: "Inter_600SemiBold" }]}>
+                    {t("vocab.sessionSayIt", { correct: sessionSayIt.correct, total: sessionSayIt.total })}
+                  </Text>
+                </View>
+              )}
+              {sessionSentence.total > 0 && (
+                <View style={[styles.statPill, { backgroundColor: accent.soft }]}>
+                  <Ionicons name="create" size={15} color={accent.color} />
+                  <Text style={[styles.statText, { color: accent.color, fontFamily: "Inter_600SemiBold" }]}>
+                    {t("vocab.sessionSentence", { correct: sessionSentence.correct, total: sessionSentence.total })}
+                  </Text>
+                </View>
+              )}
+            </View>
+          )}
+
+          {/* Quick actions */}
           <TouchableOpacity
             style={[styles.primaryBtn, { backgroundColor: accent.color }]}
             onPress={restart}
@@ -618,7 +692,35 @@ function VocabStudyScreenInner() {
               {t("vocab.restart")}
             </Text>
           </TouchableOpacity>
-        </View>
+
+          {hasMoreToStudy && (
+            <TouchableOpacity
+              style={[styles.outlineBtn, { borderColor: accent.color }]}
+              onPress={() => {
+                setSessionVersion((v) => v + 1); // new shuffle
+                setSessionSayIt({ correct: 0, total: 0 });
+                setSessionSentence({ correct: 0, total: 0 });
+                setPos(0);
+              }}
+              activeOpacity={0.85}
+            >
+              <Ionicons name="arrow-forward-circle" size={18} color={accent.color} />
+              <Text style={[styles.outlineBtnText, { color: accent.color, fontFamily: "Inter_600SemiBold" }]}>
+                {t("vocab.studyMore")}
+              </Text>
+            </TouchableOpacity>
+          )}
+
+          <TouchableOpacity
+            style={styles.ghostBtn}
+            onPress={() => router.back()}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.ghostBtnText, { color: colors.mutedForeground, fontFamily: "Inter_500Medium" }]}>
+              {t("vocab.backToWords")}
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
       </View>
     );
   }
@@ -1141,9 +1243,34 @@ const styles = StyleSheet.create({
   headerTitle: { flex: 1, textAlign: "center", fontSize: 17 },
 
   center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 32, gap: 14 },
+  recapScroll: { flexGrow: 1, alignItems: "center", justifyContent: "center", padding: 32, gap: 14 },
   bigIcon: { width: 76, height: 76, borderRadius: 38, alignItems: "center", justifyContent: "center" },
   bigTitle: { fontSize: 20, textAlign: "center" },
   bigSub: { fontSize: 14, textAlign: "center", maxWidth: 300, lineHeight: 20 },
+  statsRow: { gap: 8, alignSelf: "stretch" },
+  statPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+  },
+  statText: { fontSize: 14 },
+  outlineBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    borderWidth: 1.5,
+    borderRadius: 14,
+    paddingVertical: 13,
+    paddingHorizontal: 22,
+    alignSelf: "stretch",
+  },
+  outlineBtnText: { fontSize: 16 },
+  ghostBtn: { paddingVertical: 8 },
+  ghostBtnText: { fontSize: 14 },
 
   progressWrap: { paddingHorizontal: 20, gap: 6, paddingBottom: 10 },
   progressTrack: { height: 6, borderRadius: 3, overflow: "hidden" },

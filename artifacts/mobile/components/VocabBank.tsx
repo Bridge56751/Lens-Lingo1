@@ -10,7 +10,7 @@ import {
   Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import {
@@ -48,8 +48,13 @@ const LEVEL_COLORS: Record<Level, { bg: string; fg: string }> = {
  * standalone `/vocab-bank` route and inside the Vocabulary screen's
  * "Word Bank" tab. Manages all of its own data and selection state.
  */
-export default function VocabBank() {
+export default function VocabBank({ onSearchPress: onSearchPressProp }: { onSearchPress?: () => void } = {}) {
   const t = useT();
+  // When embedded in vocabulary.tsx, the parent passes a tab-switcher.
+  // From the standalone /vocab-bank route there's no parent, so fall back
+  // to navigating to /vocabulary with the search tab open.
+  const onSearchPress = onSearchPressProp ??
+    (() => router.push({ pathname: "/vocabulary", params: { tab: "search" } }));
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { prefs } = usePreferences();
@@ -237,9 +242,23 @@ export default function VocabBank() {
         showsVerticalScrollIndicator={false}
       >
         {isEmptyBank || visibleWords.length === 0 ? (
-          <Text style={[styles.bigSub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular", marginTop: 40 }]}>
-            {t("vocab.bankEmpty")}
-          </Text>
+          <View style={[styles.emptyLevel, { marginTop: 40 }]}>
+            <Text style={[styles.bigSub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+              {t("vocab.bankEmpty")}
+            </Text>
+            {onSearchPress && (
+              <TouchableOpacity
+                style={[styles.primaryBtn, { backgroundColor: accent.color, marginTop: 8 }]}
+                onPress={onSearchPress}
+                activeOpacity={0.85}
+              >
+                <Ionicons name="search" size={16} color="#FFFFFF" />
+                <Text style={[styles.primaryBtnText, { fontFamily: "Inter_600SemiBold" }]}>
+                  {t("vocab.bankEmptySearchCta")}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
         ) : (
           visibleWords.map((w) => {
             const added = selectedByWord.has(w.word);
@@ -360,6 +379,7 @@ const styles = StyleSheet.create({
   },
   addBtnText: { fontSize: 13 },
 
+  emptyLevel: { alignItems: "center", gap: 8 },
   primaryBtn: {
     flexDirection: "row",
     alignItems: "center",

@@ -150,9 +150,22 @@ function VocabularyScreenInner() {
     ]);
   };
 
+  const studyAll = () => {
+    // No ids param → study screen picks a shuffled, capped session automatically.
+    router.push("/vocab-study");
+  };
+
+  const reviewAll = () => {
+    if (masteredWords.length === 0) return;
+    // No ids → the study screen shuffles + caps mastered words automatically.
+    router.push("/vocab-study?mode=review");
+  };
+
   const studySelected = () => {
     if (selectedIds.size === 0) return;
-    router.push(`/vocab-study?ids=${[...selectedIds].join(",")}`);
+    const isMastered = showMastered;
+    const extra = isMastered ? "&mode=review" : "";
+    router.push(`/vocab-study?ids=${[...selectedIds].join(",")}${extra}`);
   };
 
   const topPadding = Platform.OS === "web" ? 16 : insets.top;
@@ -205,11 +218,25 @@ function VocabularyScreenInner() {
 
     return (
       <>
+        {/* One-tap primary action — study/review all without selecting anything */}
+        <View style={styles.studyAllRow}>
+          <TouchableOpacity
+            style={[styles.studyAllBtn, { backgroundColor: accent.color }]}
+            onPress={kind === "mastered" ? reviewAll : studyAll}
+            activeOpacity={0.85}
+          >
+            <Ionicons name={kind === "mastered" ? "refresh" : "albums"} size={18} color="#FFFFFF" />
+            <Text style={[styles.studyAllBtnText, { fontFamily: "Inter_700Bold" }]}>
+              {kind === "mastered" ? t("vocab.reviewAll") : t("vocab.studyAll")}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
         <View style={styles.selectBar}>
           <Text style={[styles.selectHint, { color: colors.mutedForeground, fontFamily: "Inter_500Medium" }]}>
             {selectedCount > 0
               ? t("vocab.selectedCount", { count: selectedCount })
-              : t("vocab.tapToSelect")}
+              : t("vocab.studyAllSub")}
           </Text>
           <TouchableOpacity onPress={toggleAll} activeOpacity={0.7} hitSlop={8}>
             <Text style={[styles.selectAll, { color: accent.color, fontFamily: "Inter_600SemiBold" }]}>
@@ -334,7 +361,7 @@ function VocabularyScreenInner() {
 
       {/* Word Bank tab — kept mounted so its selected level persists across switches */}
       <View style={[styles.flex, !showBank && styles.hidden, { pointerEvents: showBank ? "auto" : "none" }]}>
-        <VocabBank />
+        <VocabBank onSearchPress={() => setActiveTab("search")} />
       </View>
 
       {/* Search tab — find any word and add it to My Words to study later */}
@@ -477,6 +504,17 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   segBadgeText: { color: "#FFFFFF", fontSize: 10, fontFamily: "Inter_700Bold" },
+
+  studyAllRow: { paddingHorizontal: 14, paddingBottom: 8, paddingTop: 2 },
+  studyAllBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 15,
+    borderRadius: 16,
+  },
+  studyAllBtnText: { color: "#FFFFFF", fontSize: 16 },
 
   selectBar: {
     flexDirection: "row",

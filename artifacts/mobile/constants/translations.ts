@@ -398,6 +398,18 @@ export type TKey =
   | "vocab.deleteMsg"
   | "vocab.masteredEmptyTitle"
   | "vocab.masteredEmptySub"
+  | "vocab.studyAll"
+  | "vocab.studyAllSub"
+  | "vocab.reviewAll"
+  | "vocab.reviewTitle"
+  | "vocab.sessionDone"
+  | "vocab.sessionDoneSub"
+  | "vocab.sessionSayIt"
+  | "vocab.sessionSentence"
+  | "vocab.studyMore"
+  | "vocab.backToWords"
+  | "vocab.addedNudge"
+  | "vocab.bankEmptySearchCta"
   | "sentences.title"
   | "sentences.sub"
   | "sentences.error"
@@ -584,6 +596,18 @@ const en: Record<TKey, string> = {
   "vocab.deleteMsg": "This permanently removes the selected words from your list.",
   "vocab.masteredEmptyTitle": "No mastered words yet",
   "vocab.masteredEmptySub": "Tick words in My Words and tap Mastered to move the ones you already know here.",
+  "vocab.studyAll": "Study All",
+  "vocab.studyAllSub": "Or tap words to choose specific ones",
+  "vocab.reviewAll": "Review All",
+  "vocab.reviewTitle": "Review",
+  "vocab.sessionDone": "Session complete!",
+  "vocab.sessionDoneSub": "You went through {count} words this session.",
+  "vocab.sessionSayIt": "{correct} of {total} pronunciations nailed",
+  "vocab.sessionSentence": "{correct} of {total} sentences correct",
+  "vocab.studyMore": "Keep studying",
+  "vocab.backToWords": "Back to My Words",
+  "vocab.addedNudge": "Added to My Words — go there to study!",
+  "vocab.bankEmptySearchCta": "Search for a word",
   "sentences.title": "Simple Sentences",
   "sentences.sub": "Everyday {lang} phrases to get you around",
   "sentences.error": "Couldn’t load phrases. Pull to retry.",

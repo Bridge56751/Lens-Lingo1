@@ -51,6 +51,9 @@ export default function VocabSearch() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<VocabBankWord[] | null>(null);
   const [showRoman, setShowRoman] = useState(false);
+  // Brief nudge shown after the learner adds their first word in this session.
+  const [showNudge, setShowNudge] = useState(false);
+  const addCountRef = React.useRef(0);
   const roman = useRomanizations(
     (results ?? []).map((w) => w.word),
     target,
@@ -125,6 +128,12 @@ export default function VocabSearch() {
         },
       });
       prefetchSpeech(w.word, target);
+      // Show a brief nudge toward My Words after the first add in this session.
+      addCountRef.current += 1;
+      if (addCountRef.current === 1) {
+        setShowNudge(true);
+        setTimeout(() => setShowNudge(false), 4000);
+      }
     }
   };
 
@@ -133,6 +142,14 @@ export default function VocabSearch() {
 
   return (
     <View style={styles.flex}>
+      {showNudge && (
+        <View style={[styles.nudge, { backgroundColor: accent.color }]}>
+          <Ionicons name="checkmark-circle" size={16} color="#FFFFFF" />
+          <Text style={[styles.nudgeText, { fontFamily: "Inter_600SemiBold" }]}>
+            {t("vocab.addedNudge")}
+          </Text>
+        </View>
+      )}
       <View style={styles.searchRow}>
         <View style={[styles.inputWrap, { backgroundColor: colors.card }]}>
           <Ionicons name="search" size={18} color={colors.mutedForeground} />
@@ -348,4 +365,16 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
   addBtnText: { fontSize: 13 },
+
+  nudge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginHorizontal: 18,
+    marginBottom: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+  },
+  nudgeText: { color: "#FFFFFF", fontSize: 13, flex: 1 },
 });
