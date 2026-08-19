@@ -1,4 +1,4 @@
-// Tiny bundled feedback sound effects (success ding / gentle miss) used by
+// Tiny bundled feedback sound effects (success chime / gentle miss) used by
 // pronunciation practice. Fire-and-forget: playback failures are silently
 // ignored (haptics already give feedback), and each play uses a fresh player
 // that is released when the clip ends.
@@ -6,7 +6,7 @@ import { createAudioPlayer } from "expo-audio";
 
 /* eslint-disable @typescript-eslint/no-require-imports */
 const SOURCES = {
-  ding: require("../assets/sounds/ding.wav"),
+  ding: require("../assets/sounds/correct-chime.mp3"),
   miss: require("../assets/sounds/miss.wav"),
 } as const;
 /* eslint-enable @typescript-eslint/no-require-imports */
