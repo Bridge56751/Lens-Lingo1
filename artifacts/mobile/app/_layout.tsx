@@ -24,7 +24,7 @@ import { getOrCreateDeviceId } from "@/lib/device";
 import { setMobileAuthTokenGetter } from "@/lib/authToken";
 import { setAuthTokenGetter, setBaseUrl, setDeviceId } from "@workspace/api-client-react";
 import { initializeRevenueCat, SubscriptionProvider } from "@/lib/revenuecat";
-import { handleProRequiredError } from "@/lib/proRequired";
+import { handleProRequiredError, isProRequiredApiError } from "@/lib/proRequired";
 import {
   initAnalytics,
   logScreenView,
@@ -62,7 +62,19 @@ const OFFLINE_MAX_AGE = 1000 * 60 * 60 * 24 * 30; // 30 days
 // mismatch or a background refetch, and routing those popped the paywall "for
 // no reason" (see lib/proRequired.ts).
 const queryClient = new QueryClient({
-  mutationCache: new MutationCache({ onError: handleProRequiredError }),
+  mutationCache: new MutationCache({
+    onError: (err) => {
+      handleProRequiredError(err);
+      // The server (authoritative) just said the caller isn't Pro. The client's
+      // Pro state comes from RevenueCat's cached customer info, which can lag a
+      // just-expired subscription (e.g. short-lived sandbox purchases) — leaving
+      // screens looking Pro while paid calls 403. Refetch it so the app's Pro
+      // state resyncs with reality instead of staying stale for a minute.
+      if (isProRequiredApiError(err)) {
+        queryClient.invalidateQueries({ queryKey: ["revenuecat", "customer-info"] });
+      }
+    },
+  }),
   defaultOptions: { queries: { gcTime: OFFLINE_MAX_AGE } },
 });
 
