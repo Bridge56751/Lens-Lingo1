@@ -13,17 +13,14 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import { useQueryClient } from "@tanstack/react-query";
 import {
   useGetVocabBank,
   useListVocabSelections,
-  useAddVocabSelection,
-  useDeleteVocabSelection,
-  getListVocabSelectionsQueryKey,
   getGetVocabBankQueryKey,
   type VocabBankWord,
   type VocabSelection,
 } from "@workspace/api-client-react";
+import { useVocabSelectionMutations } from "@/hooks/useVocabSelectionMutations";
 import { useColors } from "@/hooks/useColors";
 import { usePreferences } from "@/hooks/usePreferences";
 import { useRomanizations } from "@/hooks/useRomanizations";
@@ -56,7 +53,6 @@ export default function VocabBank() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { prefs } = usePreferences();
-  const queryClient = useQueryClient();
 
   const target = prefs.targetLanguage;
   const native = prefs.nativeLanguage;
@@ -80,18 +76,11 @@ export default function VocabBank() {
   );
   const { data: selections } = useListVocabSelections({ targetLanguage: target });
 
-  const selectionsKey = getListVocabSelectionsQueryKey({ targetLanguage: target });
-  const invalidateSelections = () =>
-    queryClient.invalidateQueries({ queryKey: selectionsKey });
-
   const onMutationError = () => Alert.alert(t("vocab.actionError"));
-
-  const addMutation = useAddVocabSelection({
-    mutation: { onSuccess: invalidateSelections, onError: onMutationError },
-  });
-  const deleteMutation = useDeleteVocabSelection({
-    mutation: { onSuccess: invalidateSelections, onError: onMutationError },
-  });
+  const { addMutation, deleteMutation } = useVocabSelectionMutations(
+    target,
+    onMutationError,
+  );
 
   // Map word -> selection so we can show "added" state and remove by id.
   const selectedByWord = useMemo(() => {
@@ -140,6 +129,7 @@ export default function VocabBank() {
   const toggle = (w: VocabBankWord) => {
     const existing = selectedByWord.get(w.word);
     if (existing) {
+      if (existing.id < 0) return; // optimistic add still syncing
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       deleteMutation.mutate({ id: existing.id });
     } else {
