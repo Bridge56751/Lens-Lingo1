@@ -364,6 +364,8 @@ export type TKey =
   | "vocab.sayItClose"
   | "vocab.sayItNoSpeech"
   | "vocab.example"
+  | "vocab.flipToSentence"
+  | "vocab.flipToWord"
   | "vocab.showExample"
   | "vocab.loadingExample"
   | "vocab.yourTurn"
@@ -547,6 +549,8 @@ const en: Record<TKey, string> = {
   "vocab.sayItClose": "Almost there",
   "vocab.sayItNoSpeech": "We couldn't hear the word — try again closer to the mic.",
   "vocab.example": "Example",
+  "vocab.flipToSentence": "Flip for sentence practice",
+  "vocab.flipToWord": "Flip back to the word",
   "vocab.showExample": "Show an example sentence",
   "vocab.loadingExample": "Writing an example…",
   "vocab.yourTurn": "Now you try — write a sentence using this word",

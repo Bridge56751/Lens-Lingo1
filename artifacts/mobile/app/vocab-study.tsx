@@ -12,6 +12,8 @@ import {
   InputAccessoryView,
   Keyboard,
   Alert,
+  Animated,
+  Easing,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
@@ -169,6 +171,18 @@ function VocabStudyScreenInner() {
   const sayItHeardSpeechRef = useRef(false);
   const sayItSilenceSinceRef = useRef<number | null>(null);
 
+  // Flashcard flip: front = word + pronunciation, back = sentence practice.
+  const [side, setSide] = useState<"front" | "back">("front");
+  const flipAnim = useRef(new Animated.Value(0)).current;
+  const flipRotate = flipAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", "90deg"],
+  });
+  const flippingRef = useRef(false);
+  // Bumped on every card change and flip start; stale animation callbacks
+  // compare against it and bail instead of mutating the new card's state.
+  const flipEpochRef = useRef(0);
+
   // Cache generated examples by word so navigating back doesn't refetch.
   const exampleCache = useRef<Map<string, OfflineExample>>(new Map());
   // Tracks the word currently on screen so stale async results don't leak onto the wrong card.
@@ -193,6 +207,11 @@ function VocabStudyScreenInner() {
     setSentence("");
     setFeedback(null);
     setSayItResult(null);
+    setSide("front");
+    flipEpochRef.current++; // invalidate any in-flight flip callbacks
+    flipAnim.stopAnimation();
+    flipAnim.setValue(0);
+    flippingRef.current = false;
     pronounceMutation.reset();
     if (!card) {
       setExample(null);
@@ -466,7 +485,48 @@ function VocabStudyScreenInner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [recorderState, sayItRecording, sayItBusy]);
 
+  // Flip the flashcard: rotate to edge-on, swap the face, rotate back.
+  const flipBlocked =
+    isRecording ||
+    isTranscribing ||
+    sayItRecording ||
+    sayItBusy ||
+    checkMutation.isPending;
+  const flip = () => {
+    if (flippingRef.current || flipBlocked) return;
+    flippingRef.current = true;
+    // Epoch guard: a card change (Next) invalidates any in-flight animation
+    // callbacks so a stale flip can't flip the NEW card to its back face.
+    const epoch = ++flipEpochRef.current;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    Keyboard.dismiss();
+    const goingToBack = side === "front";
+    // Load the example sentence as soon as the learner flips to the back.
+    if (goingToBack && !example && !exampleMutation.isPending) {
+      void loadExample();
+    }
+    Animated.timing(flipAnim, {
+      toValue: 1,
+      duration: 140,
+      easing: Easing.in(Easing.ease),
+      useNativeDriver: true,
+    }).start(() => {
+      if (flipEpochRef.current !== epoch) return;
+      setSide(goingToBack ? "back" : "front");
+      Animated.timing(flipAnim, {
+        toValue: 0,
+        duration: 140,
+        easing: Easing.out(Easing.ease),
+        useNativeDriver: true,
+      }).start(() => {
+        if (flipEpochRef.current !== epoch) return;
+        flippingRef.current = false;
+      });
+    });
+  };
+
   const next = () => {
+    if (flippingRef.current) return; // let the flip settle first
     stopSpeaking();
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setPos((p) => p + 1);
@@ -585,7 +645,11 @@ function VocabStudyScreenInner() {
         keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
         showsVerticalScrollIndicator={false}
       >
-        {/* Word card */}
+        {/* Flashcard: front = word + pronunciation, back = sentence practice */}
+        <Animated.View
+          style={{ transform: [{ perspective: 1000 }, { rotateY: flipRotate }] }}
+        >
+        {side === "front" ? (
         <View style={[styles.card, { backgroundColor: colors.card }]}>
           <TouchableOpacity
             style={[styles.speaker, { backgroundColor: accent.color }]}
@@ -718,10 +782,23 @@ function VocabStudyScreenInner() {
             onToggle={() => setShowRoman((v) => !v)}
             style={{ alignSelf: "center", marginTop: 12 }}
           />
-        </View>
 
-        {/* Example sentence */}
-        <View style={[styles.block, { backgroundColor: colors.card }]}>
+          <TouchableOpacity
+            style={[styles.flipBtn, { borderColor: accent.color }]}
+            onPress={flip}
+            activeOpacity={0.85}
+            disabled={flipBlocked}
+          >
+            <Ionicons name="sync" size={17} color={accent.color} />
+            <Text style={[styles.flipBtnText, { color: accent.color, fontFamily: "Inter_600SemiBold" }]}>
+              {t("vocab.flipToSentence")}
+            </Text>
+          </TouchableOpacity>
+        </View>
+        ) : (
+        <View style={[styles.cardBack, { backgroundColor: colors.card }]}>
+          {/* Example sentence */}
+          <View style={styles.backSection}>
           <Text style={[styles.blockLabel, { color: colors.mutedForeground, fontFamily: "Inter_600SemiBold" }]}>
             {t("vocab.example")}
           </Text>
@@ -778,15 +855,17 @@ function VocabStudyScreenInner() {
               {t("vocab.actionError")}
             </Text>
           )}
-        </View>
+          </View>
 
-        {/* Your turn */}
-        <View
-          style={[styles.block, { backgroundColor: colors.card }]}
-          onLayout={(e) => {
-            yourTurnY.current = e.nativeEvent.layout.y;
-          }}
-        >
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+
+          {/* Your turn */}
+          <View
+            style={styles.backSection}
+            onLayout={(e) => {
+              yourTurnY.current = e.nativeEvent.layout.y;
+            }}
+          >
           <Text style={[styles.blockLabel, { color: colors.mutedForeground, fontFamily: "Inter_600SemiBold" }]}>
             {t("vocab.yourTurn")}
           </Text>
@@ -932,7 +1011,22 @@ function VocabStudyScreenInner() {
               ) : null}
             </View>
           )}
+          </View>
+
+          <TouchableOpacity
+            style={styles.flipBackLink}
+            onPress={flip}
+            activeOpacity={0.7}
+            disabled={flipBlocked}
+          >
+            <Ionicons name="sync" size={15} color={accent.color} />
+            <Text style={[styles.flipBtnText, { color: accent.color, fontFamily: "Inter_600SemiBold" }]}>
+              {t("vocab.flipToWord")}
+            </Text>
+          </TouchableOpacity>
         </View>
+        )}
+        </Animated.View>
 
         <TouchableOpacity
           style={[
@@ -996,6 +1090,34 @@ const styles = StyleSheet.create({
     padding: 24,
     gap: 12,
     marginBottom: 14,
+  },
+  cardBack: {
+    borderRadius: 24,
+    padding: 20,
+    gap: 14,
+    marginBottom: 14,
+  },
+  backSection: { gap: 10 },
+  divider: { height: StyleSheet.hairlineWidth, alignSelf: "stretch" },
+  flipBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    borderWidth: 1.5,
+    borderRadius: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    alignSelf: "stretch",
+    marginTop: 4,
+  },
+  flipBtnText: { fontSize: 14 },
+  flipBackLink: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 6,
   },
   speaker: { width: 88, height: 88, borderRadius: 44, alignItems: "center", justifyContent: "center" },
   word: { fontSize: 30, textAlign: "center", textTransform: "capitalize" },
