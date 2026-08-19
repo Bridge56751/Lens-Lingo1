@@ -42,6 +42,7 @@ const h = vi.hoisted(() => ({
   // "scanDayCount,scanResetsAt" (reserve) / "scanDayCount" (release) /
   // "chatCount,scanCount" (lifetime). Lets us assert which writes happened.
   setKeys: [] as string[],
+  insertedValues: [] as unknown[],
   openaiCreate: vi.fn(),
   budgetExceeded: false,
   activeEntitlementsMock: vi.fn<
@@ -96,10 +97,14 @@ vi.mock("@workspace/db", () => {
     },
   });
   const insert = () => ({
-    values: () =>
+    values: (payload: unknown) => {
+      h.insertedValues.push(payload);
+      return (
       Object.assign(Promise.resolve(undefined), {
         returning: () => Promise.resolve([{ id: 123 }]),
-      }),
+      })
+      );
+    },
   });
   const select = () => ({
     from: () => ({
@@ -191,6 +196,7 @@ beforeEach(() => {
   h.txThrows = false;
   h.txCalls = 0;
   h.setKeys = [];
+  h.insertedValues = [];
   h.budgetExceeded = false;
   h.openaiCreate.mockReset();
   h.openaiCreate.mockResolvedValue({
@@ -198,7 +204,7 @@ beforeEach(() => {
       {
         message: {
           content:
-            '{"itemName":"perro","itemNameTranslated":"dog","pronunciation":"peh-rro"}',
+            '{"itemName":"dog","itemNameTranslated":"perro","pronunciation":"peh-rro","initialMessage":"Este es un perro. ¿Te gustan los perros?"}',
         },
       },
     ],
@@ -237,14 +243,32 @@ describe("POST /api/scan free-tier daily limit", () => {
     const { status, body } = await postScan();
 
     expect(status).toBe(201);
-    expect(body.itemName).toBe("perro");
+    expect(body.itemName).toBe("dog");
+    expect(body.initialMessage).toBe("Este es un perro. ¿Te gustan los perros?");
     expect(body.scanLimit).toBe(10);
     expect(body.scansUsedToday).toBe(3);
     expect(body.scansRemaining).toBe(7);
+    expect(body.timings.identificationAndStarterMs).toEqual(expect.any(Number));
     // The reservation UPDATE ran (sets count + reset boundary together).
     expect(h.setKeys).toContain("scanDayCount,scanResetsAt");
-    // AI work happened (vision + initial message).
-    expect(h.openaiCreate).toHaveBeenCalled();
+    // Identification + starter share one model call, so there is no second
+    // sequential round-trip holding up the result.
+    expect(h.openaiCreate).toHaveBeenCalledTimes(1);
+    const requestJson = JSON.stringify(h.openaiCreate.mock.calls[0]?.[0]);
+    expect(requestJson).toContain("data:image/jpeg;base64,/9j/");
+    expect(requestJson).toContain('\\"initialMessage\\"');
+
+    const seedMessages = h.insertedValues.find(Array.isArray) as
+      | { role: string; content: string }[]
+      | undefined;
+    expect(seedMessages?.map((message) => message.role)).toEqual([
+      "system",
+      "user",
+      "assistant",
+    ]);
+    expect(seedMessages?.[2]?.content).toBe(
+      "Este es un perro. ¿Te gustan los perros?",
+    );
   });
 
   it("denies with 403 BEFORE any AI work when the active period is at the cap", async () => {

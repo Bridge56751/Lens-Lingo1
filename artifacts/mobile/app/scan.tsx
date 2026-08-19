@@ -44,6 +44,13 @@ import { speakWord, stopSpeaking, prefetchSpeech } from "@/lib/speech";
 
 const MAX_IMAGE_DIMENSION = 1024;
 
+type ScanPhase = "idle" | "preparing" | "identifying";
+
+type ClientScanTimings = {
+  captureMs?: number;
+  imagePreparationMs: number;
+};
+
 // Compress a captured/picked photo before uploading: downscale the longest edge
 // to MAX_IMAGE_DIMENSION (only when the source is larger, to avoid upscaling)
 // and re-encode as JPEG at quality 0.7, then base64-encode the result. This
@@ -93,6 +100,7 @@ export default function ScanScreen() {
   const [levelPickerOpen, setLevelPickerOpen] = useState(false);
   const [scannedImage, setScannedImage] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
+  const [scanPhase, setScanPhase] = useState<ScanPhase>("idle");
   const [scanResult, setScanResult] = useState<{
     itemName: string;
     itemNameTranslated: string;
@@ -131,25 +139,37 @@ export default function ScanScreen() {
     if (!cameraRef.current || isScanning || isPreparingRef.current) return;
     isPreparingRef.current = true;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    const captureStartedAt = Date.now();
     try {
       const photo = await cameraRef.current.takePictureAsync({
         quality: 0.7,
         skipProcessing: true,
       });
       if (!photo?.uri) return;
+      const captureMs = Date.now() - captureStartedAt;
       setScannedImage(photo.uri);
       setScanResult(null);
+      setScanPhase("preparing");
+      startScanAnimation();
       // Compress before encoding so long uploads / oversized payloads are avoided.
+      const preparationStartedAt = Date.now();
       const compressed = await compressForUpload(photo.uri, photo.width, photo.height);
+      const imagePreparationMs = Date.now() - preparationStartedAt;
       if (!compressed) {
         Alert.alert(t("scan.captureFailedTitle"), t("scan.captureFailedBody"));
+        setScannedImage(null);
         return;
       }
-      await scanItem(compressed);
+      await scanItem(compressed, { captureMs, imagePreparationMs });
     } catch (err) {
       Alert.alert(t("scan.captureFailedTitle"), t("scan.captureFailedBody"));
+      setScannedImage(null);
     } finally {
       isPreparingRef.current = false;
+      if (!isScanningRef.current) {
+        setScanPhase("idle");
+        stopScanAnimation();
+      }
     }
   };
 
@@ -167,18 +187,28 @@ export default function ScanScreen() {
       if (!result.canceled && asset?.uri) {
         setScannedImage(asset.uri);
         setScanResult(null);
+        setScanPhase("preparing");
+        startScanAnimation();
         // Compress before encoding so long uploads / oversized payloads are avoided.
+        const preparationStartedAt = Date.now();
         const compressed = await compressForUpload(asset.uri, asset.width, asset.height);
+        const imagePreparationMs = Date.now() - preparationStartedAt;
         if (!compressed) {
           Alert.alert(t("scan.scanFailedTitle"), t("scan.scanFailedBody"));
+          setScannedImage(null);
           return;
         }
-        await scanItem(compressed);
+        await scanItem(compressed, { imagePreparationMs });
       }
     } catch (err) {
       Alert.alert(t("scan.scanFailedTitle"), t("scan.scanFailedBody"));
+      setScannedImage(null);
     } finally {
       isPreparingRef.current = false;
+      if (!isScanningRef.current) {
+        setScanPhase("idle");
+        stopScanAnimation();
+      }
     }
   };
 
@@ -187,12 +217,17 @@ export default function ScanScreen() {
   // repeated taps can't kick off duplicate scans before scanItem takes its lock.
   const isPreparingRef = useRef(false);
 
-  const scanItem = async (imageBase64: string) => {
+  const scanItem = async (
+    imageBase64: string,
+    clientTimings: ClientScanTimings,
+  ) => {
     if (isScanningRef.current) return;
     isScanningRef.current = true;
     setIsScanning(true);
+    setScanPhase("identifying");
     startScanAnimation();
 
+    const requestStartedAt = Date.now();
     try {
       const baseUrl = process.env.EXPO_PUBLIC_DOMAIN
         ? `https://${process.env.EXPO_PUBLIC_DOMAIN}`
@@ -245,8 +280,22 @@ export default function ScanScreen() {
         itemName: string;
         itemNameTranslated: string;
         initialMessage: string;
+        timings?: {
+          validationMs: number;
+          accessAndQuotaMs: number;
+          identificationAndStarterMs: number;
+          persistenceMs: number;
+          totalMs: number;
+        };
       };
 
+      if (__DEV__) {
+        console.info("[scan-timing]", {
+          ...clientTimings,
+          requestAndResponseMs: Date.now() - requestStartedAt,
+          server: data.timings,
+        });
+      }
       setScanResult(data);
       // This scan consumed part of today's free allowance — refresh the home counter.
       queryClient.invalidateQueries({ queryKey: getGetMyPlanQueryKey() });
@@ -261,6 +310,7 @@ export default function ScanScreen() {
     } finally {
       isScanningRef.current = false;
       setIsScanning(false);
+      setScanPhase("idle");
       stopScanAnimation();
     }
   };
@@ -305,6 +355,7 @@ export default function ScanScreen() {
     setIsOpening(false);
     setScannedImage(null);
     setScanResult(null);
+    setScanPhase("idle");
   };
 
   const speakTranslation = () => {
@@ -325,6 +376,7 @@ export default function ScanScreen() {
   // The scan screen is a pushed route with no bottom tab bar, so the controls
   // sit right at the very bottom edge (just clear of the home indicator).
   const bottomPadding = Platform.OS === "web" ? 24 : insets.bottom + 16;
+  const isScanBusy = scanPhase !== "idle";
 
   // Full-bleed camera with a centered scan frame (corner brackets). The frame
   // is clamped to leave room for the top guidance and bottom controls.
@@ -470,11 +522,11 @@ export default function ScanScreen() {
         {/* Scanning indicator, centered over the live camera */}
         <View style={styles.frameLayer}>
           <Animated.View style={[styles.scanFrame, { width: frameWidth, height: frameHeight }, pulseStyle]}>
-            {isScanning && (
+            {isScanBusy && (
               <View style={styles.scanningBadge}>
                 <ActivityIndicator size="small" color="#FFFFFF" />
                 <Text style={[styles.scanningBadgeText, { fontFamily: "Inter_600SemiBold" }]}>
-                  {t("scan.identifying")}
+                  {t(scanPhase === "preparing" ? "scan.preparing" : "scan.identifying")}
                 </Text>
               </View>
             )}
@@ -599,12 +651,12 @@ export default function ScanScreen() {
           <TouchableOpacity
             onPress={handleCapture}
             activeOpacity={0.85}
-            disabled={isScanning || !canUseCamera}
+            disabled={isScanBusy || !canUseCamera}
             style={styles.captureWrap}
           >
             <View style={[styles.captureOuter, { opacity: !canUseCamera ? 0.4 : 1 }]}>
-              <View style={[styles.captureInner, { backgroundColor: isScanning ? colors.primary : "#FFFFFF" }]}>
-                {isScanning ? (
+              <View style={[styles.captureInner, { backgroundColor: isScanBusy ? colors.primary : "#FFFFFF" }]}>
+                {isScanBusy ? (
                   <ActivityIndicator size="small" color="#FFFFFF" />
                 ) : (
                   <Ionicons name="scan" size={26} color={colors.primary} />
@@ -617,6 +669,7 @@ export default function ScanScreen() {
             style={styles.sideButton}
             onPress={handleGallery}
             activeOpacity={0.7}
+            disabled={isScanBusy}
           >
             <Ionicons name="images-outline" size={22} color="#FFFFFF" />
             <Text style={[styles.sideButtonText, { fontFamily: "Inter_500Medium" }]}>

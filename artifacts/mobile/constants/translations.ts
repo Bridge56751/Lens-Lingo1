@@ -249,6 +249,7 @@ export type TKey =
   | "scan.cameraUnavailableWeb"
   | "scan.cameraNeeded"
   | "scan.enableCamera"
+  | "scan.preparing"
   | "scan.identifying"
   | "scan.history"
   | "scan.gallery"
@@ -848,6 +849,7 @@ const en: Record<TKey, string> = {
   "scan.cameraUnavailableWeb": "Camera preview unavailable on web",
   "scan.cameraNeeded": "Camera access needed",
   "scan.enableCamera": "Enable Camera",
+  "scan.preparing": "Preparing image\u2026",
   "scan.identifying": "Identifying\u2026",
   "scan.history": "History",
   "scan.gallery": "Gallery",

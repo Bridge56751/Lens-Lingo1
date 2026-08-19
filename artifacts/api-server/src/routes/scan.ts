@@ -58,6 +58,7 @@ async function releaseScanReservation(
 }
 
 router.post("/scan", async (req, res) => {
+  const requestStartedAt = Date.now();
   const { imageBase64, targetLanguage, nativeLanguage, difficulty: rawDifficulty } = req.body as {
     imageBase64?: string;
     targetLanguage?: string;
@@ -98,12 +99,14 @@ router.post("/scan", async (req, res) => {
   // Difficulty is interpolated into a system prompt, so validate against the
   // allowlist and fall back to the default if missing/invalid.
   const difficulty = normalizeDifficulty(rawDifficulty) ?? DEFAULT_DIFFICULTY;
+  const validationMs = Date.now() - requestStartedAt;
 
   if (req.customerId == null) {
     res.status(400).json({ error: "Missing or unresolved x-device-id" });
     return;
   }
   const customerId = req.customerId;
+  const accessStartedAt = Date.now();
 
   // Resolve entitlement first: Pro users are unlimited; free users get
   // FREE_DAILY_SCAN_LIMIT scans per LOCAL day (the client sends its UTC offset
@@ -167,16 +170,22 @@ router.post("/scan", async (req, res) => {
     }
     throw err;
   }
+  const accessAndQuotaMs = Date.now() - accessStartedAt;
 
-  // Use GPT vision to identify the item
+  // Use one GPT vision request to identify the item AND write the short starter
+  // message. Previously these were two sequential model calls, which meant the
+  // learner waited for a second full round-trip after identification was done.
   let itemName = "Unknown Item";
   let itemNameTranslated = "Unknown";
   let pronunciation = "";
+  let initialContent = "";
+  const identificationStartedAt = Date.now();
 
   try {
     const visionResponse = await openai.chat.completions.create({
       model: "gpt-4o",
-      max_completion_tokens: 200,
+      max_completion_tokens: 350,
+      response_format: { type: "json_object" },
       messages: [
         {
           role: "user",
@@ -187,7 +196,12 @@ router.post("/scan", async (req, res) => {
             },
             {
               type: "text",
-              text: `Identify the main object in this image. Respond with only valid JSON in this exact format: {"itemName": "name of the item in ${nativeLanguage}", "itemNameTranslated": "name of the item in ${targetLanguage}", "pronunciation": "phonetic pronunciation of the ${targetLanguage} name using English letters"}`,
+              text: `Identify the main object in this image and write a short language-learning conversation starter for a ${difficulty} learner.
+
+Respond with only valid JSON in this exact format:
+{"itemName":"name of the item in ${nativeLanguage}","itemNameTranslated":"name of the item in ${targetLanguage}","pronunciation":"phonetic pronunciation of the ${targetLanguage} name using English letters","initialMessage":"a warm 2-4 sentence tutor message written entirely in ${targetLanguage}, introducing the translated word and ending with one simple question in ${targetLanguage}"}
+
+The initialMessage must not contain a ${nativeLanguage} translation, gloss, or parenthetical meaning. Do not use emojis.`,
             },
           ],
         },
@@ -201,14 +215,17 @@ router.post("/scan", async (req, res) => {
         itemName?: string;
         itemNameTranslated?: string;
         pronunciation?: string;
+        initialMessage?: string;
       };
       itemName = sanitizeLabel(parsed.itemName) || itemName;
       itemNameTranslated = sanitizeLabel(parsed.itemNameTranslated) || itemNameTranslated;
       pronunciation = sanitizeLabel(parsed.pronunciation);
+      initialContent = (parsed.initialMessage ?? "").trim().slice(0, 1_500);
     }
   } catch (err) {
     req.log.error({ err }, "Vision identification failed, using defaults");
   }
+  const identificationAndStarterMs = Date.now() - identificationStartedAt;
 
   // Build system prompt for language learning
   const pronounceNote = pronunciation ? `, pronounced "${pronunciation}"` : "";
@@ -223,33 +240,17 @@ router.post("/scan", async (req, res) => {
 
   const triggerMessage = `I just scanned a ${itemName}. Help me learn the word for it in ${targetLanguage}!`;
 
-  // Generate initial AI greeting (kept outside the DB transaction below)
-  let initialContent = `Let's learn about "${itemName}" in ${targetLanguage}!`;
-  try {
-    await reserveOpenAiBudget("scan");
-    const initialResponse = await openai.chat.completions.create({
-      model: "gpt-4o",
-      max_completion_tokens: 300,
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: triggerMessage },
-      ],
-    });
-    initialContent =
-      initialResponse.choices[0]?.message?.content ?? initialContent;
-  } catch (err) {
-    if (isOpenAiBudgetExceeded(err)) {
-      req.log.info("Scan starter message skipped because OpenAI budget is exhausted");
-    } else {
-      req.log.error({ err }, "Initial message generation failed");
-    }
-  }
+  // A malformed/missing starter should never block persistence. Use the
+  // translated word itself as a language-safe fallback rather than adding an
+  // English sentence to a non-English conversation.
+  if (!initialContent) initialContent = itemNameTranslated;
 
   // Persist the conversation, its seed messages, and the lifetime usage counters
   // together so the chat artifacts and counts can't drift on partial failure.
   // The per-day scan counter was already reserved above; if this transaction
   // fails we release that reservation so a failed scan doesn't burn the user's
   // daily quota.
+  const persistenceStartedAt = Date.now();
   const conv = await db
     .transaction(async (tx) => {
       const [created] = await tx
@@ -289,12 +290,23 @@ router.post("/scan", async (req, res) => {
       }
       throw err;
     });
+  const persistenceMs = Date.now() - persistenceStartedAt;
+  const timings = {
+    validationMs,
+    accessAndQuotaMs,
+    identificationAndStarterMs,
+    persistenceMs,
+    totalMs: Date.now() - requestStartedAt,
+  };
+
+  req.log.info({ timings }, "Scan completed");
 
   res.status(201).json({
     conversationId: conv.id,
     itemName,
     itemNameTranslated,
     initialMessage: initialContent,
+    timings,
     ...buildScanUsage(
       reservation?.count ?? 0,
       isPro,
