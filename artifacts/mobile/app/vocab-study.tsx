@@ -809,13 +809,13 @@ function VocabStudyScreenInner() {
             {t("vocab.example")}
           </Text>
           {example ? (
-            <>
+            <View style={[styles.examplePanel, { backgroundColor: accent.soft }]}>
               <View style={styles.exampleRow}>
                 <Text style={[styles.exampleSentence, { color: colors.foreground, fontFamily: "Inter_500Medium" }]}>
                   {example.sentence}
                 </Text>
                 <TouchableOpacity
-                  style={[styles.speakerSmall, { backgroundColor: accent.soft }]}
+                  style={[styles.speakerSmall, { backgroundColor: "#FFFFFF" }]}
                   onPress={() => hear(example.sentence)}
                   activeOpacity={0.8}
                   hitSlop={8}
@@ -831,7 +831,7 @@ function VocabStudyScreenInner() {
               <Text style={[styles.exampleTranslation, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
                 {example.translation}
               </Text>
-            </>
+            </View>
           ) : (
             <TouchableOpacity
               style={[styles.secondaryBtn, { borderColor: colors.border }]}
@@ -913,9 +913,11 @@ function VocabStudyScreenInner() {
               );
             }}
           />
+          <View style={styles.actionRow}>
           <TouchableOpacity
             style={[
               styles.micBtn,
+              styles.actionRowItem,
               isRecording
                 ? { backgroundColor: "#FEE2E2", borderColor: "#FCA5A5" }
                 : { backgroundColor: colors.background, borderColor: colors.border },
@@ -950,6 +952,7 @@ function VocabStudyScreenInner() {
           <TouchableOpacity
             style={[
               styles.primaryBtn,
+              styles.actionRowItem,
               { backgroundColor: accent.color, opacity: sentence.trim() && !checkMutation.isPending ? 1 : 0.5 },
             ]}
             onPress={checkSentence}
@@ -965,6 +968,7 @@ function VocabStudyScreenInner() {
               {checkMutation.isPending ? t("vocab.checking") : t("vocab.check")}
             </Text>
           </TouchableOpacity>
+          </View>
 
           {checkMutation.isError && !feedback && (
             <Text style={[styles.errorText, { color: "#DC2626", fontFamily: "Inter_500Medium" }]}>
@@ -1099,11 +1103,18 @@ const styles = StyleSheet.create({
   },
   cardBack: {
     borderRadius: 24,
-    padding: 20,
-    gap: 14,
+    padding: 22,
+    gap: 20,
     marginBottom: 14,
   },
-  backSection: { gap: 10 },
+  backSection: { gap: 12 },
+  examplePanel: {
+    borderRadius: 16,
+    padding: 16,
+    gap: 8,
+  },
+  actionRow: { flexDirection: "row", gap: 10 },
+  actionRowItem: { flex: 1 },
   divider: { height: StyleSheet.hairlineWidth, alignSelf: "stretch" },
   flipBtn: {
     flexDirection: "row",
