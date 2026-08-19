@@ -19,6 +19,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import {
   useAudioRecorder,
+  useAudioRecorderState,
   RecordingPresets,
   setAudioModeAsync,
   requestRecordingPermissionsAsync,
@@ -129,7 +130,12 @@ function VocabStudyScreenInner() {
   const [feedback, setFeedback] = useState<VocabCheck | null>(null);
 
   // Voice input for the learner's own sentence.
-  const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  // Metering powers "Say it" auto-stop: we watch the input level to detect
+  // when the learner has finished saying the word.
+  const audioRecorder = useAudioRecorder({
+    ...RecordingPresets.HIGH_QUALITY,
+    isMeteringEnabled: true,
+  });
   const [isRecording, setIsRecordingState] = useState(false);
   const isRecordingRef = useRef(false);
   const setIsRecording = React.useCallback((value: boolean) => {
@@ -156,6 +162,12 @@ function VocabStudyScreenInner() {
   // recorder could be re-entered mid-stop (mutation.isPending is still false).
   const [sayItBusy, setSayItBusy] = useState(false);
   const pronounceMutation = usePronounceVocabWord();
+  // Auto-stop bookkeeping for "Say it": once speech has been heard, ~1s of
+  // silence (or a hard time cap) triggers grading without a second tap.
+  const recorderState = useAudioRecorderState(audioRecorder, 150);
+  const sayItStartedAtRef = useRef(0);
+  const sayItHeardSpeechRef = useRef(false);
+  const sayItSilenceSinceRef = useRef<number | null>(null);
 
   // Cache generated examples by word so navigating back doesn't refetch.
   const exampleCache = useRef<Map<string, OfflineExample>>(new Map());
@@ -366,6 +378,9 @@ function VocabStudyScreenInner() {
       audioRecorder.record();
       setSayItResult(null);
       pronounceMutation.reset();
+      sayItStartedAtRef.current = Date.now();
+      sayItHeardSpeechRef.current = false;
+      sayItSilenceSinceRef.current = null;
       setSayItRecording(true);
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     } catch {
@@ -417,6 +432,39 @@ function VocabStudyScreenInner() {
       setSayItBusy(false);
     }
   };
+
+  // Auto-stop "Say it": watch the mic level while recording. Once we've heard
+  // speech and then ~1s of silence, grade automatically. A hard cap ends the
+  // recording even when metering is unavailable (e.g. web preview).
+  useEffect(() => {
+    if (!sayItRecording || sayItBusy) return;
+    const now = Date.now();
+    const MAX_RECORD_MS = 6000;
+    const SILENCE_AFTER_SPEECH_MS = 1000;
+    const SPEECH_DB = -35;
+    const SILENCE_DB = -40;
+
+    if (now - sayItStartedAtRef.current >= MAX_RECORD_MS) {
+      void stopSayItAndGrade();
+      return;
+    }
+    const level = recorderState.metering;
+    if (typeof level !== "number") return; // no metering — rely on the cap
+    if (level > SPEECH_DB) {
+      sayItHeardSpeechRef.current = true;
+      sayItSilenceSinceRef.current = null;
+    } else if (sayItHeardSpeechRef.current && level < SILENCE_DB) {
+      if (sayItSilenceSinceRef.current == null) {
+        sayItSilenceSinceRef.current = now;
+      } else if (now - sayItSilenceSinceRef.current >= SILENCE_AFTER_SPEECH_MS) {
+        void stopSayItAndGrade();
+      }
+    } else {
+      sayItSilenceSinceRef.current = null;
+    }
+    // recorderState updates every 150ms while recording, driving this check.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recorderState, sayItRecording, sayItBusy]);
 
   const next = () => {
     stopSpeaking();
