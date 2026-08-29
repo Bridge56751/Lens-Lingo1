@@ -1,0 +1,126 @@
+    Build number:  10
+
+✔ Scheduled iOS submission
+
+Submission details: https://expo.dev/accounts/brogan56/projects/lens-lingo/submissions/ad2fcd14-aac3-460b-8858-0e0e04095f5d
+
+Waiting for build to complete. You can press Ctrl+C to exit.
+⠇ Build in progress...
+bridgerogan@Bridges-MacBook-Pro mobile % git stash
+error: Entry 'eas.json' not uptodate. Cannot merge.
+Cannot save the current worktree state
+bridgerogan@Bridges-MacBook-Pro mobile % git pull
+remote: Enumerating objects: 371, done.
+remote: Counting objects: 100% (371/371), done.
+remote: Compressing objects: 100% (110/110), done.
+remote: Total 295 (delta 196), reused 284 (delta 185), pack-reused 0 (from 0)
+Receiving objects: 100% (295/295), 351.12 KiB | 1.38 MiB/s, done.
+Resolving deltas: 100% (196/196), completed with 61 local objects.
+From https://github.com/Bridge56751/Lens-Lingo1
+   7f07869..c36c590  main       -> origin/main
+Updating 7f07869..c36c590
+Fast-forward
+ .agents/memory/MEMORY.md                                           |   5 +-
+ .agents/memory/cancel-abandoned-create.md                          |  62 +++
+ .agents/memory/cors-prod-domain.md                                 |  17 +
+ .agents/memory/openai-proxy-models.md                              |  11 +
+ .agents/memory/prebundled-offline.md                               |   8 +
+ .agents/memory/romanization-aid.md                                 |  21 +
+ .replit                                                            |   1 +
+ artifacts/api-server/package.json                                  |   1 +
+ artifacts/api-server/src/app.ts                                    |  17 +-
+ artifacts/api-server/src/index.ts                                  |  26 +-
+ artifacts/api-server/src/lib/abuseControlDdl.ts                    |  77 ++++
+ artifacts/api-server/src/lib/cors.test.ts                          |  56 +++
+ artifacts/api-server/src/lib/cors.ts                               |  74 +++
+ artifacts/api-server/src/lib/mediaValidation.test.ts               |  53 +++
+ artifacts/api-server/src/lib/mediaValidation.ts                    | 109 +++++
+ artifacts/api-server/src/lib/openaiBudget.test.ts                  |  66 +++
+ artifacts/api-server/src/lib/openaiBudget.ts                       | 143 ++++++
+ artifacts/api-server/src/lib/rateLimit.test.ts                     | 113 +++++
+ artifacts/api-server/src/lib/rateLimit.ts                          | 220 +++++++++
+ artifacts/api-server/src/routes/openai/conversations.test.ts       | 200 +++++++++
+ artifacts/api-server/src/routes/openai/conversations.ts            | 217 +++++++--
+ artifacts/api-server/src/routes/openai/tts.ts                      |  10 +
+ artifacts/api-server/src/routes/proGuardLeak.test.ts               |   1 +
+ artifacts/api-server/src/routes/scan.test.ts                       |  82 +++-
+ artifacts/api-server/src/routes/scan.ts                            | 127 ++++--
+ artifacts/api-server/src/routes/sentences.ts                       |  10 +
+ artifacts/api-server/src/routes/vocab.ai.test.ts                   | 448 ++++++++++++++++++
+ artifacts/api-server/src/routes/vocab.pronounce.test.ts            | 334 ++++++++++++++
+ artifacts/api-server/src/routes/vocab.ts                           | 156 ++++++-
+ artifacts/mobile/app/(tabs)/index.tsx                              |  74 ++-
+ artifacts/mobile/app/_layout.tsx                                   |  16 +-
+ artifacts/mobile/app/scan.tsx                                      |  69 ++-
+ artifacts/mobile/app/vocab-study.tsx                               | 725 ++++++++++++++++++++++++++++--
+ artifacts/mobile/app/vocabulary.tsx                                |  44 +-
+ artifacts/mobile/assets/offline/content/Arabic.json                |  83 +++-
+ artifacts/mobile/assets/offline/content/Chinese.json               |  82 +++-
+ artifacts/mobile/assets/offline/content/Hindi.json                 |  86 +++-
+ artifacts/mobile/assets/offline/content/Japanese.json              |  80 +++-
+ artifacts/mobile/assets/offline/content/Korean.json                |  84 +++-
+ artifacts/mobile/assets/offline/content/Russian.json               |  87 +++-
+ artifacts/mobile/assets/sounds/correct-chime.mp3                   | Bin 0 -> 42240 bytes
+ artifacts/mobile/assets/sounds/ding.wav                            | Bin 0 -> 36204 bytes
+ artifacts/mobile/assets/sounds/miss.wav                            | Bin 0 -> 25622 bytes
+ artifacts/mobile/components/VocabBank.tsx                          |  52 ++-
+ artifacts/mobile/components/VocabSearch.tsx                        |  50 ++-
+ artifacts/mobile/constants/translations.ts                         |  46 ++
+ artifacts/mobile/hooks/useRomanizations.ts                         |  45 +-
+ artifacts/mobile/hooks/useVocabSelectionMutations.ts               |  71 +++
+ artifacts/mobile/lib/offlineAssets.generated.ts                    |   1 +
+ artifacts/mobile/lib/offlineAssets.ts                              |  12 +
+ artifacts/mobile/lib/offlineExamples.ts                            |  12 +-
+ artifacts/mobile/lib/offlinePack.ts                                |  19 +-
+ artifacts/mobile/lib/sounds.ts                                     |  38 ++
+ attached_assets/IMG_0631_1782360832428.PNG                         | Bin 0 -> 176381 bytes
+ ...-How-to-deploy-detailed-The-deploy-is-set-env_1783140422081.txt | 149 ++++++
+ .../Screenshot_2026-07-03_at_10.00.12_PM_1783141215789.png         | Bin 0 -> 23613 bytes
+ .../Screenshot_2026-07-03_at_10.00.12_PM_1783141215790.png         | Bin 0 -> 23613 bytes
+ attached_assets/dragon-studio-correct-472358_1787115632404.mp3     | Bin 0 -> 42240 bytes
+ lib/api-client-react/src/generated/api.schemas.ts                  |  20 +
+ lib/api-client-react/src/generated/api.ts                          |  75 ++++
+ lib/api-spec/openapi.yaml                                          |  85 ++++
+ lib/api-zod/src/generated/api.ts                                   |  20 +
+ lib/api-zod/src/generated/types/index.ts                           |   2 +
+ lib/api-zod/src/generated/types/vocabPronounce.ts                  |  18 +
+ lib/api-zod/src/generated/types/vocabPronounceInput.ts             |  16 +
+ lib/db/src/schema/abuseControls.ts                                 |  68 +++
+ lib/db/src/schema/index.ts                                         |   1 +
+ package.json                                                       |   3 +
+ pnpm-lock.yaml                                                     |  26 +-
+ replit.md                                                          |   9 +
+ scripts/src/generate-offline.ts                                    | 166 ++++++-
+ 71 files changed, 4862 insertions(+), 237 deletions(-)
+ create mode 100644 .agents/memory/cancel-abandoned-create.md
+ create mode 100644 .agents/memory/cors-prod-domain.md
+ create mode 100644 .agents/memory/openai-proxy-models.md
+ create mode 100644 artifacts/api-server/src/lib/abuseControlDdl.ts
+ create mode 100644 artifacts/api-server/src/lib/cors.test.ts
+ create mode 100644 artifacts/api-server/src/lib/cors.ts
+ create mode 100644 artifacts/api-server/src/lib/mediaValidation.test.ts
+ create mode 100644 artifacts/api-server/src/lib/mediaValidation.ts
+ create mode 100644 artifacts/api-server/src/lib/openaiBudget.test.ts
+ create mode 100644 artifacts/api-server/src/lib/openaiBudget.ts
+ create mode 100644 artifacts/api-server/src/lib/rateLimit.test.ts
+ create mode 100644 artifacts/api-server/src/lib/rateLimit.ts
+ create mode 100644 artifacts/api-server/src/routes/openai/conversations.test.ts
+ create mode 100644 artifacts/api-server/src/routes/vocab.ai.test.ts
+ create mode 100644 artifacts/api-server/src/routes/vocab.pronounce.test.ts
+ create mode 100644 artifacts/mobile/assets/sounds/correct-chime.mp3
+ create mode 100644 artifacts/mobile/assets/sounds/ding.wav
+ create mode 100644 artifacts/mobile/assets/sounds/miss.wav
+ create mode 100644 artifacts/mobile/hooks/useVocabSelectionMutations.ts
+ create mode 100644 artifacts/mobile/lib/sounds.ts
+ create mode 100644 attached_assets/IMG_0631_1782360832428.PNG
+ create mode 100644 attached_assets/Pasted-1-2-Part-2-How-to-deploy-detailed-The-deploy-is-set-env_1783140422081.txt
+ create mode 100644 attached_assets/Screenshot_2026-07-03_at_10.00.12_PM_1783141215789.png
+ create mode 100644 attached_assets/Screenshot_2026-07-03_at_10.00.12_PM_1783141215790.png
+ create mode 100644 attached_assets/dragon-studio-correct-472358_1787115632404.mp3
+ create mode 100644 lib/api-zod/src/generated/types/vocabPronounce.ts
+ create mode 100644 lib/api-zod/src/generated/types/vocabPronounceInput.ts
+ create mode 100644 lib/db/src/schema/abuseControls.ts
+bridgerogan@Bridges-MacBook-Pro mobile % git stash
+error: Entry 'eas.json' not uptodate. Cannot merge.
+Cannot save the current worktree state
+bridgerogan@Bridges-MacBook-Pro mobile % 
