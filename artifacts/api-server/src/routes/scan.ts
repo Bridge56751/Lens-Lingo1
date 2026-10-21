@@ -113,7 +113,16 @@ router.post("/scan", async (req, res) => {
   // in `x-tz-offset` so the allowance refills at the user's own midnight). This
   // server-side limit is authoritative — the client counter is advisory only.
   const appUserId = req.authUserId ?? req.deviceId;
-  const isPro = await customerHasPro({ customerId, appUserId, log: req.log });
+  let isPro: boolean;
+  let verificationUnavailable = false;
+  try {
+    isPro = await customerHasPro({ customerId, appUserId, log: req.log });
+  } catch {
+    // Scanning has a free allowance. Unverified Pro must not unlock unlimited
+    // scans, but neither should a billing outage disable the free allowance.
+    isPro = false;
+    verificationUnavailable = true;
+  }
   const now = new Date();
   const tzOffset = parseTimezoneOffset(req.headers["x-tz-offset"]);
 
@@ -152,6 +161,13 @@ router.post("/scan", async (req, res) => {
     });
 
     if (!reservation.allowed) {
+      if (verificationUnavailable) {
+        res.status(503).json({
+          error: "subscription_verification_unavailable",
+          message: "Your free scan allowance is used up and we couldn't verify Pro access. Please try again shortly. You do not need to purchase again.",
+        });
+        return;
+      }
       res.status(403).json({
         error: "scan_limit_reached",
         ...buildScanUsage(reservation.count, false, reservation.resetsAt),

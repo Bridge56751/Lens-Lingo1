@@ -38,7 +38,10 @@ async function getAccessToken(): Promise<string> {
         X_REPLIT_TOKEN: xReplitToken,
       },
     },
-  ).then((res) => res.json())) as ConnectionResponse;
+   ).then((res) => {
+     if (!res.ok) throw new Error(`RevenueCat connection lookup failed with status ${res.status}`);
+     return res.json();
+   })) as ConnectionResponse;
 
   const settings = body.items?.[0]?.settings;
   const accessToken =

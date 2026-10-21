@@ -5,6 +5,7 @@ import {
   getListVocabSelectionsQueryKey,
   type VocabSelection,
 } from "@workspace/api-client-react";
+import { isSubscriptionVerificationError } from "@/lib/subscriptionError";
 
 // Module-level counter so two rapid adds can never share a temp id,
 // even across the Bank and Search tabs (they share the same cache).
@@ -35,8 +36,9 @@ export function useVocabSelectionMutations(
     }
   };
 
-  const handleError = () => {
-    onError();
+  const handleError = (error: unknown) => {
+    // The global mutation handler already explains verification failures.
+    if (!isSubscriptionVerificationError(error)) onError();
     invalidateWhenIdle();
   };
 
@@ -44,13 +46,26 @@ export function useVocabSelectionMutations(
     mutation: {
       onMutate: async ({ data }) => {
         await queryClient.cancelQueries({ queryKey: selectionsKey });
+        const tempId = nextOptimisticId();
         queryClient.setQueryData<VocabSelection[]>(selectionsKey, (old) => [
           ...((old ?? []) as VocabSelection[]),
-          { ...(data as VocabSelection), id: nextOptimisticId() },
+          { ...(data as VocabSelection), id: tempId },
         ]);
+        return { tempId };
       },
-      onError: handleError,
-      onSuccess: invalidateWhenIdle,
+      onError: (error, _variables, context) => {
+        // A failed refetch must not leave an unsaved optimistic word on screen.
+        queryClient.setQueryData<VocabSelection[]>(selectionsKey, (old) =>
+          old?.filter((word) => word.id !== context?.tempId),
+        );
+        handleError(error);
+      },
+      onSuccess: (saved, _variables, context) => {
+        queryClient.setQueryData<VocabSelection[]>(selectionsKey, (old) =>
+          old?.map((word) => word.id === context?.tempId ? saved : word),
+        );
+        invalidateWhenIdle();
+      },
     },
   });
 

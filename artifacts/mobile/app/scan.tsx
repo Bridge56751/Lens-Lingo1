@@ -29,6 +29,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { useQueryClient } from "@tanstack/react-query";
+import { SUBSCRIPTION_RETRY_MESSAGE } from "@/lib/subscriptionError";
 import {
   getGetMyPlanQueryKey,
   localTimezoneOffsetMinutes,
@@ -273,6 +274,15 @@ export default function ScanScreen() {
         }
       }
 
+      if (response.status === 503) {
+        const body = await response.json();
+        if (body?.error === "subscription_verification_unavailable") {
+          setScanPhase("idle");
+          setScannedImage(null);
+          Alert.alert("Subscription temporarily unavailable", body.message ?? SUBSCRIPTION_RETRY_MESSAGE);
+          return;
+        }
+      }
       if (!response.ok) throw new Error(`Scan failed: ${response.status}`);
 
       const data = (await response.json()) as {

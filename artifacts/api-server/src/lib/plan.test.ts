@@ -134,6 +134,31 @@ beforeEach(() => {
 });
 
 describe("invalidatePlanFreshness — re-pull after account deletion", () => {
+  it.each([403, 429, 500])("keeps verification failure %i distinct from free and does not cache it", async (status) => {
+    const opts = { customerId: 50, appUserId: `failure-${status}` };
+    h.row = { id: 50, plan: "free", proSince: null };
+    h.activeEntitlementsMock.mockResolvedValueOnce({ error: {}, response: { status } });
+    await expect(reconcileAndGetPlan(opts)).rejects.toThrow("couldn't verify");
+    expect(h.row.plan).toBe("free");
+    h.activeEntitlementsMock.mockResolvedValueOnce(rcActive());
+    expect((await reconcileAndGetPlan(opts)).plan).toBe("pro");
+  });
+
+  it("purchase/restore force refresh bypasses a cached free decision", async () => {
+    const opts = { customerId: 51, appUserId: "purchase-refresh" };
+    h.row = { id: 51, plan: "free", proSince: null };
+    h.activeEntitlementsMock.mockResolvedValueOnce({ data: { items: [] } });
+    expect((await reconcileAndGetPlan(opts)).plan).toBe("free");
+    h.activeEntitlementsMock.mockResolvedValueOnce(rcActive());
+    expect((await reconcileAndGetPlan({ ...opts, forceRefresh: true })).plan).toBe("pro");
+    expect(h.activeEntitlementsMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("expired entitlements revoke stored Pro rather than bypassing the gate", async () => {
+    h.row = { id: 52, plan: "pro", proSince: new Date() };
+    h.activeEntitlementsMock.mockResolvedValueOnce(rcActive(PRO_ENT_ID, Date.now() - 1000));
+    expect((await reconcileAndGetPlan({ customerId: 52, appUserId: "expired" })).plan).toBe("free");
+  });
   it("serves the fresh-cached plan without re-pulling within the TTL window", async () => {
     const appUserId = "dev-fresh-window";
     h.row = { id: 1, plan: "free", proSince: null };

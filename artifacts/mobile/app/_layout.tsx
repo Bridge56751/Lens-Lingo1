@@ -25,6 +25,7 @@ import { setMobileAuthTokenGetter } from "@/lib/authToken";
 import { setAuthTokenGetter, setBaseUrl, setDeviceId } from "@workspace/api-client-react";
 import { initializeRevenueCat, SubscriptionProvider } from "@/lib/revenuecat";
 import { handleProRequiredError, isProRequiredApiError } from "@/lib/proRequired";
+import { showSubscriptionVerificationError } from "@/lib/subscriptionError";
 import {
   initAnalytics,
   logScreenView,
@@ -64,6 +65,7 @@ const OFFLINE_MAX_AGE = 1000 * 60 * 60 * 24 * 30; // 30 days
 const queryClient = new QueryClient({
   mutationCache: new MutationCache({
     onError: (err) => {
+      if (showSubscriptionVerificationError(err)) return;
       handleProRequiredError(err);
       // The server (authoritative) just said the caller isn't Pro. The client's
       // Pro state comes from RevenueCat's cached customer info, which can lag a

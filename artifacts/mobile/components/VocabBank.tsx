@@ -21,6 +21,7 @@ import {
   type VocabSelection,
 } from "@workspace/api-client-react";
 import { useVocabSelectionMutations } from "@/hooks/useVocabSelectionMutations";
+import { isSubscriptionVerificationError, SUBSCRIPTION_RETRY_MESSAGE } from "@/lib/subscriptionError";
 import { useColors } from "@/hooks/useColors";
 import { usePreferences } from "@/hooks/usePreferences";
 import { useRomanizations } from "@/hooks/useRomanizations";
@@ -67,7 +68,7 @@ export default function VocabBank({ onSearchPress: onSearchPressProp }: { onSear
     [target, native],
   );
 
-  const { data: bank, isLoading, isError, refetch } = useGetVocabBank(
+  const { data: bank, isLoading, isError, error, refetch } = useGetVocabBank(
     { targetLanguage: target, nativeLanguage: native },
     {
       query: {
@@ -177,7 +178,7 @@ export default function VocabBank({ onSearchPress: onSearchPressProp }: { onSear
       <View style={styles.flex}>
         <View style={styles.center}>
           <Text style={[styles.bigSub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-            {t("vocab.bankError")}
+            {isSubscriptionVerificationError(error) ? SUBSCRIPTION_RETRY_MESSAGE : t("vocab.bankError")}
           </Text>
           <TouchableOpacity
             style={[styles.primaryBtn, { backgroundColor: accent.color }]}

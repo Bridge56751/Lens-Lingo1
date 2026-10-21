@@ -166,12 +166,13 @@ beforeEach(() => {
 
 async function getPlan(): Promise<{
   status: number;
-  body: { plan?: string; proSince?: string | null };
+  body: { plan?: string; proSince?: string | null; error?: string };
 }> {
   const res = await fetch(`${baseUrl}/api/me/plan`);
   const body = (await res.json()) as {
     plan?: string;
     proSince?: string | null;
+    error?: string;
   };
   return { status: res.status, body };
 }
@@ -297,7 +298,7 @@ describe("GET /me/plan — Pro status sync", () => {
     expect(body).toMatchObject({ plan: "free", proSince: null });
   });
 
-  it("serves the last-known stored plan (no 5xx) when RevenueCat is unreachable", async () => {
+  it("reports verification unavailable without changing the stored plan", async () => {
     const original = new Date("2025-03-01T00:00:00.000Z");
     ctx = { customerId: 7, authUserId: "user-7" };
     h.row = { id: 7, plan: "pro", proSince: original };
@@ -305,14 +306,13 @@ describe("GET /me/plan — Pro status sync", () => {
 
     const { status, body } = await getPlan();
 
-    expect(status).toBe(200);
-    expect(body.plan).toBe("pro");
-    expect(body.proSince).toBe(original.toISOString());
+    expect(status).toBe(503);
+    expect(body.error).toBe("subscription_verification_unavailable");
     // The stored plan must be untouched by a failed refresh.
     expect(h.row).toMatchObject({ plan: "pro", proSince: original });
   });
 
-  it("serves the stored plan when RevenueCat returns a non-404 error status", async () => {
+  it("does not treat a RevenueCat error as a subscription decision", async () => {
     const original = new Date("2025-03-01T00:00:00.000Z");
     ctx = { customerId: 8, deviceId: "dev-8" };
     h.row = { id: 8, plan: "pro", proSince: original };
@@ -323,9 +323,8 @@ describe("GET /me/plan — Pro status sync", () => {
 
     const { status, body } = await getPlan();
 
-    expect(status).toBe(200);
-    expect(body.plan).toBe("pro");
-    expect(body.proSince).toBe(original.toISOString());
+    expect(status).toBe(503);
+    expect(body.error).toBe("subscription_verification_unavailable");
     expect(h.row).toMatchObject({ plan: "pro", proSince: original });
   });
 

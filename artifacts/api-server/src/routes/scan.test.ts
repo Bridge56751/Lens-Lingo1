@@ -190,7 +190,10 @@ afterAll(() => {
 // wall-clock the test runs at.
 const FUTURE = "2099-01-01T00:00:00.000Z";
 
+const { invalidatePlanFreshness } = await import("../lib/plan");
 beforeEach(() => {
+  invalidatePlanFreshness("dev-1");
+  h.activeEntitlementsMock.mockReset();
   h.plan = "free";
   h.storedScan = { count: 0, resetsAt: null };
   h.txThrows = false;
@@ -238,6 +241,23 @@ async function postScan(imageBase64 = "/9j/"): Promise<{ status: number; body: a
 }
 
 describe("POST /api/scan free-tier daily limit", () => {
+  it("allows quota-limited free scans when verification is unavailable", async () => {
+    h.activeEntitlementsMock.mockRejectedValueOnce(new Error("unavailable"));
+    const { status } = await postScan();
+    expect(status).toBe(201);
+    expect(h.setKeys).toContain("scanDayCount,scanResetsAt");
+    expect(h.openaiCreate).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns retryable 503 at the free cap during verification outage", async () => {
+    h.storedScan = { count: 10, resetsAt: FUTURE };
+    h.activeEntitlementsMock.mockRejectedValueOnce(new Error("unavailable"));
+    const { status, body } = await postScan();
+    expect(status).toBe(503);
+    expect(body.error).toBe("subscription_verification_unavailable");
+    expect(h.openaiCreate).not.toHaveBeenCalled();
+    expect(h.setKeys).not.toContain("scanDayCount,scanResetsAt");
+  });
   it("reserves a slot and succeeds when a free user is under the cap", async () => {
     h.storedScan = { count: 2, resetsAt: FUTURE }; // active period, under cap
     const { status, body } = await postScan();

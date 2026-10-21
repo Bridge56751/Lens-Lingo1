@@ -199,6 +199,13 @@ export type ResolvedPlan = {
   proSince: string | null;
 };
 
+export class PlanVerificationError extends Error {
+  constructor() {
+    super("We couldn't verify your subscription. Please try again shortly. You do not need to purchase again.");
+    this.name = "PlanVerificationError";
+  }
+}
+
 /** Minimal logger surface so callers can pass `req.log` (pino) optionally. */
 type PlanLogger = { warn: (...args: unknown[]) => void };
 
@@ -218,17 +225,14 @@ export type ReconcilePlanOptions = {
 };
 
 /**
- * Reconciles the customer's plan from RevenueCat (best-effort) and returns the
+ * Reconciles the customer's plan from RevenueCat and returns the
  * server's authoritative view of it.
  *
  * Pro status is kept in sync by pulling from RevenueCat's REST API on read (no
  * webhook required): we look up the caller's RevenueCat customer and reconcile
  * `customers.plan` / `customers.pro_since` before reading the stored row. The
- * RevenueCat refresh is best-effort — if it is unreachable we fall back to the
- * last-known stored plan rather than failing. The final stored-row read is NOT
- * caught here, so a hard database failure propagates to the caller (the
- * `/me/plan` route surfaces it as a 500; the `requirePro` guard treats it as
- * "not Pro").
+ * refresh fails closed with PlanVerificationError when verification is unavailable.
+ * The stored row is preserved, but is not used as proof of current entitlement.
  */
 export async function reconcileAndGetPlan(
   opts: ReconcilePlanOptions,
@@ -241,8 +245,10 @@ export async function reconcileAndGetPlan(
       await syncPlan(customerId, pro);
       markPlanFresh(appUserId);
     } catch (err) {
-      // RevenueCat unavailable — serve the last-known stored plan instead of 5xx.
-      log?.warn({ err }, "RevenueCat plan refresh failed; serving stored plan");
+      // Unknown is not free (nor proof that a stored Pro plan is still active).
+      invalidatePlanFreshness(appUserId);
+      log?.warn({ err }, "RevenueCat plan verification unavailable");
+      throw new PlanVerificationError();
     }
   }
 
@@ -260,17 +266,12 @@ export async function reconcileAndGetPlan(
 
 /**
  * Convenience wrapper for entitlement gating: returns whether the customer
- * currently holds Pro, reconciling from RevenueCat first. Never throws — any
- * failure (including a database read error) resolves to `false` so the guard
- * fails closed (denies access) rather than leaking a paid feature.
+ * currently holds Pro, reconciling from RevenueCat first. Throws on verification
+ * or database failure so callers can deny access with a retryable 503, not a paywall.
  */
 export async function customerHasPro(
   opts: ReconcilePlanOptions,
 ): Promise<boolean> {
-  try {
-    const { plan } = await reconcileAndGetPlan(opts);
-    return plan === "pro";
-  } catch {
-    return false;
-  }
+  const { plan } = await reconcileAndGetPlan(opts);
+  return plan === "pro";
 }

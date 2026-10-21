@@ -1,10 +1,10 @@
 import React, { createContext, useContext, useEffect } from "react";
-import { Platform, Linking } from "react-native";
+import { Platform, Linking, Alert } from "react-native";
 import Purchases, {
   type PurchasesPackage,
   INTRO_ELIGIBILITY_STATUS,
 } from "react-native-purchases";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Constants from "expo-constants";
 import { useOptionalAuth } from "@/lib/auth";
 import { getMyPlan } from "@workspace/api-client-react";
@@ -110,19 +110,30 @@ export async function openManageSubscriptions(
 /**
  * Forces the server to pull the latest entitlement from RevenueCat's REST API
  * and reconcile `customers.plan`, bypassing the server's short plan cache via
- * `?refresh=true`. Best-effort: failures are swallowed so a flaky network
- * never surfaces an error after an otherwise-successful purchase/restore.
+ * `?refresh=true`. Await synchronization; warn separately on failure without
+ * presenting a successful store purchase as failed or encouraging another purchase.
  */
-function refreshServerPlan() {
-  getMyPlan({ refresh: true }).catch((e) => {
+async function refreshServerPlan() {
+  try {
+    await getMyPlan({ refresh: true });
+  } catch (e) {
     console.warn("Server plan refresh failed", e);
-  });
+    Alert.alert("Subscription verification delayed", "Your purchase is safe, but the server couldn't verify it yet. Please try Restore Purchases again shortly. Do not purchase again.");
+  }
 }
 
 function useSubscriptionContext() {
+  const { isLoaded, userId } = useOptionalAuth();
+  const ensureIdentity = async () => {
+    const appUserId = userId ?? getDeviceIdSync();
+    if (!isLoaded || !appUserId) throw new Error("Subscription identity is not ready. Please try again.");
+    await Purchases.logIn(appUserId);
+  };
   const customerInfoQuery = useQuery({
     queryKey: ["revenuecat", "customer-info"],
+    enabled: isLoaded,
     queryFn: async () => {
+      await ensureIdentity();
       const info = await Purchases.getCustomerInfo();
       return info;
     },
@@ -166,25 +177,27 @@ function useSubscriptionContext() {
 
   const purchaseMutation = useMutation({
     mutationFn: async (packageToPurchase: PurchasesPackage) => {
+      await ensureIdentity();
       const { customerInfo } = await Purchases.purchasePackage(packageToPurchase);
       return customerInfo;
     },
-    onSuccess: () => {
-      customerInfoQuery.refetch();
+    onSuccess: async () => {
+      await customerInfoQuery.refetch();
       // Force the server to reconcile its authoritative plan from RevenueCat
       // immediately (bypassing its short cache) so Pro unlocks across every
       // server-backed surface without waiting for the cache TTL.
-      refreshServerPlan();
+      await refreshServerPlan();
     },
   });
 
   const restoreMutation = useMutation({
     mutationFn: async () => {
+      await ensureIdentity();
       return Purchases.restorePurchases();
     },
-    onSuccess: () => {
-      customerInfoQuery.refetch();
-      refreshServerPlan();
+    onSuccess: async () => {
+      await customerInfoQuery.refetch();
+      await refreshServerPlan();
     },
   });
 
@@ -226,6 +239,7 @@ const Context = createContext<SubscriptionContextValue | null>(null);
  */
 function RevenueCatIdentitySync() {
   const { isLoaded, userId } = useOptionalAuth();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     // Wait for Clerk to resolve so we don't briefly log in as the device id and
@@ -233,10 +247,12 @@ function RevenueCatIdentitySync() {
     if (!isLoaded) return;
     const appUserId = userId ?? getDeviceIdSync();
     if (!appUserId) return;
-    Purchases.logIn(appUserId).catch((e) => {
+    Purchases.logIn(appUserId).then(({ customerInfo }) => {
+      queryClient.setQueryData(["revenuecat", "customer-info"], customerInfo);
+    }).catch((e) => {
       console.warn("RevenueCat logIn failed", e);
     });
-  }, [isLoaded, userId]);
+  }, [isLoaded, userId, queryClient]);
 
   return null;
 }

@@ -253,28 +253,28 @@ describe("requirePro — server-side Pro enforcement", () => {
     expect(h.row?.proSince).toBeInstanceOf(Date);
   });
 
-  it("serves stored Pro (allows access) when RevenueCat is unreachable", async () => {
+  it("fails closed with a retryable error when stored Pro cannot be verified", async () => {
     ctx = { customerId: 4, deviceId: "dev-4" };
     h.row = { id: 4, plan: "pro", proSince: new Date("2025-01-01") };
     h.activeEntitlementsMock.mockRejectedValue(new Error("network down"));
 
     const { status, body } = await callProtected();
 
-    expect(status).toBe(200);
-    expect(body).toEqual({ ok: true });
+    expect(status).toBe(503);
+    expect(body).toMatchObject({ error: "subscription_verification_unavailable" });
     // A failed refresh must not downgrade the stored plan.
     expect(h.row).toMatchObject({ plan: "pro" });
   });
 
-  it("rejects with 403 a stored-free customer when RevenueCat is unreachable", async () => {
+  it("returns retryable 503, not a paywall, when verification is unavailable", async () => {
     ctx = { customerId: 5, deviceId: "dev-5" };
     h.row = { id: 5, plan: "free", proSince: null };
     h.activeEntitlementsMock.mockRejectedValue(new Error("network down"));
 
     const { status, body } = await callProtected();
 
-    expect(status).toBe(403);
-    expect(body).toEqual({ error: "pro_required" });
+    expect(status).toBe(503);
+    expect(body).toMatchObject({ error: "subscription_verification_unavailable" });
   });
 
   it("looks up RevenueCat by the Clerk auth user id when signed in", async () => {

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { eq } from "drizzle-orm";
 import { db, customers } from "@workspace/db";
-import { reconcileAndGetPlan } from "../lib/plan";
+import { reconcileAndGetPlan, PlanVerificationError } from "../lib/plan";
 import {
   parseTimezoneOffset,
   readScanUsage,
@@ -15,9 +15,8 @@ const router = Router();
  * Pro status is kept in sync by pulling from RevenueCat's REST API on each
  * read (no webhook required) inside `reconcileAndGetPlan`: it looks up the
  * caller's RevenueCat customer and reconciles `customers.plan` /
- * `customers.pro_since` before responding. The refresh is best-effort — if
- * RevenueCat is unreachable the last-known stored plan is served rather than
- * failing the request. Resolves to a clean 'free' when no customer row is
+ * `customers.pro_since` before responding. Unavailable verification returns 503,
+ * distinct from a confirmed free plan. Resolves to 'free' when no customer row is
  * attached.
  */
 router.get("/me/plan", async (req, res) => {
@@ -70,6 +69,10 @@ router.get("/me/plan", async (req, res) => {
       ),
     });
   } catch (err) {
+    if (err instanceof PlanVerificationError) {
+      res.status(503).json({ error: "subscription_verification_unavailable", message: err.message });
+      return;
+    }
     req.log.error({ err }, "Failed to read plan");
     res.status(500).json({ error: "Failed to read plan" });
   }

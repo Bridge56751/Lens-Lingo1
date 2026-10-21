@@ -36,6 +36,7 @@ import { useColors } from "@/hooks/useColors";
 import { MODULE_ACCENTS } from "@/constants/colors";
 import { useT } from "@/hooks/useT";
 import { ProGuard } from "@/components/ProGuard";
+import { isSubscriptionVerificationError, SUBSCRIPTION_RETRY_MESSAGE } from "@/lib/subscriptionError";
 import { usePreferences, type Language } from "@/hooks/usePreferences";
 import { getDeviceIdSync } from "@/lib/device";
 import { authHeader } from "@/lib/authToken";
@@ -399,7 +400,7 @@ function ConversationScreenInner() {
     }, []),
   );
 
-  const { data: conversation, isLoading, dataUpdatedAt } = useGetOpenaiConversation(conversationId, {
+  const { data: conversation, isLoading, error: conversationError, refetch: refetchConversation, dataUpdatedAt } = useGetOpenaiConversation(conversationId, {
     query: {
       queryKey: getGetOpenaiConversationQueryKey(conversationId),
       enabled: !!conversationId,
@@ -550,6 +551,13 @@ function ConversationScreenInner() {
         goToPaywallForProRequired();
         return;
       }
+      if (response.status === 503) {
+        const body = await response.json();
+        if (body.error === "subscription_verification_unavailable") {
+          Alert.alert("Subscription temporarily unavailable", SUBSCRIPTION_RETRY_MESSAGE);
+          return;
+        }
+      }
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
       const data = (await response.json()) as { text?: string };
@@ -616,6 +624,15 @@ function ConversationScreenInner() {
         goToPaywallForProRequired();
         setMessages((prev) => prev.filter((m) => m.id !== userMessage.id));
         return;
+      }
+      if (response.status === 503) {
+        const body = await response.json();
+        if (body.error === "subscription_verification_unavailable") {
+          setMessages((prev) => prev.filter((m) => m.id !== userMessage.id));
+          setInputText(text);
+          Alert.alert("Subscription temporarily unavailable", SUBSCRIPTION_RETRY_MESSAGE);
+          return;
+        }
       }
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
@@ -744,6 +761,15 @@ function ConversationScreenInner() {
         {isLoading ? (
           <View style={styles.centered}>
             <ActivityIndicator size="large" color={accent.color} />
+          </View>
+        ) : conversationError && !conversation ? (
+          <View style={styles.centered}>
+            <Text style={{ color: colors.foreground, padding: 24, textAlign: "center" }}>
+              {isSubscriptionVerificationError(conversationError) ? SUBSCRIPTION_RETRY_MESSAGE : t("conv.errorReply")}
+            </Text>
+            <TouchableOpacity onPress={() => refetchConversation()}>
+              <Text style={{ color: accent.color }}>{t("vocab.tryAgain")}</Text>
+            </TouchableOpacity>
           </View>
         ) : (
           <FlatList

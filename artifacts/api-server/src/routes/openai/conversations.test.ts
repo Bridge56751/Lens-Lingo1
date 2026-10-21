@@ -30,6 +30,8 @@ const h = vi.hoisted(() => ({
   msgInserts: 0,
   // SET key signatures for every update().set(...) — e.g. "chatCount".
   setKeys: [] as string[],
+  savedConversation: null as Record<string, unknown> | null,
+  savedMessages: [] as Record<string, unknown>[],
   openaiCreate: vi.fn(),
   // Resolved by the abort test's OpenAI stub once the request has reached the
   // server and is awaiting the model, so the client can disconnect at the exact
@@ -63,6 +65,8 @@ vi.mock("@workspace/db", () => {
     values: (_vals: unknown) => {
       if (table === CONVERSATIONS) h.convInserts += 1;
       if (table === MESSAGES) h.msgInserts += 1;
+      if (table === CONVERSATIONS) h.savedConversation = { id: 777, ...(_vals as Record<string, unknown>) };
+      if (table === MESSAGES) h.savedMessages.push(...(_vals as Record<string, unknown>[]));
       return Object.assign(Promise.resolve(undefined), {
         returning: () => Promise.resolve([{ id: 777 }]),
       });
@@ -77,6 +81,16 @@ vi.mock("@workspace/db", () => {
   const db = {
     insert,
     update,
+    select: () => ({
+      from: (table: unknown) => ({
+        where: () => {
+          const rows = table === CONVERSATIONS ? [h.savedConversation] : h.savedMessages;
+          return Object.assign(Promise.resolve(rows), {
+            orderBy: () => Promise.resolve(rows),
+          });
+        },
+      }),
+    }),
     transaction: async (cb: (tx: unknown) => unknown) => {
       h.txCalls += 1;
       return cb({ insert, update });
@@ -122,6 +136,8 @@ beforeEach(() => {
   h.convInserts = 0;
   h.msgInserts = 0;
   h.setKeys = [];
+  h.savedConversation = null;
+  h.savedMessages = [];
   h.openaiEntered = undefined;
   h.openaiCreate.mockReset();
 });
@@ -151,6 +167,18 @@ describe("POST /openai/conversations/chat", () => {
     expect(h.convInserts).toBe(1);
     expect(h.msgInserts).toBe(1);
     expect(h.setKeys).toContain("chatCount");
+    // Reopening from History and reloading issue independent GETs. The opening
+    // reply and language anchor must survive, and system prompts stay private.
+    for (let reload = 0; reload < 2; reload++) {
+      const reopened = await fetch(`${baseUrl}/api/openai/conversations/${body.conversationId}`);
+      expect(reopened.status).toBe(200);
+      const saved = await reopened.json() as { messages: unknown[] };
+      expect(saved).toMatchObject({ targetLanguage: "Spanish", nativeLanguage: "English" });
+      expect(saved.messages).toEqual([
+        expect.objectContaining({ role: "assistant", content: "¡Hola! Vamos a practicar." }),
+      ]);
+      expect(h.openaiCreate).toHaveBeenCalledTimes(1);
+    }
   });
 
   it("persists nothing when the caller disconnects before the opening message is ready", async () => {

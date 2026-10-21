@@ -151,7 +151,7 @@ export function requireAuth(
  * the API directly. Entitlement is resolved via `customerHasPro`, which pulls
  * the authoritative state from RevenueCat (cached briefly) and reconciles it
  * onto the customer row. The check fails closed — a missing customer or any
- * resolution error yields a 403 — so a paid route is never served to a caller
+ * resolution error yields a retryable 503 (confirmed free yields 403), so a paid route is never served to a caller
  * we can't confirm as Pro. The `{ error: "pro_required" }` body lets the client
  * detect this case and route the user to the paywall.
  */
@@ -169,7 +169,16 @@ export async function requirePro(
   // Same id the mobile client logged in to RevenueCat with (Clerk user id when
   // signed in, else the anonymous device id).
   const appUserId = req.authUserId ?? req.deviceId;
-  const isPro = await customerHasPro({ customerId, appUserId, log: req.log });
+  let isPro: boolean;
+  try {
+    isPro = await customerHasPro({ customerId, appUserId, log: req.log });
+  } catch {
+    res.status(503).json({
+      error: "subscription_verification_unavailable",
+      message: "We couldn't verify your subscription. Please try again shortly. You do not need to purchase again.",
+    });
+    return;
+  }
   if (!isPro) {
     res.status(403).json({ error: "pro_required" });
     return;
