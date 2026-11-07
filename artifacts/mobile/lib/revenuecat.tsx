@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect } from "react";
-import { Platform, Linking, Alert } from "react-native";
+import { Platform, Linking, Alert, AppState } from "react-native";
 import Purchases, {
   type PurchasesPackage,
   INTRO_ELIGIBILITY_STATUS,
@@ -124,6 +124,7 @@ async function refreshServerPlan() {
 
 function useSubscriptionContext() {
   const { isLoaded, userId } = useOptionalAuth();
+  const queryClient = useQueryClient();
   const ensureIdentity = async () => {
     const appUserId = userId ?? getDeviceIdSync();
     if (!isLoaded || !appUserId) throw new Error("Subscription identity is not ready. Please try again.");
@@ -181,8 +182,11 @@ function useSubscriptionContext() {
       const { customerInfo } = await Purchases.purchasePackage(packageToPurchase);
       return customerInfo;
     },
-    onSuccess: async () => {
-      await customerInfoQuery.refetch();
+    onSuccess: async (customerInfo) => {
+      // The purchase response already contains the verified entitlement. Avoid
+      // another SDK round-trip before reflecting it in the UI.
+      await queryClient.cancelQueries({ queryKey: ["revenuecat", "customer-info"] });
+      queryClient.setQueryData(["revenuecat", "customer-info"], customerInfo);
       // Force the server to reconcile its authoritative plan from RevenueCat
       // immediately (bypassing its short cache) so Pro unlocks across every
       // server-backed surface without waiting for the cache TTL.
@@ -195,8 +199,9 @@ function useSubscriptionContext() {
       await ensureIdentity();
       return Purchases.restorePurchases();
     },
-    onSuccess: async () => {
-      await customerInfoQuery.refetch();
+    onSuccess: async (customerInfo) => {
+      await queryClient.cancelQueries({ queryKey: ["revenuecat", "customer-info"] });
+      queryClient.setQueryData(["revenuecat", "customer-info"], customerInfo);
       await refreshServerPlan();
     },
   });
@@ -217,7 +222,10 @@ function useSubscriptionContext() {
     ineligibleTrialProductIds:
       Platform.OS === "ios" ? trialEligibilityQuery.data : null,
     isSubscribed,
-    isLoading: customerInfoQuery.isLoading || offeringsQuery.isLoading,
+    // Feature gates should not wait for store pricing. The paywall has its own
+    // loading flag, so slow/unavailable products cannot delay a Pro check.
+    isLoading: !isLoaded || customerInfoQuery.isLoading,
+    isOfferingsLoading: offeringsQuery.isLoading,
     purchase: purchaseMutation.mutateAsync,
     restore: restoreMutation.mutateAsync,
     isPurchasing: purchaseMutation.isPending,
@@ -240,6 +248,22 @@ const Context = createContext<SubscriptionContextValue | null>(null);
 function RevenueCatIdentitySync() {
   const { isLoaded, userId } = useOptionalAuth();
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    // Native React Query does not automatically refetch on app foreground.
+    // Check again after returning from Apple's subscription settings, while
+    // retaining cached data so returning users don't see a blocking spinner.
+    let previous = AppState.currentState;
+    const listener = AppState.addEventListener("change", (next) => {
+      if (next === "active" && previous !== "active") {
+        void queryClient.invalidateQueries({ queryKey: ["revenuecat", "customer-info"] });
+        void queryClient.invalidateQueries({ queryKey: ["revenuecat", "offerings"] });
+        void queryClient.invalidateQueries({ queryKey: ["revenuecat", "trial-eligibility"] });
+      }
+      previous = next;
+    });
+    return () => listener.remove();
+  }, [queryClient]);
 
   useEffect(() => {
     // Wait for Clerk to resolve so we don't briefly log in as the device id and

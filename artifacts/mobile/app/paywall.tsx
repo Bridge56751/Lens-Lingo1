@@ -187,6 +187,7 @@ export default function PaywallScreen() {
     ineligibleTrialProductIds,
     isSubscribed,
     isLoading,
+    isOfferingsLoading,
     purchase,
     restore,
     isPurchasing,
@@ -545,7 +546,7 @@ export default function PaywallScreen() {
           {t("paywall.choosePlan")}
         </Text>
 
-        {isLoading ? (
+        {isLoading || isOfferingsLoading ? (
           <View style={styles.loadingWrap}>
             <ActivityIndicator color={accent} />
             <Text style={[styles.loadingText, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>

@@ -5,6 +5,12 @@ description: Converting a free/Pro tap-gate to a "locked" flag that excludes the
 
 # Paywall tap-gate fail-open during plan loading
 
+Subscription-status loading and store-price loading must remain separate.
+
+**Why:** An unavailable or slow store catalog should not delay checking access for an existing subscriber. The paywall still needs its own loading state before showing prices or an empty-plans message.
+
+**How to apply:** Feature gates wait for subscription status; purchasing screens additionally wait for store offerings. Purchase/restore responses can update status directly, but backend verification must still run.
+
 When a control is Pro-gated, the visual "locked" flag and the tap-time gate are
 NOT the same condition and must not be collapsed into one.
 
