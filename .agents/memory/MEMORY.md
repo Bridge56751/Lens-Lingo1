@@ -1,3 +1,4 @@
+- [App Store release](app-store-release.md) — app is launched; distinguish production-store availability from TestFlight sandbox success.
 - [OpenAI proxy models](openai-proxy-models.md) — AI Integrations proxy rejects whisper-1; use gpt-4o-mini-transcribe for all speech-to-text; smoke-test provider linkage directly.
 - [Supabase from Replit](supabase-connection.md) — direct DB host is IPv6-only/unreachable; must use Session pooler + split-password env pattern.
 - [Expo voice flow](expo-voice-flow.md) — web blob: audio read, auto-send after transcribe, send mutex; test mic on device not web preview.
